@@ -1,0 +1,7 @@
+(1) 0-39 with DSD
+(2) Rest space-filling
+
+(3) GSMF coverage, fGas, ... parameter dependence plots
+(4) P(k), P(k)-ratio, HMF, ...
+
+(5) Do a linear interpolation in z
