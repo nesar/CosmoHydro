@@ -14,6 +14,19 @@ Simulation outputs should be placed in `data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC
 - **CSFR** -- Cosmic Star Formation history (next)
 
 
+## Emulator Package
+
+Core modules in `codes/cosmo_hydro_emu/`:
+
+- `load_hacc.py` -- Data loading utilities for HACC simulation outputs
+- `pca.py` -- PCA decomposition of summary statistics
+- `gp.py` -- Gaussian Process training and prediction
+- `emu.py` -- Emulator wrapper (PCA + GP pipeline)
+- `viz.py` -- Plotting and visualization helpers
+- `snapshot_utils.py` -- Utilities for multi-redshift snapshot handling
+
+Unused/experimental modules are kept in `codes/cosmo_hydro_emu/_unused/`.
+
 ## Notebooks
 
 - `codes/gp_SGC_all.ipynb` -- Single-snapshot (z=0) emulation for all summary statistics, including sensitivity analysis and validation.
