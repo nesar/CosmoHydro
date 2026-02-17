@@ -11,6 +11,8 @@ Simulation outputs should be placed in `data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC
 - **GSMF** -- Galaxy Stellar Mass Function
 - **fGas** -- Cluster Gas Fraction (M_gas / M_500)
 - **CGD** -- Cluster Gas Density Profile
+- **CSFR** -- Cosmic Star Formation history (next)
+
 
 ## Notebooks
 
