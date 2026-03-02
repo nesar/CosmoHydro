@@ -10,7 +10,7 @@ import pkg_resources
 import os
 from cosmo_hydro_emu.pca import do_pca
 import numpy as np
-from cosmo_hydro_emu.load import sepia_data_format
+from cosmo_hydro_emu.load_hacc import sepia_data_format
 
 
 # %% ../nbs/02_gp.ipynb 4
