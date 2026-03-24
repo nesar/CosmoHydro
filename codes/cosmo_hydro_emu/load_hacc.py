@@ -1,10 +1,10 @@
 __all__ = ['PARAM_NAME',
            'load_params', 'sepia_data_format', 'read_gsmf', 'read_cged', 'read_bhmsm', 'load_cged_obs',
-           'load_cgd_obs', 'read_gal_ssfr', 'read_gasfr', 'read_csfr', 'read_cgd', 'read_pk', 'read_pk_new', 'plot_strings', 'mass_conds',
+           'load_cgd_obs', 'read_gal_ssfr', 'read_gasfr', 'read_csfr', 'read_hmf', 'read_cgd', 'read_pk', 'read_pk_new', 'plot_strings', 'mass_conds',
            'load_gsmf_obs', 'load_fgas_obs', 'load_fgas_other_sims', 'load_bhmsm_other_sims',
            'fill_nan_with_interpolation', 'eps_scale', 'seed_mass_scale', 'vkin_scale',
            'load_delta_cgd', 'delta_cgd', 'DirIn_128_256',
-           'read_gsmf_all_snaps', 'read_gasfr_all_snaps', 'read_cgd_all_snaps', 'read_cged_all_snaps']
+           'read_gsmf_all_snaps', 'read_hmf_all_snaps', 'read_gasfr_all_snaps', 'read_cgd_all_snaps', 'read_cged_all_snaps']
 
 
 import numpy as np
@@ -90,6 +90,25 @@ def sepia_data_format(design:np.array=None, # Params array of shape (num_simulat
 
 
 ######################################################
+
+
+def read_hmf(DirIn, num_sims, params=None, start_sim_idx=1):
+
+    hmf_arr = None
+
+    for file_indx in range(num_sims):
+        sim_idx = file_indx + start_sim_idx
+        fileIn = os.path.join(DirIn, f'RUN{sim_idx:03d}', 'extract', 'HaloMassFunction_624.txt')
+        hmf_all = np.loadtxt(fileIn)
+
+        if hmf_arr is None:
+            hmf_arr = np.zeros(shape=(num_sims, hmf_all.shape[0]))
+
+        hmf_arr[file_indx, :] = hmf_all[:, 1]
+
+    halo_mass = hmf_all[:, 0]
+
+    return halo_mass, hmf_arr
 
 
 def read_csfr(DirIn, num_sims, params=None, start_sim_idx=1):
@@ -316,6 +335,30 @@ def read_gsmf_all_snaps(DirIn, num_sims, snapshot_ids, start_sim_idx=1):
     return stellar_mass, gsmf_arr
 
 
+def read_hmf_all_snaps(DirIn, num_sims, snapshot_ids, start_sim_idx=1):
+    """Read HMF for all simulations and all snapshots.
+    Returns: halo_mass (1D), hmf_arr (num_sims, num_snaps, num_bins)
+    """
+    num_snaps = len(snapshot_ids)
+    hmf_arr = None
+
+    for file_indx in range(num_sims):
+        sim_idx = file_indx + start_sim_idx
+        for snap_idx, snap_id in enumerate(snapshot_ids):
+            fileIn = os.path.join(DirIn, f'RUN{sim_idx:03d}', 'extract',
+                                  f'HaloMassFunction_{snap_id}.txt')
+            data = np.loadtxt(fileIn)
+
+            if hmf_arr is None:
+                n_bins = data.shape[0]
+                hmf_arr = np.zeros(shape=(num_sims, num_snaps, n_bins))
+
+            hmf_arr[file_indx, snap_idx, :] = data[:, 1]
+
+    halo_mass = data[:, 0]
+    return halo_mass, hmf_arr
+
+
 def read_gasfr_all_snaps(DirIn, num_sims, snapshot_ids, start_sim_idx=1):
     """Read gas fraction for all simulations and all snapshots.
     Returns: log_halo_mass (1D), gas_fr_arr (num_sims, num_snaps, num_bins)
@@ -445,11 +488,16 @@ def mass_conds(summary_stat):
         mlim1 =  0.015707963267948967
         mlim2 = 8.042477193189871
     
-    if (summary_stat == 'CSFR'): 
+    if (summary_stat == 'CSFR'):
 
         mlim1 =  0.0
         mlim2 = 1.0
-    
+
+    if (summary_stat == 'HMF'):
+
+        mlim1 = 2e11
+        mlim2 = 1e15
+
     return mlim1, mlim2
 
 
@@ -554,7 +602,12 @@ def plot_strings(summary_stat):
         plt_title = 'Cosmic star formation rate'
         x_label = r"$a$"
         y_label = r"$\mathrm{CSFR} \, [\mathrm{M}_{\odot} \, \mathrm{yr}^{-1} \, (h^{-1}\mathrm{Mpc})^{-3}]$"
-        
+
+    elif summary_stat == 'HMF':
+        plt_title = 'Halo mass function'
+        x_label = r"$M_{\mathrm{halo}} \, [\mathrm{M}_{\odot}]$"
+        y_label = r"$\mathrm{d}n / \mathrm{d}\log_{10} M \, [(\mathrm{Mpc}/h)^{-3}]$"
+
     else:
         print('Not implemented')
         
