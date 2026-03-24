@@ -1,6 +1,6 @@
 __all__ = ['PARAM_NAME',
            'load_params', 'sepia_data_format', 'read_gsmf', 'read_cged', 'read_bhmsm', 'load_cged_obs',
-           'load_cgd_obs', 'read_gal_ssfr', 'read_gasfr', 'read_csfr', 'read_cgd', 'read_pk', 'plot_strings', 'mass_conds',
+           'load_cgd_obs', 'read_gal_ssfr', 'read_gasfr', 'read_csfr', 'read_cgd', 'read_pk', 'read_pk_new', 'plot_strings', 'mass_conds',
            'load_gsmf_obs', 'load_fgas_obs', 'load_fgas_other_sims', 'load_bhmsm_other_sims',
            'fill_nan_with_interpolation', 'eps_scale', 'seed_mass_scale', 'vkin_scale',
            'load_delta_cgd', 'delta_cgd', 'DirIn_128_256',
@@ -155,6 +155,38 @@ def read_pk(DirIn, num_sims, params=None, start_sim_idx=1):
     pk_ratio = pk_arr / pk_go
 
     return k, pk_arr, pk_ratio
+
+
+def read_pk_new(DirIn, num_sims, redshift='0.0', pk_type='hydro.full', start_sim_idx=1):
+    """Read power spectra from flat file format (scidac-olcf-pk_3 style).
+
+    Files are named: run{NNN}_z{redshift}.{pk_type}.pk.txt and
+                     run{NNN}_z{redshift}.go.pk.txt
+    Each file has columns: k, P_0(k), ErrorBar, nModes, P_2(k)
+    Returns k, pk_arr (hydro), pk_go_arr (gravity-only), pk_ratio (hydro/go).
+    """
+    pk_arr = None
+    pk_go_arr = None
+
+    for file_indx in range(num_sims):
+        sim_idx = file_indx + start_sim_idx
+        fileIn_hydro = os.path.join(DirIn, f'run{sim_idx:03d}_z{redshift}.{pk_type}.pk.txt')
+        fileIn_go = os.path.join(DirIn, f'run{sim_idx:03d}_z{redshift}.go.pk.txt')
+
+        hydro_data = np.loadtxt(fileIn_hydro)
+        go_data = np.loadtxt(fileIn_go)
+
+        if pk_arr is None:
+            pk_arr = np.zeros(shape=(num_sims, hydro_data.shape[0]))
+            pk_go_arr = np.zeros(shape=(num_sims, go_data.shape[0]))
+
+        pk_arr[file_indx, :] = hydro_data[:, 1]
+        pk_go_arr[file_indx, :] = go_data[:, 1]
+
+    k = hydro_data[:, 0]
+    pk_ratio = pk_arr / pk_go_arr
+
+    return k, pk_arr, pk_go_arr, pk_ratio
 
 
 def read_bhmsm(DirIn, num_sims, params=None, start_sim_idx=1):
@@ -403,16 +435,15 @@ def mass_conds(summary_stat):
         mlim2 = 2.75
 
 
-    if (summary_stat == 'Pk'): 
+    if (summary_stat == 'Pk'):
 
-        ## Based on 
-
+        ## Based on 400 Mpc/h box, 1024 particles
         # k_min = 2*np.pi/side_length
         # delta_x = side_length/Npart
         # k_max = np.pi/delta_x #Nyquist
 
-        mlim1 =  0.04908738521234052
-        mlim2 = 12.566370614359172
+        mlim1 =  0.015707963267948967
+        mlim2 = 8.042477193189871
     
     if (summary_stat == 'CSFR'): 
 
