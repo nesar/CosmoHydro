@@ -4,7 +4,8 @@ __all__ = ['PARAM_NAME',
            'load_gsmf_obs', 'load_fgas_obs', 'load_fgas_other_sims', 'load_bhmsm_other_sims',
            'fill_nan_with_interpolation', 'eps_scale', 'seed_mass_scale', 'vkin_scale',
            'load_delta_cgd', 'delta_cgd', 'DirIn_128_256',
-           'read_gsmf_all_snaps', 'read_hmf_all_snaps', 'read_gasfr_all_snaps', 'read_cgd_all_snaps', 'read_cged_all_snaps']
+           'read_gsmf_all_snaps', 'read_hmf_all_snaps', 'read_gasfr_all_snaps', 'read_cgd_all_snaps', 'read_cged_all_snaps',
+           'read_profile_all_snaps']
 
 
 import numpy as np
@@ -431,6 +432,31 @@ def read_cged_all_snaps(DirIn, num_sims, snapshot_ids, start_sim_idx=1):
     return 10**log_radius[1:], cged_arr[:, :, 1:]
 
 
+def read_profile_all_snaps(DirIn, num_sims, snapshot_ids, file_prefix, start_sim_idx=1):
+    """Read any radial profile for all simulations and all snapshots.
+    file_prefix: e.g. 'ClusterGasPressureProfile', 'ClusterGasTemperatureProfile', etc.
+    Returns: radius (1D, first bin removed), arr (num_sims, num_snaps, num_bins-1)
+    """
+    num_snaps = len(snapshot_ids)
+    arr = None
+
+    for file_indx in range(num_sims):
+        sim_idx = file_indx + start_sim_idx
+        for snap_idx, snap_id in enumerate(snapshot_ids):
+            fileIn = os.path.join(DirIn, f'RUN{sim_idx:03d}', 'extract',
+                                  f'{file_prefix}_{snap_id}.txt')
+            data = np.loadtxt(fileIn)
+
+            if arr is None:
+                n_bins = data.shape[0]
+                arr = np.zeros(shape=(num_sims, num_snaps, n_bins))
+
+            arr[file_indx, snap_idx, :] = data[:, 1]
+
+    log_radius = data[:, 0]
+    return 10**log_radius[1:], arr[:, :, 1:]
+
+
 ######################################################
 
 
@@ -497,6 +523,12 @@ def mass_conds(summary_stat):
 
         mlim1 = 2e11
         mlim2 = 1e15
+
+    if summary_stat in ('CPP', 'CTP', 'CEP', 'CEEP', 'CMP', 'CYP'):
+
+        ## Radius limits for cluster profiles (same as CGD)
+        mlim1 = 0.015
+        mlim2 = 2.75
 
     return mlim1, mlim2
 
@@ -608,9 +640,39 @@ def plot_strings(summary_stat):
         x_label = r"$M_{\mathrm{halo}} \, [\mathrm{M}_{\odot}]$"
         y_label = r"$\mathrm{d}n / \mathrm{d}\log_{10} M \, [(\mathrm{Mpc}/h)^{-3}]$"
 
+    elif summary_stat == 'CPP':
+        plt_title = 'Cluster gas pressure profile'
+        x_label = r"$r/R_{\mathrm{500c}}$"
+        y_label = r"$P / P_{\mathrm{500}}$"
+
+    elif summary_stat == 'CTP':
+        plt_title = 'Cluster gas temperature profile'
+        x_label = r"$r/R_{\mathrm{500c}}$"
+        y_label = r"$T / T_{\mathrm{500}}$"
+
+    elif summary_stat == 'CEP':
+        plt_title = 'Cluster gas entropy profile'
+        x_label = r"$r/R_{\mathrm{500c}}$"
+        y_label = r"$K / K_{\mathrm{500}}$"
+
+    elif summary_stat == 'CEEP':
+        plt_title = 'Cluster electron entropy profile'
+        x_label = r"$r/R_{\mathrm{500c}}$"
+        y_label = r"$K / K_{\mathrm{500}}$"
+
+    elif summary_stat == 'CMP':
+        plt_title = 'Cluster gas metallicity profile'
+        x_label = r"$r/R_{\mathrm{500c}}$"
+        y_label = r"$Z / Z_{\odot}$"
+
+    elif summary_stat == 'CYP':
+        plt_title = 'Cluster Compton-y profile'
+        x_label = r"$r/R_{\mathrm{500c}}$"
+        y_label = r"$Y_{\mathrm{SZ}}$"
+
     else:
         print('Not implemented')
-        
+
     return plt_title, x_label, y_label
 
 ######################################################
