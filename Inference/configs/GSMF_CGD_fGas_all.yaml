@@ -1,0 +1,32 @@
+# Trial: GSMF + CGD + fGas, all 7 parameters (subgrid + cosmo)
+trial_name: GSMF_CGD_fGas_all
+
+observables:
+  - GSMF
+  - CGD
+  - fGas
+
+param_mode: subgrid+cosmo
+fixed_params: {}
+bias_params: []
+flat_prior_indices: []
+
+mcmc:
+  nwalkers: 100
+  nburn: 200
+  nrun: 4000
+  parallel: true
+
+data:
+  DirIn: ../../data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC/
+  design_file: ../../data/FinalDesign.txt
+  num_sims: 110
+  exp_variance: 0.999
+  z_index: 0
+  model_dir: ../../models/
+
+obs_dirs:
+  gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
+  cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
+
+output_dir: ../results/
