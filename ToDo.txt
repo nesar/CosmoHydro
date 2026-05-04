@@ -12,5 +12,6 @@ MCMCs:
 2. z=0, z=0.5, z=1, z=2 GSMF constraints?
 3. With and without subgrid-variation, check cosmology constraints. 
 4. Using P(k), HMF is constraining? 
-5. See other cluster profile statistics? 
-3. See the impact of larger box? How?
+5. See other cluster profile target data? 
+6. See the impact of larger box? How?
+
