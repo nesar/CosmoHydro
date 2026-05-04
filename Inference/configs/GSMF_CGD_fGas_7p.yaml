@@ -1,16 +1,17 @@
-# Trial: GSMF only, all 7 parameters (5 subgrid + 2 cosmo)
+# Trial: GSMF + CGD + fGas, all 7 parameters (5 subgrid + 2 cosmo)
 # Matches gp_HACC_mcmc_universal.py settings
-trial_name: GSMF_7p
+trial_name: GSMF_CGD_fGas_7p
 
 observables:
   - GSMF
+  - CGD
+  - fGas
 
 param_mode: subgrid+cosmo
 fixed_params: {}
 bias_params: []
 
 # eps_kin (index 4) gets flat prior, all others Gaussian
-# (matches mcmc_hacc.py ln_prior with flat_indices=[4])
 flat_prior_indices: [4]
 
 mcmc:
