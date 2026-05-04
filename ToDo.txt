@@ -5,3 +5,12 @@
 (4) P(k), P(k)-ratio, HMF, ...
 
 (5) Do a linear interpolation in z
+
+MCMCs:
+
+1. All forward funcs (GSMF, GSMF + CGD, GSMF + fGas+ CGD) as paper-1 with all 5+2 params
+2. z=0, z=0.5, z=1, z=2 GSMF constraints?
+3. With and without subgrid-variation, check cosmology constraints. 
+4. Using P(k), HMF is constraining? 
+5. See other cluster profile statistics? 
+3. See the impact of larger box? How?
