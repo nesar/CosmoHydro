@@ -1,4 +1,4 @@
-__all__ = ['PARAM_NAME',
+__all__ = ['PARAM_NAME', 'PARAM_NAME_SG', 'PARAM_NAME_COSMO',
            'load_params', 'sepia_data_format', 'read_gsmf', 'read_cged', 'read_bhmsm', 'load_cged_obs',
            'load_cgd_obs', 'read_gal_ssfr', 'read_gasfr', 'read_csfr', 'read_hmf', 'read_cgd', 'read_pk', 'read_pk_new', 'plot_strings', 'mass_conds',
            'load_gsmf_obs', 'load_fgas_obs', 'load_fgas_other_sims', 'load_bhmsm_other_sims',
@@ -67,12 +67,17 @@ delta_cgd = load_delta_cgd(DirIn = DirIn_128_256, EPS_val = 2.4)
 # ]
 
 
-PARAM_NAME =  [r'$\kappa_\text{w}$', 
-               r'$e_\text{w}$', 
-               r'$M_\text{seed}/10^{' + str(int(np.log10(seed_mass_scale))) + '}$', 
-               r'$v_\text{kin}/10^{' + str(int(np.log10(vkin_scale))) + '}$', 
+PARAM_NAME_SG =  [r'$\kappa_\text{w}$',
+               r'$e_\text{w}$',
+               r'$M_\text{seed}/10^{' + str(int(np.log10(seed_mass_scale))) + '}$',
+               r'$v_\text{kin}/10^{' + str(int(np.log10(vkin_scale))) + '}$',
                r'$\epsilon_\text{kin}/10^{' + str(int(np.log10(eps_scale))) + '}$'
                ]
+
+PARAM_NAME_COSMO = [r'$\Omega_\text{m}$',
+                    r'$\sigma_8$']
+
+PARAM_NAME = PARAM_NAME_SG + PARAM_NAME_COSMO
 
 
 def load_params(p_fileIn:str, # Input file for parameters
