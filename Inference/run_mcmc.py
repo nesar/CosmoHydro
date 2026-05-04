@@ -88,6 +88,24 @@ MODEL_PREFIX = {
     'HMF':  'HMF',
     'Pk':   'Pk',
     'CSFR': 'CSFR',
+    'CPP':  'CPP',
+    'CTP':  'CTP',
+    'CEP':  'CEP',
+    'CEEP': 'CEEP',
+    'CMP':  'CMP',
+    'CYP':  'CYP',
+}
+
+# Multi-z snapshot start index per observable
+# (which snapshot index the trained models start at)
+# GSMF/HMF: all 11 snapshots (idx 0-10)
+# fGas: idx 4-10 (z <= 1.0)
+# Cluster profiles (CGD, CGED, CPP, CTP, CEP, CEEP, CMP, CYP): idx 6-10 (z <= 0.5)
+MULTIZ_START_IDX = {
+    'GSMF': 0, 'HMF': 0,
+    'fGas': 4,
+    'CGD': 6, 'CGED': 6, 'CPP': 6, 'CTP': 6,
+    'CEP': 6, 'CEEP': 6, 'CMP': 6, 'CYP': 6,
 }
 
 
@@ -448,8 +466,9 @@ def main():
     x_grids = []
     sepia_models = []
     data_list = []
-    redshifts = []     # per-observable target redshift (0.0 = use single model)
-    obs_names = []     # for case_labels
+    redshifts = []       # per-observable target redshift (0.0 = use single model)
+    obs_z_arrays = []    # per-observable z_all for emu_redshift (None if z=0)
+    obs_names = []       # for case_labels
 
     for entry in obs_entries:
         obs = entry['name']
@@ -460,31 +479,50 @@ def main():
         print(f"\nLoading {obs} (z={z_target})...")
 
         if z_target > 0 and z_all is not None:
-            # --- Multi-z path: load all snapshots, build model list ---
+            # --- Multi-z path: load models across snapshots ---
+            z_start = MULTIZ_START_IDX.get(obs, 0)
+            z_index_range = np.arange(z_start, len(snapshot_ids))
+            obs_z_all = z_all[z_start:]
+
             y_vals_all, y_ind = prepare_observable_multiz(obs, design_params, cfg, snapshot_ids)
             print(f"  y_vals_all shape: {y_vals_all.shape}, y_ind shape: {y_ind.shape}")
+            print(f"  z_index_range: {z_index_range} ({len(z_index_range)} snapshots)")
 
             model_subdir = os.path.join(model_dir, f'{MODEL_PREFIX[obs]}_multiz/')
-            z_index_range = np.arange(len(snapshot_ids))
             model_list, _ = load_model_multiple(
                 model_dir=model_subdir,
                 p_train_all=design_params,
-                y_vals_all=y_vals_all,
+                y_vals_all=y_vals_all[:, z_start:, :],
                 y_ind_all=y_ind,
                 z_index_range=z_index_range,
             )
-            sepia_models.append(model_list)  # list of models across snapshots
+            sepia_models.append(model_list)
             x_grids.append(y_ind)
+            # Store per-observable z_all for emu_redshift
+            obs_z_arrays.append(obs_z_all)
         else:
-            # --- Single-z path (z=0): use z_index model ---
+            # --- Single-z path (z=0) ---
             y_vals, y_ind = prepare_observable(obs, design_params, cfg)
             print(f"  y_vals shape: {y_vals.shape}, y_ind shape: {y_ind.shape}")
 
-            model_file = os.path.join(model_dir,
-                                      f'{MODEL_PREFIX[obs]}_multivariate_model_z_index{z_index}')
-            model = load_model(model_file, design_params, y_vals, y_ind, exp_variance)
+            # Check for multi-z directory first (z=0 is the last snapshot in it)
+            multiz_dir = os.path.join(model_dir, f'{MODEL_PREFIX[obs]}_multiz/')
+            last_snap_idx = len(snapshot_ids) - 1
+            multiz_z0_file = os.path.join(multiz_dir, f'multivariate_model_z_index{last_snap_idx}.pkl')
+
+            if os.path.exists(multiz_z0_file):
+                # Load from multi-z directory (z_index = last snapshot = z=0)
+                model = load_model(os.path.join(multiz_dir, f'multivariate_model_z_index{last_snap_idx}'),
+                                   design_params, y_vals, y_ind, exp_variance)
+            else:
+                # Fall back to standalone z_index0 model
+                model_file = os.path.join(model_dir,
+                                          f'{MODEL_PREFIX[obs]}_multivariate_model_z_index{z_index}')
+                model = load_model(model_file, design_params, y_vals, y_ind, exp_variance)
+
             sepia_models.append(model)
             x_grids.append(y_ind)
+            obs_z_arrays.append(None)
 
         # Load observational data
         obs_data = load_obs_data(obs, cfg)
@@ -507,7 +545,7 @@ def main():
                             case_label=entry['name'],
                             param_names=param_names,
                             redshift=redshifts[i],
-                            z_all=z_all)
+                            z_all=obs_z_arrays[i])
         print(f"  LL({entry['name']}, z={entry['redshift']}) = {ll:.4f}")
 
     if args.dry_run:
@@ -531,7 +569,7 @@ def main():
         x_grids=x_grids, sepia_models=sepia_models, data=data_list,
         fixed_params=fixed_params, with_underestimation_bias=with_bias,
         case_labels=case_labels, flat_indices=flat_indices,
-        param_names=param_names, redshifts=redshifts, z_all=z_all,
+        param_names=param_names, redshifts=redshifts, z_all_list=obs_z_arrays,
     )
 
     if use_pool:
