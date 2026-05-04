@@ -1,19 +1,22 @@
-# Trial: Cluster-only statistics (CGD + CGED), subgrid parameters only
-trial_name: CGD_CGED_cluster
+# Trial: GSMF + CGD, all 7 parameters (5 subgrid + 2 cosmo)
+# Matches gp_HACC_mcmc_universal.py settings
+trial_name: GSMF_CGD_7p
 
 observables:
+  - GSMF
   - CGD
-  - CGED
 
-param_mode: subgrid
+param_mode: subgrid+cosmo
 fixed_params: {}
 bias_params: []
-flat_prior_indices: []
+
+# eps_kin (index 4) gets flat prior, all others Gaussian
+flat_prior_indices: [4]
 
 mcmc:
   nwalkers: 100
-  nburn: 200
-  nrun: 4000
+  nburn: 100
+  nrun: 1000
   parallel: true
 
 data:
@@ -26,7 +29,7 @@ data:
   model_dir: ../models/
 
 obs_dirs:
+  gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
   cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
-  cged: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasElectronDensityProfile/data/
 
 output_dir: ../results/
