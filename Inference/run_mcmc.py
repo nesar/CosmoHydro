@@ -129,11 +129,24 @@ def load_config(config_path):
         return yaml.safe_load(f)
 
 
-def load_design(design_file):
-    """Load parameter design matrix from CSV, apply scaling."""
+def load_design(design_file, start_sim_idx=1, num_sims=None):
+    """Load parameter design matrix from CSV, apply scaling.
+
+    Parameters
+    ----------
+    start_sim_idx : int
+        First simulation index (1-based, matching RUN directory numbering).
+    num_sims : int or None
+        Number of simulations to use. If None, uses all from start_sim_idx.
+    """
     import pandas as pd
     df = pd.read_csv(design_file)
     params = df.values.astype(float)
+    # Slice to match the simulations we're using
+    # Row 0 of the CSV data corresponds to RUN001 (i.e., the design is 0-indexed after header)
+    start_row = start_sim_idx - 1
+    end_row = start_row + num_sims if num_sims else params.shape[0]
+    params = params[start_row:end_row]
     # Apply scaling
     for col, scale in SCALE_FACTORS.items():
         params[:, col] = params[:, col] / scale
@@ -145,18 +158,19 @@ def prepare_observable(obs_name, params, cfg):
     data_cfg = cfg['data']
     dir_in = os.path.join(os.path.dirname(__file__), data_cfg['DirIn'])
     num_sims = data_cfg['num_sims']
+    start_sim_idx = data_cfg.get('start_sim_idx', 1)
 
     reader = READER_MAP[obs_name]
 
     if obs_name == 'Pk':
-        k, pk_arr, pk_ratio = reader(dir_in, num_sims, params)
+        k, pk_arr, pk_ratio = reader(dir_in, num_sims, params, start_sim_idx=start_sim_idx)
         mlim1, mlim2 = mass_conds('Pk')
         cond = np.where((k > mlim1) & (k < mlim2))
         y_vals = pk_ratio[:, cond[0]]
         y_ind = k[cond]
         return y_vals, y_ind
 
-    x_all, y_all = reader(dir_in, num_sims, params)
+    x_all, y_all = reader(dir_in, num_sims, params, start_sim_idx=start_sim_idx)
 
     # For GSMF/fGas: x_all might be log or linear
     if obs_name == 'GSMF':
@@ -400,7 +414,9 @@ def main():
 
     # Load design matrix
     design_file = os.path.join(os.path.dirname(__file__), data_cfg['design_file'])
-    design_params = load_design(design_file)
+    start_sim_idx = data_cfg.get('start_sim_idx', 1)
+    num_sims = data_cfg['num_sims']
+    design_params = load_design(design_file, start_sim_idx=start_sim_idx, num_sims=num_sims)
     print(f"Design matrix: {design_params.shape[0]} simulations, {design_params.shape[1]} parameters")
 
     # Build parameter space
