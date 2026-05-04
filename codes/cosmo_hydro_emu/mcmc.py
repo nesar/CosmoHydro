@@ -115,21 +115,23 @@ def ln_like(theta,
             case_labels=None,
             param_names=None,
             redshifts=None,
-            z_all=None):
+            z_all_list=None):
     """Total log likelihood across all observables.
 
     Parameters
     ----------
     redshifts : list of float or None
         Per-observable target redshifts. Entry of None or 0 means z=0 model.
-    z_all : array or None
-        Snapshot redshifts for multi-z interpolation.
+    z_all_list : list of (array or None)
+        Per-observable snapshot redshifts for multi-z interpolation.
+        Entry of None means z=0 single-model observable.
     """
     log_likelihoods = []
     labels = case_labels.split('_')
 
     for i in range(len(sepia_models)):
         z_i = redshifts[i] if redshifts is not None else None
+        z_all_i = z_all_list[i] if z_all_list is not None else None
         ll = log_likelihood(theta,
                             x_grids[i],
                             sepia_models[i],
@@ -141,7 +143,7 @@ def ln_like(theta,
                             case_label=labels[i],
                             param_names=param_names,
                             redshift=z_i,
-                            z_all=z_all)
+                            z_all=z_all_i)
         log_likelihoods.append(ll)
 
     return sum(log_likelihoods)
@@ -187,7 +189,7 @@ def ln_prob(theta,
             flat_indices=None,
             param_names=None,
             redshifts=None,
-            z_all=None):
+            z_all_list=None):
     """Log probability = log prior + log likelihood."""
     lp = ln_prior(theta, params_list, flat_indices=flat_indices)
     if not np.isfinite(lp):
@@ -198,7 +200,7 @@ def ln_prob(theta,
                         case_labels=case_labels,
                         param_names=param_names,
                         redshifts=redshifts,
-                        z_all=z_all)
+                        z_all_list=z_all_list)
 
 
 def chain_init(params_list, ndim, nwalkers):
@@ -217,14 +219,14 @@ def chain_init(params_list, ndim, nwalkers):
 def define_sampler(ndim, nwalkers, params_list, x_grids, sepia_models, data,
                    fixed_params=None, with_underestimation_bias=False,
                    case_labels=None, flat_indices=None, param_names=None,
-                   redshifts=None, z_all=None,
+                   redshifts=None, z_all_list=None,
                    pool=None):
     """Define emcee EnsembleSampler with optional parallel pool."""
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, ln_prob,
         args=(params_list, x_grids, sepia_models, data, fixed_params,
               with_underestimation_bias, case_labels, flat_indices, param_names,
-              redshifts, z_all),
+              redshifts, z_all_list),
         pool=pool)
     return sampler
 
