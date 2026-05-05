@@ -98,11 +98,14 @@ def mcmc_results_percentile(samples):
 # Data loading helpers (from plot_mcmc_final_dec16.py)
 # ---------------------------------------------------------------------------
 
-def load_design(design_file):
+def load_design(design_file, start_sim_idx=1, num_sims=None):
     """Load parameter design matrix from CSV, apply scaling."""
     import pandas as pd
     df = pd.read_csv(design_file)
     params = df.values.astype(float)
+    start_row = start_sim_idx - 1
+    end_row = start_row + num_sims if num_sims else params.shape[0]
+    params = params[start_row:end_row]
     params[:, 2] = params[:, 2] / seed_mass_scale
     params[:, 3] = params[:, 3] / vkin_scale
     params[:, 4] = params[:, 4] / eps_scale
@@ -152,10 +155,11 @@ def load_all_data(cfg):
     design_file = os.path.join(os.path.dirname(__file__), data_cfg['design_file'])
     model_dir = os.path.join(os.path.dirname(__file__), data_cfg['model_dir'])
     num_sims = data_cfg['num_sims']
+    start_sim_idx = data_cfg.get('start_sim_idx', 1)
     exp_variance = data_cfg['exp_variance']
     z_index = data_cfg['z_index']
 
-    params32 = load_design(design_file)
+    params32 = load_design(design_file, start_sim_idx=start_sim_idx, num_sims=num_sims)
 
     # Load simulation data
     stellar_mass, gsmf_arr = read_gsmf(dir_in, num_sims, params32)
@@ -465,8 +469,11 @@ def main():
 
     # Determine fixed_params from config
     from run_mcmc import build_param_space, SHORT_KEY_TO_LABEL
+    _data_cfg_ref = cfg_ref['data']
     _, fixed_params, param_names_used, _ = build_param_space(cfg_ref,
-        load_design(os.path.join(os.path.dirname(__file__), cfg_ref['data']['design_file'])))
+        load_design(os.path.join(os.path.dirname(__file__), _data_cfg_ref['design_file']),
+                    start_sim_idx=_data_cfg_ref.get('start_sim_idx', 1),
+                    num_sims=_data_cfg_ref['num_sims']))
 
     # Determine observables to plot (use union of all configs, limited to 3 with available models)
     obs_list = cfg_ref.get('observables', ['GSMF', 'fGas', 'CGD'])
