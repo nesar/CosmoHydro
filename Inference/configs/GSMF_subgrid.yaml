@@ -24,8 +24,8 @@ flat_prior_indices: []
 
 # --- MCMC settings ---
 mcmc:
-  nwalkers: 100
-  nburn: 200
+  nwalkers: 400
+  nburn: 100
   nrun: 4000
   parallel: true     # use multiprocessing Pool
 
