@@ -1,35 +1,23 @@
-# Trial: GSMF + CGD with bias parameters, subgrid + cosmo
-trial_name: GSMF_CGD_bias
+# Trial: GSMF + CGD + fGas, all 7 parameters (5 subgrid + 2 cosmo)
+# Matches gp_HACC_mcmc_universal.py settings
+trial_name: GSMF_CGD_fGas_7p
 
 observables:
   - GSMF
   - CGD
+  - fGas
 
 param_mode: subgrid+cosmo
 fixed_params: {}
+bias_params: []
 
-# Include observational bias parameters
-bias_params:
-  - name: log_bstar
-    initial: 0.0
-    min: -0.14
-    max: 0.14
-  - name: bCV
-    initial: 1.0
-    min: 0.94
-    max: 1.06
-  - name: bHSE
-    initial: 0.74
-    min: 0.64
-    max: 0.84
-
-# Flat priors on eps_kin (index 4) and all bias params (indices 7,8,9)
-flat_prior_indices: [4, 7, 8, 9]
+# eps_kin (index 4) gets flat prior, all others Gaussian
+flat_prior_indices: [4]
 
 mcmc:
   nwalkers: 100
-  nburn: 200
-  nrun: 4000
+  nburn: 100
+  nrun: 1000
   parallel: true
 
 data:
@@ -45,4 +33,4 @@ obs_dirs:
   gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
   cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
 
-output_dir: results/
+output_dir: ../results/

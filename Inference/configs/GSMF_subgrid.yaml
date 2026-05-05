@@ -47,4 +47,4 @@ obs_dirs:
   cged: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasElectronDensityProfile/data/
 
 # --- Output ---
-output_dir: ../results/
+output_dir: results/

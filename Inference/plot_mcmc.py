@@ -488,7 +488,8 @@ def main():
         save_path = args.output
     else:
         names = '_vs_'.join(all_labels)
-        save_path = os.path.join('results', f'plot_{names}.png')
+        save_path = os.path.join(os.path.dirname(__file__), 'results',
+                                 f'plot_{names}.png')
 
     print(f"Creating combined plot...")
     combined_plot(
