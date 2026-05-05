@@ -10,6 +10,9 @@ codes/model/**/*.pkl
 plots/*.png
 plots/*.pdf
 
+# Inference results (large MCMC chains)
+Inference/results/*.npy
+
 # Python
 __pycache__/
 *.pyc
