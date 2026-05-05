@@ -14,7 +14,7 @@ bias_params: []
 flat_prior_indices: [4]
 
 mcmc:
-  nwalkers: 100
+  nwalkers: 500
   nburn: 100
   nrun: 1000
   parallel: true
