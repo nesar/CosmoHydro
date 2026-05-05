@@ -36,4 +36,4 @@ obs_dirs:
   gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
   cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
 
-output_dir: ../results/
+output_dir: results/

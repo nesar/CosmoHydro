@@ -4,7 +4,8 @@
 (3) GSMF coverage, fGas, ... parameter dependence plots
 (4) P(k), P(k)-ratio, HMF, ...
 
-(5) Do a linear interpolation in z
+(5) Do a linear interpolation in z -- confirm this is done properly. 
+
 
 MCMCs:
 

@@ -1,0 +1,36 @@
+# Trial: GSMF + CGD + fGas, all 7 parameters (5 subgrid + 2 cosmo)
+# Matches gp_HACC_mcmc_universal.py settings
+trial_name: GSMF_CGD_fGas_7p
+
+observables:
+  - GSMF
+  - CGD
+  - fGas
+
+param_mode: subgrid+cosmo
+fixed_params: {}
+bias_params: []
+
+# eps_kin (index 4) gets flat prior, all others Gaussian
+flat_prior_indices: [4]
+
+mcmc:
+  nwalkers: 100
+  nburn: 100
+  nrun: 1000
+  parallel: true
+
+data:
+  DirIn: ../data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC/
+  design_file: ../data/FinalDesign.txt
+  num_sims: 39
+  start_sim_idx: 1
+  exp_variance: 0.95
+  z_index: 0
+  model_dir: ../models/
+
+obs_dirs:
+  gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
+  cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
+
+output_dir: ../results/
