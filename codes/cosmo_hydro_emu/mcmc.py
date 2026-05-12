@@ -149,9 +149,11 @@ def ln_like(theta,
     return sum(log_likelihoods)
 
 
-def ln_prior(theta, params_list, flat_indices=None):
+def ln_prior(theta, params_list, flat_indices=None, gaussian_priors=None):
     """
-    Mixed prior: Gaussian for most params, flat for specified indices.
+    Mixed prior: Gaussian (default = wide, centered at design midpoint),
+    flat for indices in ``flat_indices``, or a custom truncated Gaussian
+    with explicit (mu, sigma) for indices in ``gaussian_priors``.
 
     Parameters
     ----------
@@ -160,10 +162,15 @@ def ln_prior(theta, params_list, flat_indices=None):
     params_list : list
         Each entry: [name, initial_value, lower_bound, upper_bound].
     flat_indices : list or None
-        Indices that get flat priors. If None, all get Gaussian.
+        Indices that get a flat (uniform) prior.
+    gaussian_priors : dict or None
+        ``{index: (mu, sigma)}`` for parameters with a custom Gaussian prior
+        (e.g. Planck cosmology). Truncated by the [lower, upper] design range.
     """
     if flat_indices is None:
         flat_indices = []
+    if gaussian_priors is None:
+        gaussian_priors = {}
 
     pdf_sum = 0
     for i, (p, param) in enumerate(zip(theta, params_list)):
@@ -171,8 +178,11 @@ def ln_prior(theta, params_list, flat_indices=None):
             return -np.inf
         if i in flat_indices:
             continue
-        p_mu = 0.5 * (param[3] - param[2]) + param[2]
-        p_sigma = 1 * (param[3] - p_mu)
+        if i in gaussian_priors:
+            p_mu, p_sigma = gaussian_priors[i]
+        else:
+            p_mu = 0.5 * (param[3] - param[2]) + param[2]
+            p_sigma = 1 * (param[3] - p_mu)
         pdf_sum += (np.log(1.0 / (np.sqrt(2 * np.pi) * p_sigma))
                     - 0.5 * (p - p_mu) ** 2 / p_sigma ** 2)
     return pdf_sum
@@ -189,9 +199,11 @@ def ln_prob(theta,
             flat_indices=None,
             param_names=None,
             redshifts=None,
-            z_all_list=None):
+            z_all_list=None,
+            gaussian_priors=None):
     """Log probability = log prior + log likelihood."""
-    lp = ln_prior(theta, params_list, flat_indices=flat_indices)
+    lp = ln_prior(theta, params_list, flat_indices=flat_indices,
+                  gaussian_priors=gaussian_priors)
     if not np.isfinite(lp):
         return -np.inf
     return lp + ln_like(theta, x_grids, sepia_models, data,
@@ -220,13 +232,14 @@ def define_sampler(ndim, nwalkers, params_list, x_grids, sepia_models, data,
                    fixed_params=None, with_underestimation_bias=False,
                    case_labels=None, flat_indices=None, param_names=None,
                    redshifts=None, z_all_list=None,
+                   gaussian_priors=None,
                    pool=None):
     """Define emcee EnsembleSampler with optional parallel pool."""
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, ln_prob,
         args=(params_list, x_grids, sepia_models, data, fixed_params,
               with_underestimation_bias, case_labels, flat_indices, param_names,
-              redshifts, z_all_list),
+              redshifts, z_all_list, gaussian_priors),
         pool=pool)
     return sampler
 
