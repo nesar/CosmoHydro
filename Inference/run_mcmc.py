@@ -441,6 +441,24 @@ def main():
     params_list, fixed_params, param_names, with_bias = build_param_space(cfg, design_params)
     flat_indices = cfg.get('flat_prior_indices', [])
 
+    # Build per-parameter Gaussian priors (e.g. Planck on cosmology).
+    # Config form (preferred, by short key):
+    #   gaussian_priors:
+    #     omega_m: {mu: 0.143, sigma: 0.001}
+    #     sigma_8: {mu: 0.811, sigma: 0.006}
+    # Maps short keys -> indices into the *free* params_list.
+    gaussian_priors = {}
+    free_labels = [p[0] for p in params_list]
+    for short_key, spec in (cfg.get('gaussian_priors') or {}).items():
+        label = SHORT_KEY_TO_LABEL.get(short_key, short_key)
+        if label not in free_labels:
+            print(f"  [gaussian_priors] '{short_key}' is fixed/absent — skipping")
+            continue
+        idx = free_labels.index(label)
+        gaussian_priors[idx] = (float(spec['mu']), float(spec['sigma']))
+        print(f"  [gaussian_priors] {short_key} (idx {idx}): "
+              f"N(mu={spec['mu']}, sigma={spec['sigma']}) truncated to design range")
+
     print(f"Free parameters ({len(params_list)}):")
     for p in params_list:
         print(f"  {p[0]:30s}  init={p[1]:.4f}  range=[{p[2]:.4f}, {p[3]:.4f}]")
@@ -535,7 +553,7 @@ def main():
     # Test likelihood at initial point
     theta0 = np.array([p[1] for p in params_list])
     print(f"\nTest theta: {theta0}")
-    print(f"ln_prior = {ln_prior(theta0, params_list, flat_indices=flat_indices):.4f}")
+    print(f"ln_prior = {ln_prior(theta0, params_list, flat_indices=flat_indices, gaussian_priors=gaussian_priors):.4f}")
 
     for i, entry in enumerate(obs_entries):
         ll = log_likelihood(theta0, x_grids[i], sepia_models[i],
@@ -570,6 +588,7 @@ def main():
         fixed_params=fixed_params, with_underestimation_bias=with_bias,
         case_labels=case_labels, flat_indices=flat_indices,
         param_names=param_names, redshifts=redshifts, z_all_list=obs_z_arrays,
+        gaussian_priors=gaussian_priors,
     )
 
     if use_pool:
