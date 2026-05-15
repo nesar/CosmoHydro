@@ -127,7 +127,7 @@ def load_obs_data_for_plot(obs_dirs):
         mlim1, mlim2 = mass_conds('GSMF')
         x_raw, y_raw, yerr_raw = load_gsmf_obs(obs_dirs['gsmf'])
         m = (x_raw > mlim1) & (x_raw < mlim2)
-        obs_data['gsmf'] = {'x': x_raw[m], 'y': 10**y_raw[m], 'yerr': yerr_raw[:, m]}
+        obs_data['gsmf'] = {'x': x_raw[m], 'y': 10**y_raw[m], 'yerr': yerr_raw[0, m]}
 
     try:
         mlim1, mlim2 = mass_conds('fGas')
