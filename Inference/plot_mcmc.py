@@ -277,21 +277,23 @@ def plot_mcmc_bestfit(p_mcmc_list, chains_labels, fig, axes,
         for i, obs in enumerate(obs_list):
             key = obs_key_map.get(obs)
             if key and key in models:
-                model_grid, model_var_grid = emulate(models[key], theta_params)
+                model_grid, model_std_grid = emulate(models[key], theta_params)
+                # 90% Gaussian band from analytical std (replaces old 5/95 quantile)
+                lo = model_grid - 1.6449 * model_std_grid
+                hi = model_grid + 1.6449 * model_std_grid
 
                 if obs == 'GSMF':
                     axes[i].plot(datasets[key]['y_ind'], np.log10(model_grid),
                                 label=label, lw=3, linestyle=linestyle, color=color)
                     axes[i].fill_between(datasets[key]['y_ind'],
-                                         np.log10(model_var_grid[:, 0, 0]),
-                                         np.log10(model_var_grid[:, 0, 1]),
+                                         np.log10(np.clip(lo[:, 0], 1e-300, None)),
+                                         np.log10(np.clip(hi[:, 0], 1e-300, None)),
                                          alpha=0.2, color=color)
                 else:
                     axes[i].plot(datasets[key]['y_ind'], model_grid,
                                 label=label, lw=3, linestyle=linestyle, color=color)
                     axes[i].fill_between(datasets[key]['y_ind'],
-                                         model_var_grid[:, 0, 0],
-                                         model_var_grid[:, 0, 1],
+                                         lo[:, 0], hi[:, 0],
                                          alpha=0.2, color=color)
 
     # Plot observational data

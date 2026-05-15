@@ -417,32 +417,43 @@ def validation_plot(x_all,
     all_rel_errors_mean = []
     all_rel_errors_quant = []
 
+    # Accept either (p, n, 2) quantile band (legacy emulate_ensemble) or
+    # (p, n) std (new emulate). For std, build a 90% Gaussian band.
+    pq = np.asarray(pred_quant)
+    if pq.ndim == 2:
+        band_lo = pred_mean - 1.6449 * pq
+        band_hi = pred_mean + 1.6449 * pq
+    else:
+        band_lo = pq[..., 0]
+        band_hi = pq[..., 1]
+
     for one_index in range(pred_mean.shape[1]):
 
         a[0].plot(x_all, target_vals[one_index], c=colors[one_index], ls=styles[0])
         a[0].plot(x_all, pred_mean[:, one_index], c=colors[one_index], ls=styles[1])
-        a[0].fill_between(x_all, pred_quant[:, one_index, 0], pred_quant[:, one_index, 1], color=colors[one_index], alpha=0.2)
+        a[0].fill_between(x_all, band_lo[:, one_index], band_hi[:, one_index],
+                          color=colors[one_index], alpha=0.2)
 
         if log_transformed:
             # data is log(y), so delta = log(pred) - log(target)
             delta = pred_mean[:, one_index] - target_vals[one_index]
-            delta_quant_low = pred_quant[:, one_index, 0] - target_vals[one_index]
-            delta_quant_high = pred_quant[:, one_index, 1] - target_vals[one_index]
+            delta_quant_low = band_lo[:, one_index] - target_vals[one_index]
+            delta_quant_high = band_hi[:, one_index] - target_vals[one_index]
             # convert to relative error: 10^delta - 1
             rel_error_mean = np.abs(10**delta - 1)
             rel_error_quant = np.maximum(np.abs(10**delta_quant_low - 1), np.abs(10**delta_quant_high - 1))
         else:
             # Mask out zeros to avoid division by zero
             valid_mask = target_vals[one_index] != 0
-            
+
             delta = np.full_like(pred_mean[:, one_index], np.nan)
             delta_quant_low = np.full_like(pred_mean[:, one_index], np.nan)
             delta_quant_high = np.full_like(pred_mean[:, one_index], np.nan)
-            
+
             delta[valid_mask] = (pred_mean[valid_mask, one_index] / target_vals[one_index][valid_mask]) - 1
-            delta_quant_low[valid_mask] = (pred_quant[valid_mask, one_index, 0] / target_vals[one_index][valid_mask]) - 1
-            delta_quant_high[valid_mask] = (pred_quant[valid_mask, one_index, 1] / target_vals[one_index][valid_mask]) - 1
-            
+            delta_quant_low[valid_mask] = (band_lo[valid_mask, one_index] / target_vals[one_index][valid_mask]) - 1
+            delta_quant_high[valid_mask] = (band_hi[valid_mask, one_index] / target_vals[one_index][valid_mask]) - 1
+
             rel_error_mean = np.abs(delta)
             rel_error_quant = np.maximum(np.abs(delta_quant_low), np.abs(delta_quant_high))
 

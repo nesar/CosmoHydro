@@ -1,4 +1,5 @@
-__all__ = ['emulate', 'load_model_multiple', 'emu_redshift', 'blockPrint', 'enablePrint']
+__all__ = ['emulate', 'emulate_ensemble', 'load_model_multiple', 'emu_redshift',
+           'blockPrint', 'enablePrint']
 
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
@@ -19,26 +20,75 @@ def enablePrint():
     sys.stdout = sys.__stdout__
 
 
-def emulate(sepia_model:SepiaModel=None, # Input data in SEPIA format
-        input_params:np.array=None, #Input parameter array
-       ) -> tuple: # 2 np.array of mean and (0.05,0.95) quantile in prediction
+def emulate_ensemble(sepia_model: SepiaModel = None,
+                     input_params: np.array = None,
+                     ) -> tuple:  # (mean, 5/95 quantile band) from posterior samples
+    """Posterior-sample-based predictor (legacy).
 
+    Returns (pred_mean, pred_err) where pred_err is the [0.05, 0.95] quantile
+    band with shape (p, n_inputs, 2). Uses 100 posterior samples of the
+    hyperparameters.
+    """
     if len(input_params.shape) == 1:
         ip = np.expand_dims(input_params, axis=0)
-
     else:
         ip = input_params
 
-    pred_samples= sepia_model.get_samples(numsamples=100)
-
+    pred_samples = sepia_model.get_samples(numsamples=100)
     pred = SepiaEmulatorPrediction(t_pred=ip, samples=pred_samples, model=sepia_model)
-
     pred_samps = pred.get_y()
 
     pred_mean = np.mean(pred_samps, axis=0).T
     pred_err = np.quantile(pred_samps, [0.05, 0.95], axis=0).T
 
     return pred_mean, pred_err
+
+
+def emulate(sepia_model: SepiaModel = None,
+            input_params: np.array = None,
+            sepia_data: SepiaData = None,
+            ) -> tuple:  # (mean, std), both shape (p, n_inputs)
+    """Analytical GP predictor: returns mean and std on the original y-scale.
+
+    Uses the latent GP posterior (mu, Sigma) and projects through the K basis:
+        y_mu  = K^T mu
+        y_std = sqrt(diag(K^T Sigma K))
+    then undoes the (orig_y_mean, orig_y_sd) standardization. If sepia_data is
+    not supplied it is taken from sepia_model.data so this is a drop-in
+    replacement signature-wise versus the legacy emulate_ensemble.
+    """
+    if input_params.ndim == 1:
+        input_params = np.expand_dims(input_params, 0)
+
+    if sepia_data is None:
+        sepia_data = sepia_model.data
+
+    K = sepia_data.sim_data.K
+    y_sd = sepia_data.sim_data.orig_y_sd
+    y_mean = sepia_data.sim_data.orig_y_mean
+
+    pred_samples = sepia_model.get_samples(numsamples=1)
+
+    K_T = K.T  # sepia stores K as (pu, p); y = K^T x in latent->output
+
+    means, stds = [], []
+    for param in input_params:
+        pred = SepiaEmulatorPrediction(t_pred=param[None, :], samples=pred_samples,
+                                       model=sepia_model, storeMuSigma=True)
+        mu = pred.mu[0]
+        Sigma = pred.sigma[0]
+
+        y_mu = K_T @ mu
+        y_cov = K_T @ Sigma @ K
+        y_std = np.sqrt(np.clip(np.diag(y_cov), 0, None))
+
+        y_mu = y_sd * y_mu + y_mean
+        y_std = y_sd * y_std
+
+        means.append(y_mu)
+        stds.append(y_std)
+
+    return np.stack(means, axis=1), np.stack(stds, axis=1)
 
 
 def load_model_multiple(model_dir:str=None, # Pickle directory path
@@ -71,19 +121,22 @@ def load_model_multiple(model_dir:str=None, # Pickle directory path
     return model_list, data_list
 
 
-def emu_redshift(input_params_and_redshift:np.array=None, # Input parameters (along with redshift)
-                 sepia_model_list:list=None,
-                 sepia_data_list:list=None,
-                 z_all:np.array=None): # All the trained models
+def emu_redshift(input_params_and_redshift: np.array = None,
+                 sepia_model_list: list = None,
+                 sepia_data_list: list = None,
+                 z_all: np.array = None):
+    """Linearly interpolate the emulator across z snapshots.
 
+    Returns (mean, std) on the original y-scale (matches new emulate()).
+    sepia_data_list is optional; when None, sepia_data is taken from each
+    model's .data attribute.
+    """
     z = input_params_and_redshift[:, -1]
     input_params = input_params_and_redshift[:, :-1]
 
-    # Linear interpolation between z1 < z < z2
     snap_idx_nearest = (np.abs(z_all - z)).argmin()
-    if (z > z_all[snap_idx_nearest]):
+    if z > z_all[snap_idx_nearest]:
         snap_ID_z1 = snap_idx_nearest - 1
-
     else:
         snap_ID_z1 = snap_idx_nearest
     snap_ID_z2 = snap_ID_z1 + 1
@@ -91,16 +144,15 @@ def emu_redshift(input_params_and_redshift:np.array=None, # Input parameters (al
     z1 = z_all[snap_ID_z1]
     z2 = z_all[snap_ID_z2]
 
-    sepia_model_z1 = sepia_model_list[snap_ID_z1]
-    Bk_z1, Bk_z1_err = emulate(sepia_model_z1, input_params)
+    sd1 = sepia_data_list[snap_ID_z1] if sepia_data_list is not None else None
+    sd2 = sepia_data_list[snap_ID_z2] if sepia_data_list is not None else None
 
-    sepia_model_z2 = sepia_model_list[snap_ID_z2]
-    Bk_z2, Bk_z2_err = emulate(sepia_model_z2, input_params)
+    Bk_z1, Bk_z1_err = emulate(sepia_model_list[snap_ID_z1], input_params,
+                               sepia_data=sd1)
+    Bk_z2, Bk_z2_err = emulate(sepia_model_list[snap_ID_z2], input_params,
+                               sepia_data=sd2)
 
-    Bk_interp = np.zeros_like(Bk_z1)
-    Bk_interp = Bk_z2 + (Bk_z1 - Bk_z2)*(z - z2)/(z1 - z2)
-
-    Bk_interp_err = np.zeros_like(Bk_z1_err)
-    Bk_interp_err = Bk_z2_err + (Bk_z1_err - Bk_z2_err)*(z - z2)/(z1 - z2)
+    Bk_interp = Bk_z2 + (Bk_z1 - Bk_z2) * (z - z2) / (z1 - z2)
+    Bk_interp_err = Bk_z2_err + (Bk_z1_err - Bk_z2_err) * (z - z2) / (z1 - z2)
 
     return Bk_interp, Bk_interp_err
