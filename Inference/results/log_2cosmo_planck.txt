@@ -32,3 +32,17 @@ ln_prior = -6.6197
   LL(fGas, z=0.0) = -207.2174
 
 MCMC: ndim=2, nwalkers=400, nburn=100, nrun=4000
+time (minutes): 18.180957969029745
+Burn-in phase
+time (minutes): 720.439022509257
+Sampling phase
+
+=== Results saved ===
+  Samples:     /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/samples_GSMF_CGD_fGas_2cosmo_planck.npy
+  Params list: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/params_list_GSMF_CGD_fGas_2cosmo_planck.npy
+  Config copy: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/config_GSMF_CGD_fGas_2cosmo_planck.yaml
+mcmc results: 0.1375730933332671 0.8938360387636758
+
+MCMC median results:
+  $\Omega_\text{m}$               = 0.1376
+  $\sigma_8$                      = 0.8938
