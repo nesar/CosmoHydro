@@ -300,7 +300,9 @@ def load_obs_data(obs_name, cfg):
         mlim1, mlim2 = mass_conds('GSMF')
         x_raw, y_raw, yerr_raw = load_gsmf_obs(gsmf_dir)
         m = (x_raw > mlim1) & (x_raw < mlim2)
-        return {'x': x_raw[m], 'y': 10**y_raw[m], 'yerr': yerr_raw[:, m]}
+        # yerr_raw is (2, N) for [lower, upper] asymmetric errors; the old
+        # mcmc_hacc.py pipeline used the lower-error magnitude only.
+        return {'x': x_raw[m], 'y': 10**y_raw[m], 'yerr': yerr_raw[0, m]}
 
     elif obs_name == 'fGas':
         mlim1, mlim2 = mass_conds('fGas')
