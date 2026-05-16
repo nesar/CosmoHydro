@@ -96,7 +96,7 @@ def load_model_multiple(model_dir:str=None, # Pickle directory path
                         y_vals_all:np.array=None, # Target y-values array
                         y_ind_all:np.array=None, # x-values
                         z_index_range:np.array=None, # Snapshot indices for training
-                        exp_variance:float=0.95, # Must match value used at training
+                        exp_variance:float=0.999, # Must match value used at training
                    ) -> None:
 
     blockPrint()
