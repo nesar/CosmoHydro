@@ -35,7 +35,7 @@ from cosmo_hydro_emu.load_hacc import (
     read_gsmf, read_gasfr, read_cgd, read_cged, read_hmf,
     load_gsmf_obs, load_fgas_obs, load_cgd_obs,
 )
-from cosmo_hydro_emu.emu import emulate
+from cosmo_hydro_emu.emu import emulate, load_model_autosync
 from cosmo_hydro_emu.gp import gp_load
 
 from scipy.stats import gaussian_kde
@@ -103,7 +103,9 @@ def load_design(design_file, start_sim_idx=1, num_sims=None):
     import pandas as pd
     df = pd.read_csv(design_file)
     params = df.values.astype(float)
-    start_row = start_sim_idx - 1
+    # Design CSV row K corresponds to RUN_K (both 0-indexed); row 0 = RUN000.
+    # RUN{start_sim_idx} therefore lives at design row start_sim_idx.
+    start_row = start_sim_idx
     end_row = start_row + num_sims if num_sims else params.shape[0]
     params = params[start_row:end_row]
     params[:, 2] = params[:, 2] / seed_mass_scale

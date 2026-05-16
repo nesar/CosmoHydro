@@ -1,10 +1,11 @@
 __all__ = ['emulate', 'emulate_ensemble', 'load_model_multiple', 'emu_redshift',
-           'blockPrint', 'enablePrint']
+           'blockPrint', 'enablePrint', 'pu_from_saved_model', 'load_model_autosync']
 
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
 from sepia.SepiaPredict import SepiaEmulatorPrediction
 import numpy as np
+import pickle
 import sys
 import os
 from cosmo_hydro_emu.pca import do_pca
@@ -18,6 +19,42 @@ def blockPrint():
 
 def enablePrint():
     sys.stdout = sys.__stdout__
+
+
+def pu_from_saved_model(model_filename):
+    """Inspect a saved SEPIA model pickle and return the number of PCA basis
+    components (`pu`) used at training. Returns None if the file is missing or
+    doesn't expose betaU samples (in which case the caller should fall back to
+    an explicit exp_variance).
+    """
+    path = model_filename if model_filename.endswith('.pkl') else model_filename + '.pkl'
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, 'rb') as fh:
+            blob = pickle.load(fh)
+    except Exception:
+        return None
+    samples = blob.get('samples') if isinstance(blob, dict) else None
+    betaU = samples.get('betaU') if isinstance(samples, dict) else None
+    if betaU is None or getattr(betaU, 'ndim', 0) < 3:
+        return None
+    return int(betaU.shape[2])
+
+
+def load_model_autosync(model_filename, sepia_data, exp_variance=0.95):
+    """Load a trained SEPIA model with the basis size auto-synced to the saved
+    pickle. Uses the pickle's `samples['betaU'].shape[2]` as the integer `n_pc`
+    so the reconstructed K basis always matches what the MCMC samples expect.
+    Falls back to `exp_variance` (float) if the basis count can't be detected.
+    """
+    pu = pu_from_saved_model(model_filename)
+    n_pc = pu if pu is not None else exp_variance
+    blockPrint()
+    sepia_model = do_pca(sepia_data, exp_variance=n_pc)
+    sepia_model = gp_load(sepia_model, model_filename)
+    enablePrint()
+    return sepia_model
 
 
 def emulate_ensemble(sepia_model: SepiaModel = None,
@@ -96,10 +133,8 @@ def load_model_multiple(model_dir:str=None, # Pickle directory path
                         y_vals_all:np.array=None, # Target y-values array
                         y_ind_all:np.array=None, # x-values
                         z_index_range:np.array=None, # Snapshot indices for training
-                        exp_variance:float=0.999, # Must match value used at training
+                        exp_variance:float=0.95, # Fallback if pickle has no betaU info
                    ) -> None:
-
-    blockPrint()
 
     model_list = []
     data_list = []
@@ -108,14 +143,11 @@ def load_model_multiple(model_dir:str=None, # Pickle directory path
 
         sepia_data = sepia_data_format(p_train_all, y_vals_all[:, z_index, :], y_ind_all)
 
-        sepia_model_pca_i = do_pca(sepia_data, exp_variance=exp_variance)
-
         model_filename = model_dir + 'multivariate_model_z_index' + str(z_index)
-        sepia_model_z = gp_load(sepia_model_pca_i, model_filename)
+        sepia_model_z = load_model_autosync(model_filename, sepia_data,
+                                            exp_variance=exp_variance)
         model_list.append(sepia_model_z)
         data_list.append(sepia_data)
-
-    enablePrint()
 
     print('Number of models loaded: ' + str(len(model_list)) + ' from: ' + model_dir)
 
