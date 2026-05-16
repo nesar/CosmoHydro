@@ -48,12 +48,15 @@ def load_model_autosync(model_filename, sepia_data, exp_variance=0.95):
     so the reconstructed K basis always matches what the MCMC samples expect.
     Falls back to `exp_variance` (float) if the basis count can't be detected.
     """
+    import contextlib, io
     pu = pu_from_saved_model(model_filename)
     n_pc = pu if pu is not None else exp_variance
-    blockPrint()
-    sepia_model = do_pca(sepia_data, exp_variance=n_pc)
-    sepia_model = gp_load(sepia_model, model_filename)
-    enablePrint()
+    # Suppress SEPIA chatter without touching sys.stdout globally, so callers
+    # that already redirected stdout (e.g. via their own context manager) are
+    # not affected.
+    with contextlib.redirect_stdout(io.StringIO()):
+        sepia_model = do_pca(sepia_data, exp_variance=n_pc)
+        sepia_model = gp_load(sepia_model, model_filename)
     return sepia_model
 
 

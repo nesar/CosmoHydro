@@ -115,10 +115,14 @@ def load_design(design_file, start_sim_idx=1, num_sims=None):
 
 
 def load_model(model_filename, p_all, y_vals, y_ind, exp_variance):
+    """Load a trained GP model with basis size auto-synced to the pickle.
+
+    `exp_variance` is only used as a fallback if the saved file doesn't
+    expose the trained basis count.
+    """
     sepia_data = sepia_data_format(p_all, y_vals, y_ind)
-    sepia_model_i = do_pca(sepia_data, exp_variance=exp_variance)
-    sepia_model = gp_load(sepia_model_i, model_filename)
-    return sepia_model
+    return load_model_autosync(model_filename, sepia_data,
+                               exp_variance=exp_variance)
 
 
 def load_obs_data_for_plot(obs_dirs):
