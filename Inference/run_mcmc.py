@@ -160,9 +160,10 @@ def load_design(design_file, start_sim_idx=1, num_sims=None):
     import pandas as pd
     df = pd.read_csv(design_file)
     params = df.values.astype(float)
-    # Slice to match the simulations we're using
-    # Row 0 of the CSV data corresponds to RUN001 (i.e., the design is 0-indexed after header)
-    start_row = start_sim_idx - 1
+    # Slice to match the simulations we're using.
+    # Design CSV row K corresponds to RUN_K (both 0-indexed); row 0 = RUN000.
+    # So RUN{start_sim_idx} lives at design row start_sim_idx, not start_sim_idx-1.
+    start_row = start_sim_idx
     end_row = start_row + num_sims if num_sims else params.shape[0]
     params = params[start_row:end_row]
     # Apply scaling
