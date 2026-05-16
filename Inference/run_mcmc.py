@@ -26,7 +26,7 @@ from cosmo_hydro_emu.load_hacc import (
     read_cgd_all_snaps, read_cged_all_snaps,
     load_gsmf_obs, load_fgas_obs, load_cgd_obs, load_cged_obs,
 )
-from cosmo_hydro_emu.emu import emulate, load_model_multiple
+from cosmo_hydro_emu.emu import emulate, load_model_multiple, load_model_autosync
 from cosmo_hydro_emu.gp import gp_load
 from cosmo_hydro_emu.snapshot_utils import SNAPSHOT_IDS, get_snapshot_redshifts
 from cosmo_hydro_emu.mcmc import (
@@ -283,11 +283,14 @@ def prepare_observable_multiz(obs_name, params, cfg, snapshot_ids):
 
 
 def load_model(model_filename, p_all, y_vals, y_ind, exp_variance):
-    """Load a trained GP model."""
+    """Load a trained GP model with basis size auto-synced to the pickle.
+
+    `exp_variance` is only used as a fallback if the saved file doesn't
+    expose the trained basis count.
+    """
     sepia_data = sepia_data_format(p_all, y_vals, y_ind)
-    sepia_model_i = do_pca(sepia_data, exp_variance=exp_variance)
-    sepia_model = gp_load(sepia_model_i, model_filename)
-    return sepia_model
+    return load_model_autosync(model_filename, sepia_data,
+                               exp_variance=exp_variance)
 
 
 def load_obs_data(obs_name, cfg):
