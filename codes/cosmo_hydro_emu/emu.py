@@ -96,6 +96,7 @@ def load_model_multiple(model_dir:str=None, # Pickle directory path
                         y_vals_all:np.array=None, # Target y-values array
                         y_ind_all:np.array=None, # x-values
                         z_index_range:np.array=None, # Snapshot indices for training
+                        exp_variance:float=0.95, # Must match value used at training
                    ) -> None:
 
     blockPrint()
@@ -107,7 +108,7 @@ def load_model_multiple(model_dir:str=None, # Pickle directory path
 
         sepia_data = sepia_data_format(p_train_all, y_vals_all[:, z_index, :], y_ind_all)
 
-        sepia_model_pca_i = do_pca(sepia_data, exp_variance=0.999)
+        sepia_model_pca_i = do_pca(sepia_data, exp_variance=exp_variance)
 
         model_filename = model_dir + 'multivariate_model_z_index' + str(z_index)
         sepia_model_z = gp_load(sepia_model_pca_i, model_filename)

@@ -55,6 +55,7 @@ def do_gp_train_multiple(model_dir:str=None, # Pickle directory path
                          y_vals_all:np.array=None, # Target y-values array
                          y_ind_all:np.array=None, # x-values
                          z_index_range:np.array=None, # Snapshot indices for training
+                         exp_variance:float=0.95, # PCA explained-variance threshold
                    ) -> None:
 
     for z_index in z_index_range:
@@ -63,7 +64,7 @@ def do_gp_train_multiple(model_dir:str=None, # Pickle directory path
 
         model_filename = model_dir + 'multivariate_model_z_index' + str(z_index)
 
-        sepia_model = do_pca(sepia_data, exp_variance=0.999)
+        sepia_model = do_pca(sepia_data, exp_variance=exp_variance)
         sepia_model = do_gp_train(sepia_model, model_filename)
         print('Training complete for snapshot ' + str(z_index))
         print('Model saved at ' + model_dir)
