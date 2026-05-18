@@ -1,0 +1,118 @@
+Pipeline configuration diff for the GSMF-only, no-bias MCMC trial.
+Generated 2026-05-17.
+
+================================================================
+SECTION 1 — Simulation campaign (training data)
+================================================================
+                          v1                                          v2
+Path                      ../../Data/.../128MPC_RUNS_HACC_5PARAM       data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC
+Box size                  128 Mpc/h                                   400 Mpc/h
+Code family               HACC subgrid-5p                              HAvoCC (HACC + new subgrid + cosmology design)
+Number of training sims   64                                           39 (or 34 train after 5-sim test split)
+Sim parameter dim         5 (subgrid only)                             7 (5 subgrid + ω_m, σ_8)
+How params map to sims    Parsed from RUN directory name (KAPPA_*_…)  Row K of FinalDesign.txt ↔ RUN_K  (both 0-indexed)
+                          → impossible to misalign                     → fixed today; prior runs were off by one
+
+================================================================
+SECTION 2 — Parameter ranges (scaled)
+================================================================
+Param            v1 [min, max]      v2 [min, max]      Changed?
+kappa_w          [2.0, 4.0]         [2.0, 4.0]         no
+e_w              [0.2, 1.0]         [0.2, 1.0]         no
+M_seed/1e6       [0.6, 1.2]         [0.6, 2.0]         YES (README: "updated from 1.2×10⁶")
+v_kin/1e4        [0.1, 1.2]         [0.1, 1.2]         no
+eps_kin/1e1      [0.02, 1.2]        [0.02, 1.2]        no
+omega_m          (fixed, sim)       [0.12, 0.155]      YES (now varied)
+sigma_8          (fixed, sim)       [0.7, 0.9]         YES (now varied)
+
+================================================================
+SECTION 3 — Cosmology at inference time
+================================================================
+v1                            v2 (5p subgrid mode)
+                              omega_m fixed at 0.5(min+max) = 0.1375
+                              sigma_8 fixed at 0.5(min+max) = 0.8000
+Implicit single value from    The v2 YAML chooses these as "design midpoint =~ HACC fiducial"
+the 128 MPC HACC config.      but this is an assumption — verify against the actual v1 sim card.
+Not exposed in v2 artifacts.
+
+================================================================
+SECTION 4 — Prior (ln_prior)
+================================================================
+                            v1                          v2
+Default per parameter       N(μ=midpoint, σ=halfrange)  N(μ=midpoint, σ=halfrange)  ← IDENTICAL form
+flat_prior_indices          [4]  (hardcoded)            [4]  (from YAML)
+Out-of-range                -inf                        -inf
+Mixed/Planck priors         not supported               supported via gaussian_priors dict (unused in 5p config)
+
+Conclusion: identical functional form; identical concrete values for the 4 of 5
+parameters with unchanged ranges. The M_seed prior differs because the design range differs.
+
+================================================================
+SECTION 5 — Chain initialization (chain_init)
+================================================================
+v1                                          v2
+Uniform(min, max) per parameter             Uniform(min, max) per parameter   ← IDENTICAL
+
+================================================================
+SECTION 6 — Likelihood (log_likelihood)
+================================================================
+v1 (no bias, hydro_emu/mcmc_hacc.py:42)     v2 (no bias, codes/cosmo_hydro_emu/mcmc.py:97-106)
+model = np.interp(x, x_grid, m[:,0])        model = np.interp(x_eff, x_grid, m[:,0])   # x_eff == x when no bias
+sigma2 = yerr**2                            sigma2 = yerr**2
+ll = -0.5 Σ (y - model)^2 / sigma2          ll = -0.5 Σ (y_adj - model)^2 / sigma2    # y_adj == y when no bias
+
+Conclusion: identical when bias_params is empty (which it is for 5p config).
+
+Bias schemes when enabled differ entirely:
+  v1: log_f error inflation (sigma2 += model² · exp(2·log_f))
+  v2: log_bstar (x-shift on GSMF), bCV (y-scale on GSMF), bHSE (x-shift on fGas)
+  Neither activates in the current GSMF_5p_fid_cosmo trial.
+
+================================================================
+SECTION 7 — Observation
+================================================================
+GSMF: identical
+- Path: HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
+- Loader: load_gsmf_obs(gsmf_obs_dir) -> (x_raw, y_raw, yerr_raw)
+- Mass cut: mass_conds('GSMF') = [5e9, 3e11] (linear M⊙)
+- y selection: 10**y_raw[mask]
+- yerr selection: yerr_raw[0, mask]  (lower asymmetric error)
+
+================================================================
+SECTION 8 — Emulator details
+================================================================
+                              v1                        v2
+PCA exp_variance              0.95 hardcoded            0.999 at training; load auto-syncs basis size from pickle
+Predictor mean                mean of 100 samples       analytical mean from 1 draw (≈ 0.1% diff verified)
+Predictor uncertainty         (0.05, 0.95) quantile     analytical std (single-draw GP posterior)
+Inference uses uncertainty?   no (only mean enters ln_like)   no (same — only mean enters ln_like)
+
+================================================================
+SECTION 9 — MCMC settings
+================================================================
+                v1                v2
+nwalkers        100               400
+nburn           100               100
+nrun            1000              4000
+
+Conclusion: v2 has 4× walkers and 4× post-burn steps → better mixing,
+                tighter contours. Does NOT shift the posterior centroid by ~30% on its own.
+
+================================================================
+What would actually change between v1 and v2?
+================================================================
+(in expected order of magnitude of impact on the 5p posterior, largest first)
+
+1. The training simulation campaign (different box / volume / resolution / physics)  ← biggest
+2. The wider M_seed range and shifted prior centre                                   ← medium
+3. Whether the assumed fixed cosmology (ω_m=0.1375, σ_8=0.8) matches v1's HACC sims  ← medium
+4. Fewer training sims (34 vs 64), giving wider effective likelihoods                ← small
+5. The off-by-one slicing bug (PRE-FIX runs only)                                    ← small-to-medium
+   (the v2 plots in screenshots predate today's retrain)
+
+Differences NOT expected to matter:
+- Prior shape (Gaussian, flat indices)
+- Chain initialization
+- Likelihood functional form in the no-bias case
+- Observational input
+- exp_variance choice (auto-synced now)

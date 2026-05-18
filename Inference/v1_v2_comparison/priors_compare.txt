@@ -1,0 +1,14 @@
+PRIOR COMPARISON — v1 (Flamingo HACC-5p, 64 sims) vs v2 (CosmoHydro 7p, 39 sims)
+
+                 v1 range           v1 μ    v1 σ      v2 range           v2 μ    v2 σ      flat?
+kappa_w          [ 2.000, 4.000]   3.000   1.000   [ 2.000, 4.000]   3.000   1.000   
+e_w              [ 0.200, 1.000]   0.600   0.400   [ 0.200, 1.000]   0.600   0.400   
+M_seed/1e6       [ 0.600, 1.200]   0.900   0.300   [ 0.600, 2.000]   1.300   0.700   
+v_kin/1e4        [ 0.100, 1.200]   0.650   0.550   [ 0.100, 1.200]   0.650   0.550   
+eps_kin/1e1      [ 0.020, 1.200]   0.610   0.590   [ 0.020, 1.200]   0.610   0.590    yes 
+
+COSMOLOGY (v1: implicit single fiducial; v2: free in 7p, fixed at design midpoint in 5p)
+omega_m          v1: (single value, baked into 128MPC HACC sims, exact value not in v2 metadata)
+                 v2: free range [0.1200,0.1550], midpoint=0.1375  (used as fixed value in subgrid-only runs)
+sigma_8          v1: (single value, baked into 128MPC HACC sims, exact value not in v2 metadata)
+                 v2: free range [0.7000,0.9000], midpoint=0.8000  (used as fixed value in subgrid-only runs)
