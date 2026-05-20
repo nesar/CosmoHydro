@@ -688,6 +688,10 @@ def load_gsmf_obs(gsmf_obs_dir):
     # ax.plot(10**_data[:, 0], 10 ** _data[:, 1] / hubble**3, 'rx-', label=r"Moustakas et al. 2013", alpha=0.3)
     # # ax.fill_between(10**_data[:, 0], 10 ** (_data[:, 1] - _data[:, 2]) / hubble**3, 10 ** (_data[:, 1] + _data[:, 2]) / hubble**3)
 
+    # h=0.681 is the value Driver+ 2022 reports their GSMF in. It is the
+    # *observational* h assumption, NOT the HACC simulation h (which is
+    # 0.6766). Do not change to match the project fiducial — that would
+    # mis-undo the unit convention the published data is in.
     hubble=0.681
     _data = np.loadtxt( gsmf_obs_dir + "Driver2022.txt")
     # _h = 0.73
@@ -703,9 +707,11 @@ def load_fgas_obs():
     # Table 5 from Kugel+ 2023
     # M500c fgas_500c fgas_500c_err
     # [log10 Msun] [-] [-]
-    
-    
-    
+    #
+    # h=0.681 is Kugel+ 2023's observational h assumption, NOT the HACC
+    # simulation h (0.6766). Do not change to the project fiducial — that
+    # would mis-undo the unit convention the published data is in.
+
     hubble=0.681
     
     M500c = np.array([13.89, 14.06, 14.23, 14.40, 14.57, 14.74, 14.91])
@@ -717,6 +723,8 @@ def load_fgas_obs():
 
 
 def load_fgas_other_sims(directory, pattern='*.txt', exclude=['SalmanCollection', 'Chiu2018Sample'] ):
+    # h=0.681 matches the published-observation h convention used by the
+    # comparison fgas datasets; do not change to the HACC sim h (0.6766).
 
     hubble=0.681
     data = {}  # Initialize an empty dictionary to store transformed x and original y values for each source

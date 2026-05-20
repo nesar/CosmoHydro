@@ -165,7 +165,7 @@ def ln_prior(theta, params_list, flat_indices=None, gaussian_priors=None):
         Indices that get a flat (uniform) prior.
     gaussian_priors : dict or None
         ``{index: (mu, sigma)}`` for parameters with a custom Gaussian prior
-        (e.g. Planck cosmology). Truncated by the [lower, upper] design range.
+        (e.g. fiducial cosmology). Truncated by the [lower, upper] design range.
     """
     if flat_indices is None:
         flat_indices = []

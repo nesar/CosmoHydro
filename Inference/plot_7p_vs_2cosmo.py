@@ -89,8 +89,9 @@ def main():
         contour_colors=['#1f77b4', '#d62728'],
     )
 
-    # Mark Planck means as crosshairs on the cosmology panels for reference
-    planck = {names_7p[5]: 0.143, names_7p[6]: 0.811}
+    # Mark project fiducial cosmology as crosshairs on the cosmology panels.
+    # omega_m = Omega_m*h^2 from Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66.
+    fiducial = {names_7p[5]: 0.14176, names_7p[6]: 0.8102}
     n = len(names_7p)
     for i, ni in enumerate(names_7p):
         for j, nj in enumerate(names_7p):
@@ -99,13 +100,13 @@ def main():
             ax = g.subplots[i, j]
             if ax is None:
                 continue
-            if i == j and ni in planck:
-                ax.axvline(planck[ni], color='k', lw=1.0, ls=':')
-            elif ni in planck and nj in planck:
-                ax.axvline(planck[nj], color='k', lw=1.0, ls=':')
-                ax.axhline(planck[ni], color='k', lw=1.0, ls=':')
+            if i == j and ni in fiducial:
+                ax.axvline(fiducial[ni], color='k', lw=1.0, ls=':')
+            elif ni in fiducial and nj in fiducial:
+                ax.axvline(fiducial[nj], color='k', lw=1.0, ls=':')
+                ax.axhline(fiducial[ni], color='k', lw=1.0, ls=':')
 
-    plt.suptitle('7-param vs 2-cosmology MCMC — Planck prior on $\\Omega_m h^2$, $\\sigma_8$',
+    plt.suptitle('7-param vs 2-cosmology MCMC — fiducial prior on $\\Omega_m h^2$, $\\sigma_8$',
                  y=1.005, fontsize=14)
 
     os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)

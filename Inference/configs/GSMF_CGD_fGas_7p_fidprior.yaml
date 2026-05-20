@@ -1,6 +1,8 @@
 # Trial: GSMF + CGD + fGas, all 7 parameters (5 subgrid + 2 cosmo).
-# Truncated-Gaussian Planck 2018 prior on the cosmology parameters,
-# default wide Gaussian on subgrid params (with eps_kin flat — matches GSMF_CGD_fGas_7p).
+# Truncated-Gaussian prior on the cosmology parameters, centered at the project
+# fiducial cosmology (Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66,
+# sigma_8=0.8102 -> omega_m = Omega_m*h^2 = 0.14176, sigma_8 = 0.8102).
+# Default wide Gaussian on subgrid params (with eps_kin flat — matches GSMF_CGD_fGas_7p).
 trial_name: GSMF_CGD_fGas_7p_planck
 
 observables:
@@ -15,10 +17,10 @@ bias_params: []
 # eps_kin (index 4) keeps flat prior (matches GSMF_CGD_fGas_7p.yaml)
 flat_prior_indices: [4]
 
-# Truncated-Gaussian "Planck 2018" prior on cosmology only.
+# Truncated-Gaussian prior on cosmology only, centered at the project fiducial.
 gaussian_priors:
-  omega_m: {mu: 0.143, sigma: 0.001}
-  sigma_8: {mu: 0.811, sigma: 0.006}
+  omega_m: {mu: 0.14176, sigma: 0.001}
+  sigma_8: {mu: 0.8102, sigma: 0.006}
 
 mcmc:
   nwalkers: 400
