@@ -13,12 +13,14 @@ free_params:
   - eps_kin
   - sigma_8
 
-# Fix all other parameters at these values (scaled units)
+# Fix all other parameters at these values (scaled units).
+# omega_m here is omega_m = Omega_m * h^2, fixed to the project fiducial:
+#   Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66 -> omega_m = 0.14176.
 fixed_params:
   kappa_w: 3.0
   e_w: 0.5
   M_seed: 0.8       # 8e5 / 1e6
-  omega_m: 0.1375
+  omega_m: 0.14176
 
 bias_params: []
 flat_prior_indices: []
