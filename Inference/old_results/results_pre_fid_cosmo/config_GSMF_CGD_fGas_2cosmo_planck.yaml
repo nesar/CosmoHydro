@@ -1,0 +1,52 @@
+# Trial: GSMF + CGD + fGas, ONLY the 2 cosmology parameters (omega_m, sigma_8).
+# Subgrid parameters fixed at design midpoints.
+# Truncated-Gaussian Planck 2018 prior on the cosmology parameters.
+trial_name: GSMF_CGD_fGas_2cosmo_planck
+
+observables:
+  - GSMF
+  - CGD
+  - fGas
+
+param_mode: custom
+free_params:
+  - omega_m
+  - sigma_8
+
+# Other params fixed at design midpoints (matches sigma8_vkin_custom convention)
+fixed_params:
+  kappa_w: 3.0
+  e_w: 0.6
+  M_seed: 1.3
+  v_kin: 0.65
+  eps_kin: 0.61
+
+bias_params: []
+flat_prior_indices: []
+
+# Truncated-Gaussian "Planck 2018" prior on cosmology.
+# omega_m here is Omega_m * h^2 (design range [0.12, 0.155]).
+gaussian_priors:
+  omega_m: {mu: 0.143, sigma: 0.001}
+  sigma_8: {mu: 0.811, sigma: 0.006}
+
+mcmc:
+  nwalkers: 400
+  nburn: 100
+  nrun: 4000
+  parallel: true
+
+data:
+  DirIn: ../data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC/
+  design_file: ../data/FinalDesign.txt
+  num_sims: 39
+  start_sim_idx: 1
+  exp_variance: 0.95
+  z_index: 0
+  model_dir: ../models/
+
+obs_dirs:
+  gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
+  cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
+
+output_dir: results/

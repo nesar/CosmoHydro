@@ -3,7 +3,7 @@
 # fiducial cosmology (Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66,
 # sigma_8=0.8102 -> omega_m = Omega_m*h^2 = 0.14176, sigma_8 = 0.8102).
 # Default wide Gaussian on subgrid params (with eps_kin flat — matches GSMF_CGD_fGas_7p).
-trial_name: GSMF_CGD_fGas_7p_planck
+trial_name: GSMF_CGD_fGas_7p_fidprior
 
 observables:
   - GSMF

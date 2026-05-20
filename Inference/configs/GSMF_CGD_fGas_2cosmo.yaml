@@ -3,7 +3,7 @@
 # Truncated-Gaussian prior on the cosmology parameters, centered at the project
 # fiducial cosmology (Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66,
 # sigma_8=0.8102 -> omega_m = Omega_m*h^2 = 0.14176, sigma_8 = 0.8102).
-trial_name: GSMF_CGD_fGas_2cosmo_planck
+trial_name: GSMF_CGD_fGas_2cosmo
 
 observables:
   - GSMF

@@ -11,8 +11,12 @@ observables:
 param_mode: subgrid
 
 # Optional: fix specific parameters (by PARAM_NAME latex label or short key)
-# Values should be in scaled units (same as emulator input)
-fixed_params: {}
+# Values should be in scaled units (same as emulator input).
+# Cosmology fixed at the project fiducial (Omega_cdm=0.26067, Omega_b*h^2=0.02242,
+# H0=67.66, sigma_8=0.8102 -> omega_m=0.14176, sigma_8=0.8102).
+fixed_params:
+  omega_m: 0.14176
+  sigma_8: 0.8102
 
 # Optional: extra bias parameters to include
 # Available: log_bstar, bCV, bHSE
