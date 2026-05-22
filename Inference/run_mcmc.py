@@ -142,9 +142,35 @@ def parse_observables(cfg):
     return parsed
 
 
+def _deep_merge(base, override):
+    """Recursively merge `override` into `base`. Dicts are merged key-by-key;
+    any non-dict value in `override` replaces the corresponding value in `base`.
+    Returns a new dict; inputs are not mutated.
+    """
+    if not isinstance(base, dict) or not isinstance(override, dict):
+        return override
+    out = dict(base)
+    for k, v in override.items():
+        if k in out and isinstance(out[k], dict) and isinstance(v, dict):
+            out[k] = _deep_merge(out[k], v)
+        else:
+            out[k] = v
+    return out
+
+
 def load_config(config_path):
+    """Load a trial config, deep-merging shared `_defaults.yaml` (if present in
+    the same directory) underneath it. Trial values override defaults.
+    """
     with open(config_path, 'r') as f:
-        return yaml.safe_load(f)
+        trial = yaml.safe_load(f) or {}
+    defaults_path = os.path.join(os.path.dirname(os.path.abspath(config_path)),
+                                 '_defaults.yaml')
+    if os.path.exists(defaults_path) and os.path.abspath(config_path) != defaults_path:
+        with open(defaults_path, 'r') as f:
+            defaults = yaml.safe_load(f) or {}
+        return _deep_merge(defaults, trial)
+    return trial
 
 
 def load_design(design_file, start_sim_idx=1, num_sims=None):
@@ -513,10 +539,12 @@ def main():
             print(f"  z_index_range: {z_index_range} ({len(z_index_range)} snapshots)")
 
             model_subdir = os.path.join(model_dir, f'{MODEL_PREFIX[obs]}_multiz/')
+            # Pass the un-sliced y_vals_all so z_index_range (global snapshot
+            # indices like [6,7,8,9,10] for CGD) can index it directly.
             model_list, _ = load_model_multiple(
                 model_dir=model_subdir,
                 p_train_all=design_params,
-                y_vals_all=y_vals_all[:, z_start:, :],
+                y_vals_all=y_vals_all,
                 y_ind_all=y_ind,
                 z_index_range=z_index_range,
             )

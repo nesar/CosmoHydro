@@ -3,6 +3,7 @@
 # Truncated-Gaussian prior on the cosmology parameters, centered at the project
 # fiducial cosmology (Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66,
 # sigma_8=0.8102 -> omega_m = Omega_m*h^2 = 0.14176, sigma_8 = 0.8102).
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
 trial_name: GSMF_CGD_fGas_2cosmo
 
 observables:
@@ -15,7 +16,7 @@ free_params:
   - omega_m
   - sigma_8
 
-# Other params fixed at design midpoints (matches sigma8_vkin_custom convention)
+# Other params fixed at design midpoints (matches sigma8_vkin_custom convention).
 fixed_params:
   kappa_w: 3.0
   e_w: 0.6
@@ -23,32 +24,8 @@ fixed_params:
   v_kin: 0.65
   eps_kin: 0.61
 
-bias_params: []
-flat_prior_indices: []
-
 # Truncated-Gaussian prior on cosmology, centered at the project fiducial.
 # omega_m here is Omega_m * h^2 (design range [0.12, 0.155]).
 gaussian_priors:
   omega_m: {mu: 0.14176, sigma: 0.001}
   sigma_8: {mu: 0.8102, sigma: 0.006}
-
-mcmc:
-  nwalkers: 400
-  nburn: 100
-  nrun: 4000
-  parallel: true
-
-data:
-  DirIn: ../data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC/
-  design_file: ../data/FinalDesign.txt
-  num_sims: 39
-  start_sim_idx: 1
-  exp_variance: 0.95
-  z_index: 0
-  model_dir: ../models/
-
-obs_dirs:
-  gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
-  cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
-
-output_dir: results/

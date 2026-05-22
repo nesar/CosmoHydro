@@ -3,6 +3,7 @@
 # fiducial cosmology (Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66,
 # sigma_8=0.8102 -> omega_m = Omega_m*h^2 = 0.14176, sigma_8 = 0.8102).
 # Default wide Gaussian on subgrid params (with eps_kin flat — matches GSMF_CGD_fGas_7p).
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
 trial_name: GSMF_CGD_fGas_7p_fidprior
 
 observables:
@@ -11,8 +12,6 @@ observables:
   - fGas
 
 param_mode: subgrid+cosmo
-fixed_params: {}
-bias_params: []
 
 # eps_kin (index 4) keeps flat prior (matches GSMF_CGD_fGas_7p.yaml)
 flat_prior_indices: [4]
@@ -21,24 +20,3 @@ flat_prior_indices: [4]
 gaussian_priors:
   omega_m: {mu: 0.14176, sigma: 0.001}
   sigma_8: {mu: 0.8102, sigma: 0.006}
-
-mcmc:
-  nwalkers: 400
-  nburn: 100
-  nrun: 4000
-  parallel: true
-
-data:
-  DirIn: ../data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC/
-  design_file: ../data/FinalDesign.txt
-  num_sims: 39
-  start_sim_idx: 1
-  exp_variance: 0.95
-  z_index: 0
-  model_dir: ../models/
-
-obs_dirs:
-  gsmf: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/galaxy_modules/GalStellarMassFunction/data/
-  cgd: /home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/ClusterGasDensityProfile/data/
-
-output_dir: results/
