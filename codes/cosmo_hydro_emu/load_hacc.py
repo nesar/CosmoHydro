@@ -5,7 +5,10 @@ __all__ = ['PARAM_NAME', 'PARAM_NAME_SG', 'PARAM_NAME_COSMO',
            'fill_nan_with_interpolation', 'eps_scale', 'seed_mass_scale', 'vkin_scale',
            'load_delta_cgd', 'delta_cgd', 'DirIn_128_256',
            'read_gsmf_all_snaps', 'read_hmf_all_snaps', 'read_gasfr_all_snaps', 'read_cgd_all_snaps', 'read_cged_all_snaps',
-           'read_profile_all_snaps']
+           'read_profile_all_snaps',
+           'HAVOCC_PROFILE_OBS_BASE', 'CLUSTER_PROFILE_OBS_DIRS',
+           'load_cep_obs', 'load_cpp_obs', 'load_ctp_obs', 'load_cmp_obs',
+           'load_cluster_profile_obs']
 
 
 import numpy as np
@@ -767,21 +770,126 @@ def load_cged_obs(directory, pattern='*.txt', exclude=[], rho_cgs_scale=True):
     return data
 
 def load_cgd_obs(directory, pattern='*.txt', exclude=[]):
-    
+
     data = {}
-    
+
     for fileIn in glob.glob(directory + pattern):
         sourceIn = fileIn.split('/')[-1].split('.txt')[0]
         if not any(excl in sourceIn for excl in exclude):
             a = np.loadtxt(fileIn)
             x_transformed = a[:, 0]
             y = a[:, 1:]
-            
+
             data[sourceIn] = (x_transformed, y)
 
     return data
 
-    
+
+HAVOCC_PROFILE_OBS_BASE = '/home/nramachandra/Projects/Hydro_runs/HAvoCC/havocc/analysis/modules/halo_profile_modules/'
+
+# Map short profile names to their HAvoCC observation directories.
+# Profiles without observational data (CEEP, CYP) are intentionally omitted.
+CLUSTER_PROFILE_OBS_DIRS = {
+    'CGD':  HAVOCC_PROFILE_OBS_BASE + 'ClusterGasDensityProfile/data/',
+    'CGED': HAVOCC_PROFILE_OBS_BASE + 'ClusterGasElectronDensityProfile/data/',
+    'CEP':  HAVOCC_PROFILE_OBS_BASE + 'ClusterGasEntropyProfile/data/',
+    'CPP':  HAVOCC_PROFILE_OBS_BASE + 'ClusterGasPressureProfile/data/',
+    'CTP':  HAVOCC_PROFILE_OBS_BASE + 'ClusterGasTemperatureProfile/data/',
+    'CMP':  HAVOCC_PROFILE_OBS_BASE + 'ClusterGasMetallicityProfile/data/',
+}
+
+
+def _load_profile_obs_generic(directory, pattern='*.txt', exclude=[]):
+    """Generic cluster-profile observation loader: glob *.txt and return
+    {source_name: (radius, y_2d)}, with column 0 of each file taken as the
+    radius (r/R500) and the remaining columns kept as-is.
+
+    Files with header `r y` give y_2d.shape == (N, 1); files with header
+    `r y ylerr yherr` give y_2d.shape == (N, 3) where columns 1, 2 are the
+    lower/upper errorbar half-widths. Files with multiple measurement
+    columns (e.g. McDonald2017 z-bins, Pakmor2022 mass bins) keep all of
+    them — the caller picks which column to plot.
+    """
+    data = {}
+    for fileIn in glob.glob(directory + pattern):
+        sourceIn = fileIn.split('/')[-1].split('.txt')[0]
+        if any(excl in sourceIn for excl in exclude):
+            continue
+        try:
+            a = np.loadtxt(fileIn)
+        except (ValueError, OSError):
+            continue
+        if a.ndim < 2 or a.shape[1] < 2:
+            continue
+        data[sourceIn] = (a[:, 0], a[:, 1:])
+    return data
+
+
+def load_cep_obs(directory=None, pattern='*.txt', exclude=[]):
+    """Cluster gas entropy profile observations (K/K500 vs r/R500)."""
+    if directory is None:
+        directory = CLUSTER_PROFILE_OBS_DIRS['CEP']
+    return _load_profile_obs_generic(directory, pattern, exclude)
+
+
+def load_cpp_obs(directory=None, pattern='*.txt', exclude=[]):
+    """Cluster gas pressure profile observations (P/P500 vs r/R500)."""
+    if directory is None:
+        directory = CLUSTER_PROFILE_OBS_DIRS['CPP']
+    return _load_profile_obs_generic(directory, pattern, exclude)
+
+
+def load_ctp_obs(directory=None, pattern='*.txt', exclude=[]):
+    """Cluster gas temperature profile observations (T/T500 vs r/R500)."""
+    if directory is None:
+        directory = CLUSTER_PROFILE_OBS_DIRS['CTP']
+    return _load_profile_obs_generic(directory, pattern, exclude)
+
+
+def load_cmp_obs(directory=None, pattern='*.txt', exclude=[]):
+    """Cluster gas metallicity profile observations (Z/Z_sun vs r/R500).
+
+    Note: Lovisari2019.txt uses (r_left, r_right, Z_rel, Z_rel_err, ...)
+    — y_2d still contains all columns from index 1 onward, so the caller
+    must take Z_rel = y_2d[:, 1] for that source (column 0 of y_2d is
+    r_right, not a y value).
+    """
+    if directory is None:
+        directory = CLUSTER_PROFILE_OBS_DIRS['CMP']
+    return _load_profile_obs_generic(directory, pattern, exclude)
+
+
+def load_cluster_profile_obs(short_name, **kwargs):
+    """Dispatch by profile short_name (CGD/CGED/CEP/CPP/CTP/CMP).
+
+    Returns the same {source: (radius, y_2d)} dict shape across profiles,
+    so plotting code can iterate uniformly. Returns {} for profiles that
+    have no observational data (CEEP, CYP).
+    """
+    if short_name == 'CGD':
+        return load_cgd_obs(
+            directory=kwargs.pop('directory', CLUSTER_PROFILE_OBS_DIRS['CGD']),
+            **kwargs,
+        )
+    if short_name == 'CGED':
+        # NOTE: do NOT route through load_cged_obs(rho_cgs_scale=True). That
+        # rescale assumes a CGD-style input (rho_gas/rho_crit, dimensionless)
+        # and converts it to n_e in cm^-3. The remaining HAvoCC CGED files
+        # (Ghirardini2019, McDonald2017_*) are already in cm^-3, matching the
+        # havocc sim output (sod_halo_bin_hot_gas_ne_ew * E(z)^-2), so any
+        # extra rescale here is wrong and shifts obs by ~5 orders of magnitude.
+        return _load_profile_obs_generic(
+            kwargs.pop('directory', CLUSTER_PROFILE_OBS_DIRS['CGED']),
+            **kwargs,
+        )
+    if short_name in CLUSTER_PROFILE_OBS_DIRS:
+        return _load_profile_obs_generic(
+            kwargs.pop('directory', CLUSTER_PROFILE_OBS_DIRS[short_name]),
+            **kwargs,
+        )
+    return {}
+
+
 def load_bhmsm_other_sims(directory, pattern='*.txt', exclude='Moustakas2013_z0.2-z1.0'):
     data = {}  # Initialize an empty dictionary to store x and y values for each source
     for fileIn in glob.glob(directory + pattern):
