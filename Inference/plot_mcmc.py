@@ -440,17 +440,31 @@ def main():
     all_params_list = []
     cfg_ref = None
 
+    # Trial configs in results/ are saved as the overlay-only YAML; the shared
+    # data/mcmc/obs_dirs sections live in configs/_defaults.yaml and are merged
+    # in by run_mcmc.load_config at run time. Mirror that merge here so
+    # cfg_ref['data'] etc. are populated.
+    from run_mcmc import _deep_merge
+    _defaults_path = os.path.join(os.path.dirname(__file__),
+                                  'configs', '_defaults.yaml')
+    if os.path.exists(_defaults_path):
+        with open(_defaults_path) as f:
+            _defaults_cfg = yaml.safe_load(f) or {}
+    else:
+        _defaults_cfg = {}
+
     for i, samples_path in enumerate(args.samples):
         samples = np.load(samples_path)
         all_samples.append(samples)
 
         trial_name = os.path.basename(samples_path).replace('samples_', '').replace('.npy', '')
 
-        # Try loading the config copy
+        # Try loading the config copy (overlay only)
         config_path = samples_path.replace('samples_', 'config_').replace('.npy', '.yaml')
         if os.path.exists(config_path):
             with open(config_path) as f:
-                cfg = yaml.safe_load(f)
+                _trial = yaml.safe_load(f) or {}
+            cfg = _deep_merge(_defaults_cfg, _trial)
             if cfg_ref is None:
                 cfg_ref = cfg
         else:

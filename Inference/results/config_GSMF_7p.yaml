@@ -1,0 +1,13 @@
+# Trial: GSMF only, all 7 parameters (5 subgrid + 2 cosmo).
+# Matches gp_HACC_mcmc_universal.py settings.
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_7p
+
+observables:
+  - GSMF
+
+param_mode: subgrid+cosmo
+
+# eps_kin (index 4) gets flat prior, all others Gaussian
+# (matches mcmc_hacc.py ln_prior with flat_indices=[4])
+flat_prior_indices: [4]
