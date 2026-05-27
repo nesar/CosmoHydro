@@ -16,11 +16,13 @@ GP-based emulator and MCMC inference framework for summary statistics from cosmo
 | Matter density | omega_m | -- |
 | Amplitude of fluctuations | sigma_8 | -- |
 
-Design: 39 simulations (400 Mpc/h boxes, from `data/FinalDesign.txt`).
+Design: 110 simulations (400 Mpc/h boxes, from `data/FinalDesign.txt`) -- a 40-point D-optimal core (0--39) plus three space-filling extensions (40--89, 90--99, 100--110). Test set held out: `[3, 11, 19, 27, 35]`.
+
+Project fiducial cosmology (for `param_mode: subgrid` runs): `omega_m = 0.14176`, `sigma_8 = 0.8102`.
 
 ## Data
 
-Simulation outputs in `data/400MPC_RUNS_5SG_2COSMO_PARAM/HAvoCC/RUN{001-039}/extract/`.
+Simulation outputs in `data/scidac-400MPC_RUNS_5SG_2COSMO_PARAM-extracts_20260323/RUN{001-110}/extract/`.
 Power spectrum data in `data/scidac-olcf-pk_3/`.
 
 ## Emulated Quantities
@@ -51,7 +53,7 @@ Core modules in `codes/cosmo_hydro_emu/`:
 | `load_hacc.py` | Data loading for all observables (single-z and multi-z readers) |
 | `pca.py` | PCA decomposition of summary statistics |
 | `gp.py` | Gaussian Process training and prediction (SEPIA) |
-| `emu.py` | Emulator wrapper: `emulate()`, `emu_redshift()`, `load_model_multiple()` |
+| `emu.py` | Emulator wrapper: `emulate()`, `emu_redshift()`, `load_model_multiple()`, `load_model_autosync()` |
 | `viz.py` | Plotting and visualization helpers |
 | `snapshot_utils.py` | Multi-redshift snapshot handling (11 snapshots, z_initial=200) |
 | `mcmc.py` | MCMC inference: likelihood, priors, emcee sampler, with multi-z support |
@@ -70,11 +72,13 @@ Trained models are saved to `models/`:
 - Single-z models: `models/<OBS>_multivariate_model_z_index0.pkl`
 - Multi-z models: `models/<OBS>_multiz/multivariate_model_z_index{i}.pkl`
 
+PCA basis size is auto-synced from each pickle at load time (`load_model_autosync`) so chains and emulators stay consistent across retrains.
+
 Previous notebooks are preserved in `codes/_old/`.
 
 ## Inference
 
-YAML-config-driven MCMC framework in `Inference/`. Run different trials by combining observables, parameter spaces, and redshifts without duplicating code.
+YAML-config-driven MCMC framework in `Inference/`. Trial configs are deep-merged on top of `Inference/configs/_defaults.yaml`, so shared data/MCMC/observation-path settings live in one place.
 
 ### Quick start
 
@@ -87,25 +91,30 @@ python run_mcmc.py configs/GSMF_7p.yaml --dry-run
 # Run MCMC
 python run_mcmc.py configs/GSMF_7p.yaml
 
-# Compare results from multiple trials
-python plot_mcmc.py results/samples_GSMF_7p.npy results/samples_GSMF_CGD_7p.npy \
-    --labels "GSMF" "GSMF+CGD" --output results/comparison.png
+# Plot a single chain or compare multiple
+python plot_mcmc.py results/samples_GSMF_7p.npy
+python plot_mcmc.py results/samples_GSMF_7p.npy results/samples_GSMF_CGD_fGas_7p.npy \
+    --labels "GSMF" "GSMF+CGD+fGas" --output results/comparison.png
 ```
 
 ### Available trial configs
 
 | Config | Observables | Parameters |
 |--------|-------------|------------|
+| `GSMF_5p_fid_cosmo.yaml` | GSMF | 5 subgrid, cosmology fixed at project fiducial |
 | `GSMF_7p.yaml` | GSMF | all 7 (subgrid + cosmo) |
+| `GSMF_subgrid.yaml` | GSMF | 5 subgrid only |
 | `GSMF_CGD_7p.yaml` | GSMF + CGD | all 7 |
+| `GSMF_CGD_subgrid.yaml` | GSMF + CGD | 5 subgrid only |
 | `GSMF_fGas_7p.yaml` | GSMF + fGas | all 7 |
 | `GSMF_CGD_fGas_7p.yaml` | GSMF + CGD + fGas | all 7 |
-| `GSMF_subgrid.yaml` | GSMF | 5 subgrid only |
-| `GSMF_CGD_subgrid.yaml` | GSMF + CGD | 5 subgrid only |
-| `CGD_CGED_cluster.yaml` | CGD + CGED | 5 subgrid only |
-| `sigma8_vkin_custom.yaml` | GSMF + CGD | custom: v_kin + eps_kin + sigma_8 |
+| `GSMF_CGD_fGas_7p_fidprior.yaml` | GSMF + CGD + fGas | all 7, fiducial-cosmology prior |
+| `GSMF_CGD_fGas_2cosmo.yaml` | GSMF + CGD + fGas | 2 cosmology only |
+| `GSMF_CGD_fGas_all.yaml` | GSMF + CGD + fGas | all 7, all-Gaussian priors |
+| `CGD_CGED_cluster.yaml` | CGD + CGED | 5 subgrid only, cluster-only fit |
 | `GSMF_CGD_bias.yaml` | GSMF + CGD | all 7 + 3 bias params |
 | `GSMF_multiz_CGD.yaml` | GSMF(z=0,1) + CGD(z=0.4) | all 7, multi-z |
+| `sigma8_vkin_custom.yaml` | GSMF + CGD | custom: v_kin + eps_kin + sigma_8 |
 
 ### Config options
 
@@ -116,9 +125,30 @@ python plot_mcmc.py results/samples_GSMF_7p.npy results/samples_GSMF_CGD_7p.npy 
 - **`bias_params`**: optional observational bias parameters (log_bstar, bCV, bHSE)
 - **`flat_prior_indices`**: which free params get flat vs Gaussian priors
 
-### MCMC settings (matching Flamingo reference)
+### MCMC settings
 
-- Prior: Gaussian on all params except eps_kin (flat), centered at midpoint of range
-- Likelihood: chi-squared (`sigma2 = yerr**2`)
-- Sampler: emcee EnsembleSampler with multiprocessing Pool
-- Default: 100 walkers, 100 burn-in, 1000 production steps
+- Prior: Gaussian on all params except `eps_kin` (flat), centered at midpoint of design range with sigma = half-range
+- Walker init: uniform across `[min, max]` per parameter
+- Likelihood: chi-squared (`sigma2 = yerr**2`), summed over observables
+- Sampler: emcee `EnsembleSampler` with multiprocessing Pool
+- Defaults (`_defaults.yaml`): 400 walkers, 100 burn-in, 4000 production steps
+
+### v1 (Flamingo) -- v2 (CosmoHydro) cross-check
+
+`Inference/v1_v2_comparison/make_plots.py` generates a side-by-side
+GSMF posterior overlay (`corner_overlay.png`), a posterior-predictive
+comparison across GSMF / fGas / CGD (`summary_stats_compare.png`),
+and a posterior-median table (`posterior_medians.txt`).
+
+## Documentation
+
+Four standalone LaTeX notes in `documentation/`:
+
+| File | Contents |
+|------|----------|
+| `main.tex` | Simulation setup, parameter ranges, snapshot windows, design-matrix appendix tables |
+| `summaries_emulation.tex` | P(k) suppression, HMF, GSMF, fGas, CSFR emulation figures |
+| `cluster_profiles.tex` | Eight cluster-profile emulators (CGD, CGED, CEP, CEEP, CMP, CPP, CTP, CYP) |
+| `calibration_results.tex` | MCMC posteriors and v1 -- v2 benchmarking |
+
+The three companion notes are flat-layout: copy them next to `plots/`, `Inference/results/` (as `results/`), and `Inference/v1_v2_comparison/` (as `v1_v2_comparison/`) for an Overleaf-style build. `main.tex` additionally references `data/FinalDesign.txt` for the appendix tables.
