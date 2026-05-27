@@ -1,0 +1,356 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{placeins}
+\usepackage[hypertexnames=false]{hyperref}
+\renewcommand{\figurename}{Fig.}
+
+\graphicspath{{plots/}}
+
+\title{Emulation of summary statistics:\\
+$P(k)$ suppression, HMF, GSMF, $f_{\rm gas}$, and CSFR}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Design and inputs}
+
+The simulation suite varies seven parameters $\theta = \{\theta_{\rm sub},\theta_{\rm cos}\}$:
+five subgrid parameters
+$\theta_{\rm sub}=\{\kappa_{\rm w},\,e_{\rm w},\,M_{\rm seed},\,v_{\rm kin},\,\epsilon_{\rm kin}\}$
+and two cosmological parameters $\theta_{\rm cos}=\{\omega_{\rm m},\sigma_8\}$
+(other $\Lambda$CDM parameters are held fixed). The design comprises 110
+HAvoCC--400\,Mpc runs assembled from a D-optimal core (0--39) and
+three space-filling extensions (40--89, 90--99, 100--110).
+\autoref{fig:design} shows the parameter scatter for the full design.
+Held-out test simulations $\{3,11,19,27,35\}$ are reserved for validation;
+the remaining sims are used to train the Gaussian-process emulators
+(SEPIA, multivariate PCA basis with \texttt{exp\_variance}=0.999 except
+for $P(k)$, which uses 0.95).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{exp_design.png}
+    \caption{Pairwise distribution of the seven design parameters across
+    the full simulation campaign (110 runs). The five subgrid parameters
+    $\kappa_{\rm w}, e_{\rm w}, M_{\rm seed}/10^6, v_{\rm kin}/10^4,
+    \epsilon_{\rm kin}/10^1$ are plotted in their scaled units alongside
+    the two cosmological parameters $\omega_{\rm m}$ and $\sigma_8$. The
+    overlap of D-optimal and space-filling sub-designs explains the
+    apparent visual clustering near the edges of each projection.}
+    \label{fig:design}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{snapshot_z.png}
+    \caption{Mapping of HACC snapshot identifier to cosmological
+    redshift, $z(a)$. The 11 snapshots used for multi-$z$ emulation
+    cover $z \in [0,2]$.}
+    \label{fig:snap_z}
+\end{figure}
+
+\FloatBarrier
+
+\section{Galaxy Stellar Mass Function (GSMF)}
+
+The GSMF is the most data-rich summary, with clean measurements across
+all 11 snapshots ($z\in[0,2]$). The emulator is trained per snapshot and
+the redshift dimension is interpolated at inference time.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\linewidth]{GSMF_design.png}
+    \caption{Training ensemble of GSMF measurements at $z=0$, coloured by
+    a design parameter. Black markers show the Driver+2022 observational
+    constraint used for calibration. The mass window $5\times10^{9}<
+    M_\star/M_\odot < 3\times10^{11}$ defines the emulation/likelihood
+    range.}
+    \label{fig:gsmf_design}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{GSMF_multiz.png}
+    \caption{Multi-redshift GSMF training data: each black line is one
+    simulation, shown at four representative snapshots from
+    $z=2.0$ to $z=0$. The GSMF amplitude grows monotonically toward
+    low $z$.}
+    \label{fig:gsmf_multiz}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{GSMF_multiz_valid.png}
+    \caption{Hold-out validation at $z=0$. Three test simulations
+    (solid) are compared to emulator predictions (dashed), with $90\%$
+    Gaussian bands from the GP analytical variance. The mass-cut limits
+    are shaded.}
+    \label{fig:gsmf_valid}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\linewidth]{GSMF_sensi_HACC5p.png}
+    \caption{Sensitivity of the GSMF emulator at $z=0$: each panel
+    sweeps one of the seven parameters across its design range while
+    holding the others at the design mean. Subgrid feedback parameters
+    ($\kappa_{\rm w}$, $v_{\rm kin}$, $\epsilon_{\rm kin}$) primarily
+    suppress the high-mass end, while $M_{\rm seed}$ shifts the knee
+    location. Cosmology ($\omega_{\rm m}$, $\sigma_8$) shifts the overall
+    amplitude.}
+    \label{fig:gsmf_sensi}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{GSMF_sensi_multiz.png}
+    \caption{Combined parameter--redshift sensitivity for the GSMF
+    emulator. Top: variation in $\sigma_8$ at $z=0$. Middle: variation
+    in $\kappa_{\rm w}$ at $z=0$. Bottom: redshift variation at
+    fiducial parameters. Shaded regions mark the mass cut.}
+    \label{fig:gsmf_sensi_multiz}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{GSMF_z_sweep.png}
+    \caption{GSMF emulator ensemble across redshift. Each panel
+    shows the emulated GSMF at a snapshot in $z\in[0,2]$ for a sweep of
+    training-design points. The full multi-$z$ predictive surface is
+    used by the redshift-aware likelihood at calibration time.}
+    \label{fig:gsmf_z_sweep}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{GSMF_z_interp.png}
+    \caption{Cross-check of the redshift interpolator: predictions at
+    the bracketing trained snapshots (dashed) versus the interpolated
+    GSMF at an intermediate $z=0.15$ (solid). The interpolator preserves
+    the shape and amplitude smoothly between training snapshots.}
+    \label{fig:gsmf_z_interp}
+\end{figure}
+
+\FloatBarrier
+
+\section{Halo Mass Function (HMF)}
+
+The HMF emulator is trained on all 11 snapshots in the mass window
+$2\times 10^{11} < M_h/M_\odot < 1\times 10^{15}$.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{HMF_multiz.png}
+    \caption{HMF training data across redshift. The black ensemble
+    illustrates the suppression of the high-mass tail as $z$ increases.}
+    \label{fig:hmf_multiz}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.55\linewidth]{HMF_valid.png}
+    \includegraphics[width=0.55\linewidth]{HMF_multiz_valid.png}
+    \caption{HMF hold-out validation at $z=0$. Single-snapshot fit
+    (top) and multi-$z$ snapshot fit (bottom) for three test sims.}
+    \label{fig:hmf_valid}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\linewidth]{HMF_sensi_HACC5p.png}
+    \caption{HMF parameter sensitivity at $z=0$. The HMF is dominated
+    by $\omega_{\rm m}$ and $\sigma_8$; subgrid parameters produce only
+    a small residual response, consistent with baryonic back-reaction
+    being a sub-percent perturbation on the halo mass function in this
+    range.}
+    \label{fig:hmf_sensi}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{HMF_z_sweep.png}
+    \caption{HMF emulator output across the redshift range.}
+    \label{fig:hmf_z_sweep}
+\end{figure}
+
+\FloatBarrier
+
+\section{Cluster gas fraction $f_{\rm gas}$}
+
+The cluster gas fraction $f_{\rm gas} = M_{\rm gas}/M_{500c}$ is measured
+in the cluster-mass window $10^{13.5}<M_{500c}/M_\odot<10^{14.3}$.
+Early snapshots ($z>1$) have many failed measurements, so the
+emulator is restricted to snapshots 4--10 ($z\in[0,1]$).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{fGas_design.png}
+    \caption{Training $f_{\rm gas}$ ensemble at $z=0$, coloured by a
+    design parameter. Markers show the published cluster $f_{\rm gas}$
+    constraint used for calibration.}
+    \label{fig:fgas_design}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{fGas_multiz.png}
+    \caption{Multi-snapshot $f_{\rm gas}$ training data. The four panels
+    span $z=1.0$ down to $z=0$ in the seven snapshots where
+    measurements are clean.}
+    \label{fig:fgas_multiz}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.55\linewidth]{fGas_valid.png}
+    \includegraphics[width=0.55\linewidth]{fGas_multiz_valid.png}
+    \caption{$f_{\rm gas}$ hold-out validation at $z=0$ for the
+    single-snapshot emulator (top) and the multi-$z$ emulator (bottom).}
+    \label{fig:fgas_valid}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\linewidth]{fGas_sensi_HACC5p.png}
+    \caption{$f_{\rm gas}$ sensitivity to subgrid and cosmological
+    parameters at $z=0$. Kinetic AGN feedback ($v_{\rm kin}$,
+    $\epsilon_{\rm kin}$) sets the overall normalisation, while
+    $\kappa_{\rm w}$ controls the wind-loading.}
+    \label{fig:fgas_sensi}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{fGas_z_sweep.png}
+    \caption{$f_{\rm gas}$ emulator predictions over the valid redshift
+    range $z\in[0,1]$.}
+    \label{fig:fgas_z_sweep}
+\end{figure}
+
+\FloatBarrier
+
+\section{Power spectrum suppression $P_{\rm hydro}(k)/P_{\rm GO}(k)$}
+
+The matter power-spectrum suppression is the ratio of the hydrodynamic
+$P(k)$ to a gravity-only counterpart at matched cosmology,
+\begin{equation}
+\mathcal{S}(k;\theta_{\rm sub},\theta_{\rm cos})
+=\frac{P_{\rm hydro}(k;\theta_{\rm sub},\theta_{\rm cos})}
+      {P_{\rm GO}(k;\theta_{\rm cos})}.
+\end{equation}
+Because a gravity-only run is not available at every $\theta_{\rm cos}$,
+$P_{\rm GO}$ is approximated by rescaling a single reference GO sim
+with the Mira-Titan / Cosmic Emulator $P_{\rm emu}$:
+\begin{equation}
+P_{\rm GO}(k;\theta_{\rm cos})\approx
+P_{\rm GO}(k;\theta_{\rm cos}')
+\,\frac{P_{\rm emu}(k;\theta_{\rm cos})}{P_{\rm emu}(k;\theta_{\rm cos}')}.
+\end{equation}
+The emulator is trained on the $z=0$ ratio
+($k\in[1.6\times10^{-2},\,8]\,h\,\mathrm{Mpc}^{-1}$, PCA budget 0.95).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{Pk_design.png}
+    \caption{$P(k)$ suppression $-1$ across the training suite at $z=0$.
+    Top panel coloured by $\kappa_{\rm w}$, bottom by $\sigma_8$. The
+    two-panel layout shows that the small-scale suppression is driven
+    primarily by AGN/wind subgrid choices, while $\sigma_8$ shifts the
+    baseline normalisation.}
+    \label{fig:pk_design}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{Pk_valid.png}
+    \caption{$P(k)$-suppression emulator hold-out validation for three
+    test sims at $z=0$.}
+    \label{fig:pk_valid}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\linewidth]{Pk_sensi.png}
+    \caption{$P(k)$ suppression sensitivity to each of the seven
+    parameters. AGN/wind subgrid parameters control the depth and
+    location of the suppression dip, while cosmology shifts the
+    baseline ratio.}
+    \label{fig:pk_sensi}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{Pk_boosted_vs_suppressed_4x2.png}
+    \caption{Most-boosted (red) vs.\ most-suppressed (black)
+    simulations selected by their $P(k)$ ratio at $k\sim 1\,h\,\mathrm{Mpc}^{-1}$.
+    Side-by-side panels show how the same selection projects into the
+    other observables: gravity-only $P(k)$, hydrodynamic $P(k)$, HMF
+    ($z=0$), GSMF ($z=0$) and $f_{\rm gas}$ ($z=0$). Suppressed-$P(k)$
+    sims correspond to stronger AGN feedback and systematically reduced
+    cluster gas content.}
+    \label{fig:pk_boosted}
+\end{figure}
+
+\FloatBarrier
+
+\section{Cosmic Star Formation Rate (CSFR)}
+
+The CSFR is recorded as a function of scale factor $a$ and emulated as
+a single multivariate output ($z$-axis absorbed into the curve).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.65\linewidth]{exp_design_csfr.png}
+    \caption{Design distribution for the CSFR runs.}
+    \label{fig:csfr_design_scatter}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{CSFR_design.png}
+    \caption{Training CSFR curves across the design, coloured by one of
+    the subgrid parameters. The spread brackets the canonical
+    Madau--Dickinson cosmic SFR shape but with appreciable peak-height
+    differences.}
+    \label{fig:csfr_design}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\linewidth]{CSFR_valid.png}
+    \caption{CSFR hold-out validation for three test sims.}
+    \label{fig:csfr_valid}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\linewidth]{CSFR_sensi_HACC5p.png}
+    \caption{CSFR sensitivity to each parameter (subgrid + cosmology).
+    AGN feedback parameters depress the peak; $\sigma_8$ shifts the
+    onset and amplitude of cosmic star formation, while $\omega_{\rm m}$
+    sets the integrated history.}
+    \label{fig:csfr_sensi}
+\end{figure}
+
+\FloatBarrier
+
+\section{Snapshot coverage and redshift cuts}
+
+Not all observables are clean over the full snapshot range. The
+analysis pipeline applies the following snapshot windows (start-index
+relative to the 11-snapshot grid):
+
+\begin{itemize}
+  \item \textbf{GSMF, HMF:} snapshots 205--624 (idx 0--10), $z\in[0,2]$ -- all clean.
+  \item \textbf{$f_{\rm gas}$:} snapshots 310--624 (idx 4--10), $z\in[0,1]$ -- early snapshots have $>$half the sims flagged bad.
+  \item \textbf{CGD/CGED/cluster profiles:} snapshots 415--624 (idx 6--10), $z\in[0,0.5]$ -- earlier snapshots are mostly NaN.
+  \item \textbf{$P(k)$:} $z=0$ only.
+  \item \textbf{CSFR:} continuous in scale factor.
+\end{itemize}
+
+\end{document}
