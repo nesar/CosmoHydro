@@ -134,7 +134,17 @@ def validation_plot(x_all,
     f, a = plt.subplots(2, 1, figsize=(8, 6), gridspec_kw={'height_ratios': [2, 1]}, sharex=True)
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.05)
 
-    colors = ['b', 'r', 'g', ]
+    # Per-test-sim color palette. Keep b/r/g for the first 3 so older plots
+    # look identical, then fall back to tab10 / viridis for larger test sets.
+    n_test = pred_mean.shape[1]
+    base = ['b', 'r', 'g']
+    if n_test <= len(base):
+        colors = base[:n_test]
+    elif n_test <= 10:
+        extra = [mcolors.to_hex(plt.cm.tab10(i)) for i in range(len(base), n_test)]
+        colors = base + extra
+    else:
+        colors = [mcolors.to_hex(plt.cm.viridis(t)) for t in np.linspace(0, 1, n_test)]
     styles = ['-', '--']
     styles_label = ['Simulation mean', 'Emulated mean']
 
@@ -257,7 +267,14 @@ def validation_plot_kall(k_all:np.array=None,
     f, a = plt.subplots(2, 1, figsize=(8, 6), gridspec_kw={'height_ratios': [2, 1]}, sharex=True)
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.05)
 
-    colors = ['b', 'r', 'g', ]
+    n_test = pred_mean.shape[1]
+    base = ['b', 'r', 'g']
+    if n_test <= len(base):
+        colors = base[:n_test]
+    elif n_test <= 10:
+        colors = base + [mcolors.to_hex(plt.cm.tab10(i)) for i in range(len(base), n_test)]
+    else:
+        colors = [mcolors.to_hex(plt.cm.viridis(t)) for t in np.linspace(0, 1, n_test)]
     styles = ['-', '--']
     styles_label = ['Hi-COLA', 'Emulated mean']
 
