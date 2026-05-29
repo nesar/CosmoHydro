@@ -339,18 +339,11 @@ a single multivariate output ($z$-axis absorbed into the curve).
 
 \FloatBarrier
 
-\section{Snapshot coverage and redshift cuts}
+\section{Snapshot coverage}
 
-Not all observables are clean over the full snapshot range. The
-analysis pipeline applies the following snapshot windows (start-index
-relative to the 11-snapshot grid):
-
-\begin{itemize}
-  \item \textbf{GSMF, HMF:} snapshots 205--624 (idx 0--10), $z\in[0,2]$ -- all clean.
-  \item \textbf{$f_{\rm gas}$:} snapshots 310--624 (idx 4--10), $z\in[0,1]$ -- early snapshots have $>$half the sims flagged bad.
-  \item \textbf{CGD/CGED/cluster profiles:} snapshots 415--624 (idx 6--10), $z\in[0,0.5]$ -- earlier snapshots are mostly NaN.
-  \item \textbf{$P(k)$:} $z=0$ only.
-  \item \textbf{CSFR:} continuous in scale factor.
-\end{itemize}
+A per-observable snapshot window is applied at the loader level to
+exclude redshifts with incomplete or NaN measurements. The exact
+ranges and motivation are listed in \texttt{main.tex} (Sec.~Redshift
+coverage and snapshot windows) and need not be repeated here.
 
 \end{document}

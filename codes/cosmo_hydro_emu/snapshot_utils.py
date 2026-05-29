@@ -4,11 +4,6 @@ __all__ = ['scale_factor_from_snapshot', 'redshift_from_scale_factor',
 import numpy as np
 
 
-# SNAPSHOT_IDS = [59, 66, 74, 86, 101, 122, 153, 175, 205, 224,
-#                 247, 275, 310, 355, 415, 479, 498, 567, 624]
-
-
-# SNAPSHOT_IDS = [205, 224, 247, 275, 310, 355, 415, 479, 498, 567, 624]
 SNAPSHOT_IDS = [205, 224, 247, 275, 310, 355, 415, 479, 498, 567, 624]
 
 

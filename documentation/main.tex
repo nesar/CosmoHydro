@@ -1,45 +1,24 @@
-% \documentclass[numberedappendix,onecolumn,onecolappendix]{openjournal}
-% \documentclass[preprint]{aastex631}
 \documentclass{article}
-% \documentclass{mnras}
 \usepackage[margin=1in]{geometry}
-\usepackage{multicol}
-\usepackage{color}
-\usepackage{verbatim}
-\usepackage{ulem}
 \usepackage{graphicx}
-\usepackage{dcolumn}
-\usepackage{bm}
-\usepackage[hypertexnames=false]{hyperref}
-\usepackage{tabularx}
 \usepackage{amsmath}
-\usepackage{numprint}
 \usepackage{booktabs}
-\usepackage{xspace}
+\usepackage{natbib}
+\usepackage{pgfplotstable}
+\usepackage{placeins}
+\usepackage[hypertexnames=false]{hyperref}
 \renewcommand{\sectionautorefname}{Section}
 \renewcommand{\subsectionautorefname}{Section}
 \renewcommand{\subsubsectionautorefname}{Section}
-\usepackage{natbib}
-\usepackage{booktabs}
-\usepackage{pgfplotstable}
-\usepackage{placeins}
-\usepackage{stfloats} % improves starred float placement in 2-col
 
 \begin{document}
 \title{Subgrid and Cosmological parameter variations}
-
-% \begin{abstract}
-
-% Our simulation dataset involves subgrid parameter variations along with 2 cosmological parameter variations. Experimental design is based on (1) Definitive Screening Designs for screening primary effects and exploring higher-order parameter-parameter interactions. (2) Traditional space-filling design.
-% \end{abstract}
-
-
 \maketitle
 \section{Introduction}
 
-We have expanding the simulation-emulator-calibration framework to a combined cosmology and subgrid parameter regime. Subgrid effects depend on environmental factors like local density, which are heavily impacted by Cosmological parameters like $\sigma_8$. Hence, it's crucial to understand the interactions/correlations between subgrid and cosmology of parameters, their impacts on forward models, and other systematic effects on calibrations.
+We have expanded the simulation--emulator--calibration framework to a combined cosmology and subgrid parameter regime. Subgrid effects depend on environmental factors like local density, which are themselves strongly influenced by cosmological parameters such as $\sigma_8$. It is therefore important to understand the interactions and correlations between subgrid and cosmology parameters, their impact on the forward models, and the resulting systematics on the calibrations.
 
-Papers to refer to: (CAMELS with Cosmological back-reaction of baryons: \url{https://arxiv.org/pdf/2601.06258}.
+Related work: CAMELS with cosmological back-reaction of baryons, \url{https://arxiv.org/pdf/2601.06258}.
 
 The full set of figures supporting the three classes of results sit in three companion notes:
 \begin{itemize}
@@ -59,22 +38,18 @@ and two $\Lambda$CDM parameters
 $\theta_{\rm CDM}=\{\omega_m,\sigma_8\}$.
 
 
-All other parameters that enter the complete subgrid prescription are held fixed (see \cite{frontiere2025modeling} for the parameter choices). In addition, we fix the a few of the $\Lambda$CDM cosmology parameters to
-$\Omega_{\rm b}h^2=0.02242$,
-%$\Omega_{\nu}=0.0$,
-$H_0=67.66$,
-$n_s=0.9665$. Spatial flatness and massless neutrinos are assumed.
+All other parameters in the full subgrid prescription are held fixed (see \cite{frontiere2025modeling} for the parameter choices). The remaining $\Lambda$CDM parameters are also fixed:
+$\Omega_{\rm b}h^2=0.02242$, $H_0=67.66$, $n_s=0.9665$. Spatial flatness and massless neutrinos are assumed.
 
-We have multiple experimental designs:
-
+The simulation campaign comprises 110 HAvoCC-400\,Mpc runs assembled from four sub-designs:
 \begin{itemize}
-    \item 0-39: 40 simulations of D-optimal with \autoref{tab:param_ranges}
-    \item 40-89: 50 space-filling design around \autoref{tab:param_ranges}
-    \item 90-99: 10 space-filling
-    \item 100-110: 10 more space-filling
+    \item indices 0--39: 40 D-optimal points spanning the ranges of \autoref{tab:param_ranges},
+    \item indices 40--89: 50 space-filling points over the same box,
+    \item indices 90--99: 10 additional space-filling points,
+    \item indices 100--110: 10 further space-filling points.
 \end{itemize}
 
-See \autoref{appendix:params} for the parameter values. The design-space projection plots (\texttt{exp\_design.png}) live in \texttt{summaries\_emulation.tex}.
+The exhaustive parameter listing is in \autoref{appendix:params}; design-space projection plots (\texttt{exp\_design.png}) live in \texttt{summaries\_emulation.tex}. Five simulations, indices $\{3,11,19,27,35\}$, are held out as the validation set used throughout the companion notes.
 
 \begin{table}[htbp]
 \centering
@@ -139,9 +114,7 @@ The emulator development in this work is carried out with SEPIA (Simulation-Enab
 
 For each summary statistic we train an independent multivariate Gaussian-process emulator over the seven-parameter input space. The simulation output is projected onto a principal-component basis (training-time \texttt{exp\_variance}$=0.999$ for all summaries except $P(k)$, which uses $0.95$); the GP is then fit on the PC weights. At inference time the basis size is auto-synced to whatever was stored in the model pickle so chains and emulators stay consistent across retrains.
 
-\emph{Train/test split.} Out of the 109 simulations actually used for training, five are held out as a fixed validation set: indices $\{3, 11, 19, 27, 35\}$. Validation and sensitivity plots in the companion documents use these same five test points.
-
-Per-observable validation, parameter sensitivity, and redshift sweeps are collected in \texttt{summaries\_emulation.tex} (for $P(k)$, HMF, GSMF, $f_\mathrm{gas}$, CSFR) and \texttt{cluster\_profiles.tex} (for the eight cluster profiles).
+\emph{Train/test split.} The five held-out simulations $\{3,11,19,27,35\}$ form a fixed validation set; the remaining sims train the per-observable GPs. Per-observable validation, sensitivity, and redshift sweeps are collected in \texttt{summaries\_emulation.tex} ($P(k)$, HMF, GSMF, $f_\mathrm{gas}$, CSFR) and \texttt{cluster\_profiles.tex} (eight cluster profiles).
 
 \section{Redshift coverage and snapshot windows}\label{sec:z_dependence}
 
@@ -162,34 +135,23 @@ With the available snapshots we first fit independent GP models for each redshif
 
 The full MCMC trial set, posteriors and v1$\leftrightarrow$v2 benchmarking are documented in \texttt{calibration\_results.tex}. The shared configuration (priors, walker count, fixed cosmology when applicable) is held in \texttt{Inference/configs/\_defaults.yaml}; trial-specific overrides specify only the observables and the parameter mode (\texttt{subgrid}, \texttt{subgrid+cosmo}, or \texttt{custom}).
 
-\section{Discussions}
+\section{Discussion and outlook}
 \label{sec:conclusions}
 
+The framework currently delivers (i) single- and multi-$z$ emulators for $P(k)$ suppression, HMF, GSMF, $f_{\rm gas}$, CSFR and the eight cluster profiles, (ii) a redshift interpolator that stitches per-snapshot GPs at inference time, and (iii) a YAML-driven MCMC pipeline that supports arbitrary observable + parameter combinations, including the cluster-only and v1$\leftrightarrow$v2 benchmark fits documented in \texttt{calibration\_results.tex}.
 
-To-do:
-
+\paragraph{Open items.}
 \begin{enumerate}
-    \item Power-spectra suppression, Halo-mass functions, Cosmic Star formation rates, and other Cosmology-level statistics.
-    \item Any other cluster-level statistics -- electron density profiles?
-    \item Redshift-space interpolation
-    \item Need to discuss on Calibration runs. Similar patterns as before? (With and without fGas?).
-    \item Should also do a multi-redshift GSMF MCMC calibration.
+    \item \textbf{Multi-$z$ GSMF MCMC.} The per-snapshot likelihood scaffolding is in place; the remaining work is a trial config wired to multiple Driver+2022 redshift bins and a follow-up sensitivity test on $\sigma_8$--$M_{\rm seed}$ degeneracy as a function of $z$.
+    \item \textbf{Joint $P(k)$ + cluster constraints.} Combine the validated $P(k)$-suppression emulator with $f_{\rm gas}$ (and optionally CGD) for an independent baryonic-feedback channel; check whether the GSMF-driven posterior shifts.
+    \item \textbf{Cluster-profile observational coverage.} CEEP and CYP currently have no external dataset in the comparison figure; resolve whether to add literature values or label them prediction-only. Address mild small-$r$ tension in the metallicity (CMP) profile and the outer-bin tension in the temperature (CTP) profile.
+    \item \textbf{Design-extension review.} After the next batch of simulations, re-check the design-space coverage plot and decide whether to expand the $\epsilon_{\rm kin}$ range (its posterior currently sits at the prior edge in the 7p fit).
+    \item \textbf{Bias-parameter MCMC.} The \texttt{GSMF\_CGD\_bias} trial folds in three observational bias parameters ($\log b_\star, b_{\rm CV}, b_{\rm HSE}$); produce a paper-grade posterior with the same priors as the headline 7p fit.
 \end{enumerate}
 
 
-% \section*{Acknowledgements}
-
-% Work at Argonne National Laboratory was supported under the U.S. Department of Energy contract DE-AC02-06CH11357. U.S. Department of Energy, Office of Science, Office of Advanced Scientific Computing Research and Office of High Energy Physics, Scientific Discovery through Advanced Computing (SciDAC) program. The SciDAC program also supported the work at Los Alamos National Laboratory. This research used resources of the National Energy Research Scientific Computing Center, a DOE Office of Science User Facility supported by the Office of Science of the U.S. Department of Energy under Contract DE-AC02-05CH11231. This research also used
-% resources of the Argonne Leadership Computing Facility, which is a DOE Office of Science User Facility supported under Contract DE-AC02-06CH11357. Additionally, this work used resources of the Oak Ridge Leadership Computing Facility, which is a DOE Office of Science User Facility supported under Contract DEAC05-00OR22725.
-
-% \end{acknowledgements}
-
-% \appendix
-% \clearpage
-% \onecolumn
 \section{Parameters in the design}
 \label{appendix:params}
-% Parameters in the experimental designs:
 \newcommand{\DesignTableSlice}[4]{%
 \begin{table}
 \centering
@@ -214,7 +176,6 @@ To-do:
 \end{table}
 }
 
-% ---- use it (your bins) ----
 \DesignTableSlice{0}{39}{tab:params_dopt}{Design points 0--39: 40 simulations of D-optimal design around \autoref{tab:param_ranges}.}
 
 \DesignTableSlice{40}{89}{tab:params_spacefill_A}{Design points 40--89: 50 space-filling design around \autoref{tab:param_ranges}.}

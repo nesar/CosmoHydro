@@ -1,13 +1,17 @@
 __all__ = ['emulate', 'emulate_ensemble', 'load_model_multiple', 'emu_redshift',
            'blockPrint', 'enablePrint', 'pu_from_saved_model', 'load_model_autosync']
 
+import contextlib
+import io
+import os
+import pickle
+import sys
+
+import numpy as np
 from sepia.SepiaModel import SepiaModel
 from sepia.SepiaData import SepiaData
 from sepia.SepiaPredict import SepiaEmulatorPrediction
-import numpy as np
-import pickle
-import sys
-import os
+
 from cosmo_hydro_emu.pca import do_pca
 from cosmo_hydro_emu.gp import gp_load
 from cosmo_hydro_emu.load_hacc import sepia_data_format
@@ -48,7 +52,6 @@ def load_model_autosync(model_filename, sepia_data, exp_variance=0.95):
     so the reconstructed K basis always matches what the MCMC samples expect.
     Falls back to `exp_variance` (float) if the basis count can't be detected.
     """
-    import contextlib, io
     pu = pu_from_saved_model(model_filename)
     n_pc = pu if pu is not None else exp_variance
     # Suppress SEPIA chatter without touching sys.stdout globally, so callers
