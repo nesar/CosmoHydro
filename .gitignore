@@ -5,6 +5,7 @@ data/*
 # Model pickle files
 models/*.pkl
 codes/model/**/*.pkl
+documentation/*.tex
 
 # Plots
 plots/*.png
