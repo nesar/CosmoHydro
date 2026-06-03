@@ -1,0 +1,6 @@
+Cosmology posterior summary on (omega_m, sigma_8)
+fiducial : omega_m = 0.14176,  sigma_8 = 0.8102
+prior    : omega_m ~ N(0.1375, 0.0175), sigma_8 ~ N(0.8000, 0.1000)
+
+chain                                                    omega_m (med +/- 1sig)     sigma_8 (med +/- 1sig)  
+  7p, hydro marginalized (OLD chain)                       0.14553 +/- 0.00821    0.7514 +/- 0.0321
