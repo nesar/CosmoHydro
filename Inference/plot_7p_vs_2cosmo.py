@@ -18,11 +18,11 @@ from cosmo_hydro_emu.load_hacc import PARAM_NAME
 
 RESULTS = os.path.join(os.path.dirname(__file__), 'results')
 
-SAMPLES_7P = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_7p_fidprior.npy')
-PARAMS_7P  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_7p_fidprior.npy')
+SAMPLES_7P = os.path.join(RESULTS, 'samples_GSMF_7p.npy')
+PARAMS_7P  = os.path.join(RESULTS, 'params_list_GSMF_7p.npy')
 
-SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_2cosmo.npy')
-PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_2cosmo.npy')
+SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_2cosmo_match7p.npy')
+PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_2cosmo_match7p.npy')
 
 OUTPUT = os.path.join(RESULTS, 'plot_7p_vs_2cosmo.png')
 
