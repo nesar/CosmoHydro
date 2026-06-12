@@ -1,8 +1,9 @@
 # Trial: GSMF + CGD + fGas, ONLY the 2 cosmology parameters (omega_m, sigma_8).
-# Subgrid parameters fixed at design midpoints.
-# Truncated-Gaussian prior on the cosmology parameters, centered at the project
-# fiducial cosmology (Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66,
-# sigma_8=0.8102 -> omega_m = Omega_m*h^2 = 0.14176, sigma_8 = 0.8102).
+# Subgrid parameters fixed at design midpoints. This is THE canonical 2-cosmology
+# run (the former _match7p / _fidprior variants were retired into this one).
+# The cosmology prior is the shared project default from _defaults.yaml
+# (moderate truncated Gaussian centered on the fiducial, sigma = 0.005 / 0.03) —
+# no per-trial prior block needed.
 # Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
 trial_name: GSMF_CGD_fGas_2cosmo
 
@@ -23,9 +24,3 @@ fixed_params:
   M_seed: 1.3
   v_kin: 0.65
   eps_kin: 0.61
-
-# Truncated-Gaussian prior on cosmology, centered at the project fiducial.
-# omega_m here is Omega_m * h^2 (design range [0.12, 0.155]).
-gaussian_priors:
-  omega_m: {mu: 0.14176, sigma: 0.001}
-  sigma_8: {mu: 0.8102, sigma: 0.006}

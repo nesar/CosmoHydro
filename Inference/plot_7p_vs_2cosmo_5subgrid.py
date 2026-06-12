@@ -23,11 +23,11 @@ RESULTS = os.path.join(os.path.dirname(__file__), 'results')
 SAMPLES_7P = os.path.join(RESULTS, 'samples_GSMF_7p.npy')
 PARAMS_7P  = os.path.join(RESULTS, 'params_list_GSMF_7p.npy')
 
-# Fiducial-centered, moderately stronger prior on (omega_m, sigma_8) — replaces
-# the old _match7p run whose weak default prior let the posterior rail against
-# the box edge. See configs/GSMF_CGD_fGas_2cosmo_fidprior.yaml.
-SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_2cosmo_fidprior.npy')
-PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_2cosmo_fidprior.npy')
+# Canonical 2-cosmology run. Uses the shared project-default cosmology prior
+# (moderate fiducial-centered Gaussian from configs/_defaults.yaml), which keeps
+# the posterior off the design-box edge. See configs/GSMF_CGD_fGas_2cosmo.yaml.
+SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_2cosmo.npy')
+PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_2cosmo.npy')
 
 SAMPLES_5P = os.path.join(RESULTS, 'samples_GSMF_5p_fid_cosmo.npy')
 PARAMS_5P  = os.path.join(RESULTS, 'params_list_GSMF_5p_fid_cosmo.npy')
