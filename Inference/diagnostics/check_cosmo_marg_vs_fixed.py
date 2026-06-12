@@ -5,21 +5,25 @@ What this answers
   "If we fix the hydro parameters instead of marginalizing over them,
    how much do the cosmology constraints change?"
 
-Chains compared
----------------
-  1. OLD 7p (GSMF+CGD+fGas) marginalized to (omega_m, sigma_8)
-       old_results/results_pre_fid_cosmo/samples_GSMF_CGD_fGas_7p.npy
-  2. NEW 7p (GSMF+CGD+fGas) marginalized to (omega_m, sigma_8)   [if present]
-       results/samples_GSMF_CGD_fGas_7p.npy
-  3. NEW 2p fixed-hydro (broad-prior, matches 7p)                 [if present]
-       results/samples_GSMF_CGD_fGas_2cosmo_match7p.npy
+Both chains use the shared project-default cosmology prior (moderate
+truncated Gaussian centered on the fiducial; configs/_defaults.yaml), so the
+only difference is fixed vs. marginalized hydro.
 
-For each chain that does not yet exist on disk, the script just skips it and
-prints a note, so it is safe to re-run while the 7p / 2p MCMCs are still going.
+Chains compared (GSMF+CGD+fGas, 3 observables)
+----------------------------------------------
+  1. 7p marginalized to (omega_m, sigma_8)        [if present]
+       results/samples_GSMF_CGD_fGas_7p.npy
+  2. 2p, hydro FIXED at design midpoints
+       results/samples_GSMF_CGD_fGas_2cosmo.npy
+
+The 3-observable 7p chain has not been run under the new prior yet; until it
+exists the script just skips it and prints a note, so it is safe to re-run
+while the MCMCs are still going.
 
 Outputs (in this directory)
 ---------------------------
   cosmo_marg_vs_fixed.png
+  cosmo_marg_vs_fixed_medians.txt
 """
 import os
 import numpy as np
@@ -31,16 +35,16 @@ from getdist import MCSamples
 
 
 V2  = '/home/nramachandra/Projects/Hydro_runs/CosmoHydro'
-OUT = os.path.join(V2, 'Inference/v1_v2_comparison')
+OUT = os.path.join(V2, 'Inference/diagnostics')
 
 # Design ranges (must match FinalDesign cosmology columns)
 RANGES = {'omega_m': (0.12, 0.155), 'sigma_8': (0.7, 0.9)}
 # Project fiducial cosmology
 FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
-# Default broad prior actually used by the 7p run (midpoint Gaussian).
-# For reference only; not drawn.
-PRIOR = {'omega_m': (0.5*(0.12+0.155), 0.5*(0.155-0.12)),
-         'sigma_8': (0.5*(0.7+0.9),    0.5*(0.9-0.7))}
+# Shared project-default cosmology prior (moderate fiducial-centered Gaussian
+# from configs/_defaults.yaml). For reference only; not drawn.
+PRIOR = {'omega_m': (0.14176, 0.005),
+         'sigma_8': (0.8102,  0.03)}
 
 NAMES  = ['omega_m', 'sigma_8']
 LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
@@ -48,18 +52,13 @@ LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
 
 CANDIDATES = [
     dict(
-        label='7p, hydro marginalized (OLD chain)',
-        path=f'{V2}/Inference/old_results/results_pre_fid_cosmo/samples_GSMF_CGD_fGas_7p.npy',
+        label='7p, hydro marginalized (GSMF+CGD+fGas)',
+        path=f'{V2}/Inference/results/samples_GSMF_CGD_fGas_7p.npy',
         cols=(5, 6), color='tab:red', ls='-',
     ),
     dict(
-        label='7p, hydro marginalized (NEW chain)',
-        path=f'{V2}/Inference/results/samples_GSMF_CGD_fGas_7p.npy',
-        cols=(5, 6), color='tab:orange', ls='-',
-    ),
-    dict(
-        label='2p, hydro FIXED at midpoints (match-7p priors)',
-        path=f'{V2}/Inference/results/samples_GSMF_CGD_fGas_2cosmo_match7p.npy',
+        label='2p, hydro FIXED at midpoints (GSMF+CGD+fGas)',
+        path=f'{V2}/Inference/results/samples_GSMF_CGD_fGas_2cosmo.npy',
         cols=(0, 1), color='tab:blue', ls='-',
     ),
 ]

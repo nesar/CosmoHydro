@@ -18,7 +18,7 @@ from getdist import MCSamples
 
 V1  = '/home/nramachandra/Projects/Hydro_runs/Flamingo/Clean'
 V2  = '/home/nramachandra/Projects/Hydro_runs/CosmoHydro'
-OUT = os.path.join(V2, 'Inference/v1_v2_comparison')
+OUT = os.path.join(V2, 'Inference/diagnostics')
 
 sys.path.insert(0, f'{V2}/codes')
 from cosmo_hydro_emu.load_hacc import (
