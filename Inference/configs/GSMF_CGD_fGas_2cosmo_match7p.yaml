@@ -1,8 +1,13 @@
 # Trial: GSMF + CGD + fGas, 2 cosmology parameters ONLY, hydro params FIXED at
-# design midpoints. Cosmology priors deliberately match the broad defaults used
-# by GSMF_CGD_fGas_7p.yaml (midpoint Gaussian with sigma = half-range), so the
-# only difference between this run and the 7p run's (omega_m, sigma_8) marginal
-# is the treatment of hydro parameters (fixed vs. marginalized).
+# design midpoints. The cosmology prior is the shared fiducial-centered default
+# from _defaults.yaml (same prior the 7p run now sees), so the only difference
+# between this run and the 7p run's (omega_m, sigma_8) marginal is the treatment
+# of hydro parameters (fixed vs. marginalized).
+#
+# NOTE: now equivalent to GSMF_CGD_fGas_2cosmo_fidprior.yaml (which states the
+# same prior explicitly). The canonical 2cosmo run / plot overlay uses _fidprior.
+# (Historically this config fell back to the weak broad default; that default was
+# replaced project-wide by the moderate fiducial prior on 2026-06-12.)
 # Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
 trial_name: GSMF_CGD_fGas_2cosmo_match7p
 
