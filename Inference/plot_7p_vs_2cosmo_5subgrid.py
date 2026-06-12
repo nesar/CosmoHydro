@@ -23,8 +23,11 @@ RESULTS = os.path.join(os.path.dirname(__file__), 'results')
 SAMPLES_7P = os.path.join(RESULTS, 'samples_GSMF_7p.npy')
 PARAMS_7P  = os.path.join(RESULTS, 'params_list_GSMF_7p.npy')
 
-SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_2cosmo_match7p.npy')
-PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_2cosmo_match7p.npy')
+# Fiducial-centered, moderately stronger prior on (omega_m, sigma_8) — replaces
+# the old _match7p run whose weak default prior let the posterior rail against
+# the box edge. See configs/GSMF_CGD_fGas_2cosmo_fidprior.yaml.
+SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_2cosmo_fidprior.npy')
+PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_2cosmo_fidprior.npy')
 
 SAMPLES_5P = os.path.join(RESULTS, 'samples_GSMF_5p_fid_cosmo.npy')
 PARAMS_5P  = os.path.join(RESULTS, 'params_list_GSMF_5p_fid_cosmo.npy')
@@ -71,7 +74,7 @@ def main():
         samples=s2c,
         names=names_2c,
         labels=[n.strip('$') for n in names_2c],
-        label='2 cosmo only (GSMF+CGD+fGas, Planck prior)',
+        label='2 cosmo only (GSMF+CGD+fGas, fiducial prior)',
         ranges=ranges_2c,
         settings={'mult_bias_correction_order': 0.5,
                   'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
