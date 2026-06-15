@@ -97,6 +97,7 @@ python plot_mcmc.py results/samples_GSMF_7p.npy results/samples_GSMF_CGD_fGas_7p
     --labels "GSMF" "GSMF+CGD+fGas" --output results/comparison.png
 ```
 
+
 ### Available trial configs
 
 | Config | Observables | Parameters |
