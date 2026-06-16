@@ -23,11 +23,13 @@ RESULTS = os.path.join(os.path.dirname(__file__), 'results')
 SAMPLES_7P = os.path.join(RESULTS, 'samples_GSMF_7p.npy')
 PARAMS_7P  = os.path.join(RESULTS, 'params_list_GSMF_7p.npy')
 
-# Canonical 2-cosmology run. Uses the shared project-default cosmology prior
-# (moderate fiducial-centered Gaussian from configs/_defaults.yaml), which keeps
-# the posterior off the design-box edge. See configs/GSMF_CGD_fGas_2cosmo.yaml.
-SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_CGD_fGas_2cosmo.npy')
-PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_CGD_fGas_2cosmo.npy')
+# GSMF-only 2-cosmology run (hydro fixed at midpoints). Matched to the GSMF-only
+# 7p and 5p chains above so the whole triangle is one consistent observable set.
+# Uses the shared project-default cosmology prior (configs/_defaults.yaml).
+# (The GSMF+CGD+fGas 2cosmo run was retired to old_results/retired_GSMF_CGD_fGas/
+# because CGD+fGas drive cosmology to the design-box edge.)
+SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_2cosmo.npy')
+PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_2cosmo.npy')
 
 SAMPLES_5P = os.path.join(RESULTS, 'samples_GSMF_5p_fid_cosmo.npy')
 PARAMS_5P  = os.path.join(RESULTS, 'params_list_GSMF_5p_fid_cosmo.npy')
