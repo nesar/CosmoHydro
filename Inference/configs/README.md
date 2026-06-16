@@ -62,7 +62,8 @@ params otherwise use the broad default Gaussian (midpoint, σ=half-range).
 ### Cosmology-only / custom
 | Config | Observables | Notes |
 |---|---|---|
-| `GSMF_CGD_fGas_2cosmo.yaml` | GSMF + CGD + fGas | Only `omega_m`, `sigma_8` free; 5 hydro params **fixed** at design midpoints. Red chain / fixed partner for the cosmo marg-vs-fixed check. |
+| `GSMF_CGD_fGas_2cosmo.yaml` | GSMF + CGD + fGas | Only `omega_m`, `sigma_8` free; 5 hydro params **fixed** at design midpoints. Fixed partner for the 3-observable cosmo marg-vs-fixed check. |
+| `GSMF_2cosmo.yaml` | GSMF | GSMF-only control: `omega_m`, `sigma_8` free, hydro fixed at midpoints. Isolates the fix-hydro effect without the CGD+fGas pull; pairs with `GSMF_7p` for a GSMF-only cosmo marg-vs-fixed check. |
 | `sigma8_vkin_custom.yaml` | GSMF + CGD | Custom: `v_kin`, `eps_kin`, `sigma_8` free. |
 
 ### Bias / multi-redshift
