@@ -46,24 +46,22 @@ params otherwise use the broad default Gaussian (midpoint, σ=half-range).
 | Config | Observables | Notes |
 |---|---|---|
 | `GSMF_7p.yaml` | GSMF | 7p; `eps_kin` flat. Main blue chain / subgrid-marg partner. |
-| `GSMF_CGD_7p.yaml` | GSMF + CGD | 7p; `eps_kin` flat. |
+| `GSMF_CGD_7p.yaml` | GSMF + CGD | 7p; `eps_kin` flat. Marginalized partner for the cosmo marg-vs-fixed check. |
 | `GSMF_fGas_7p.yaml` | GSMF + fGas | 7p; `eps_kin` flat. |
-| `GSMF_CGD_fGas_7p.yaml` | GSMF + CGD + fGas | 7p; `eps_kin` flat. Marginalized partner for the cosmo marg-vs-fixed check. |
-| `GSMF_CGD_fGas_all.yaml` | GSMF + CGD + fGas | 7p; **all** subgrid params Gaussian (no `eps_kin` flat override). |
 
 ### Subgrid-only fits (cosmology fixed at fiducial)
 | Config | Observables | Notes |
 |---|---|---|
 | `GSMF_subgrid.yaml` | GSMF | 5 subgrid free. |
-| `GSMF_CGD_subgrid.yaml` | GSMF + CGD | 5 subgrid free. |
 | `GSMF_5p_fid_cosmo.yaml` | GSMF | 5 subgrid free; `eps_kin` flat. Reproduces the legacy `mcmc_hacc.py` "GSMF only" result. Green chain / fixed partner for the subgrid marg-vs-fixed check. |
+| `GSMF_CGD_5p_fid_cosmo.yaml` | GSMF + CGD | 5 subgrid free; `eps_kin` flat. GSMF+CGD analog of `GSMF_5p_fid_cosmo` (was `GSMF_CGD_subgrid`). |
 | `CGD_CGED_cluster.yaml` | CGD + CGED | Cluster-only statistics, subgrid free. |
 
 ### Cosmology-only / custom
 | Config | Observables | Notes |
 |---|---|---|
-| `GSMF_CGD_fGas_2cosmo.yaml` | GSMF + CGD + fGas | Only `omega_m`, `sigma_8` free; 5 hydro params **fixed** at design midpoints. Fixed partner for the 3-observable cosmo marg-vs-fixed check. |
-| `GSMF_2cosmo.yaml` | GSMF | GSMF-only control: `omega_m`, `sigma_8` free, hydro fixed at midpoints. Isolates the fix-hydro effect without the CGD+fGas pull; pairs with `GSMF_7p` for a GSMF-only cosmo marg-vs-fixed check. |
+| `GSMF_2cosmo.yaml` | GSMF | `omega_m`, `sigma_8` free, hydro fixed at midpoints. GSMF-only control; pairs with `GSMF_7p` for a GSMF-only cosmo marg-vs-fixed check. |
+| `GSMF_CGD_2cosmo.yaml` | GSMF + CGD | `omega_m`, `sigma_8` free, hydro fixed at midpoints. Fixed partner for the GSMF+CGD cosmo marg-vs-fixed check (pairs with `GSMF_CGD_7p`). |
 | `sigma8_vkin_custom.yaml` | GSMF + CGD | Custom: `v_kin`, `eps_kin`, `sigma_8` free. |
 
 ### Bias / multi-redshift
@@ -76,3 +74,8 @@ params otherwise use the broad default Gaussian (midpoint, σ=half-range).
 > Gaussian). The former tight Planck-pin variants (`*_fidprior`, `*_planck`) and
 > the broad-default `*_match7p` 2cosmo variant were retired; their old chains
 > live under `old_results/results_pre_fid_cosmo/`.
+>
+> The `GSMF_CGD_fGas_*` trio (`7p`, `2cosmo`, `all`) was retired to
+> `old_results/retired_GSMF_CGD_fGas/`: adding CGD **and** fGas drove cosmology
+> to the upper design-box edge (Ωₘ→0.155, σ₈→0.9) in both hydro-free and
+> hydro-fixed runs. The `GSMF_CGD_*` trio above is the fGas-free replacement.

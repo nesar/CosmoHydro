@@ -1,0 +1,29 @@
+# Trial: GSMF + CGD, the 2 cosmology parameters (omega_m, sigma_8) free, with the
+# 5 hydro params FIXED at design midpoints. The GSMF+CGD analog of GSMF_2cosmo.yaml
+# (GSMF-only) and of the retired GSMF_CGD_fGas_2cosmo. 2p-cosmo case of the
+# GSMF_CGD trio (with GSMF_CGD_7p and GSMF_CGD_5p_fid_cosmo).
+#
+# Pairs apples-to-apples with GSMF_CGD_7p for the cosmo marg-vs-fixed check.
+# Cosmology prior is the shared project default (moderate fiducial-centered
+# Gaussian; configs/_defaults.yaml).
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_CGD_2cosmo
+
+observables:
+  - GSMF
+  - CGD
+
+param_mode: custom
+free_params:
+  - omega_m
+  - sigma_8
+
+# Hydro fixed at design midpoints (same convention as GSMF_2cosmo).
+fixed_params:
+  kappa_w: 3.0
+  e_w: 0.6
+  M_seed: 1.3
+  v_kin: 0.65
+  eps_kin: 0.61
+
+flat_prior_indices: []

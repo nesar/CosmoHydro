@@ -1,0 +1,23 @@
+# Trial: GSMF + CGD, 5 subgrid params free, cosmology FIXED at the project
+# fiducial. The GSMF+CGD analog of GSMF_5p_fid_cosmo.yaml (which is GSMF-only).
+# Subgrid case of the GSMF_CGD trio (with GSMF_CGD_7p and GSMF_CGD_2cosmo).
+#
+# Cosmology fixed at the project fiducial:
+#   Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66, sigma_8=0.8102
+#   -> omega_m (Omega_m*h^2) = 0.14176, sigma_8 = 0.8102.
+# eps_kin (index 4) keeps a flat prior; all other subgrid params Gaussian
+# (matches GSMF_5p_fid_cosmo / GSMF_CGD_7p).
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_CGD_5p_fid_cosmo
+
+observables:
+  - GSMF
+  - CGD
+
+param_mode: subgrid
+
+fixed_params:
+  omega_m: 0.14176
+  sigma_8: 0.8102
+
+flat_prior_indices: [4]

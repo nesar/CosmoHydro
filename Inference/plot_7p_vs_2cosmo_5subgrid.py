@@ -66,7 +66,7 @@ def main():
         samples=s7p,
         names=names_7p,
         labels=[n.strip('$') for n in names_7p],
-        label='7 params (GSMF+CGD+fGas, Planck prior on cosmo)',
+        label='7 params (GSMF, cosmo + hydro free)',
         ranges=ranges_7p,
         settings={'mult_bias_correction_order': 0.5,
                   'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
@@ -76,7 +76,7 @@ def main():
         samples=s2c,
         names=names_2c,
         labels=[n.strip('$') for n in names_2c],
-        label='2 cosmo only (GSMF+CGD+fGas, fiducial prior)',
+        label='2 cosmo only (GSMF, hydro fixed at midpoints)',
         ranges=ranges_2c,
         settings={'mult_bias_correction_order': 0.5,
                   'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
@@ -86,7 +86,7 @@ def main():
         samples=s5p,
         names=names_5p,
         labels=[n.strip('$') for n in names_5p],
-        label='5 subgrid only (GSMF, fiducial cosmology fixed)',
+        label='5 subgrid only (GSMF, cosmology fixed at fiducial)',
         ranges=ranges_5p,
         settings={'mult_bias_correction_order': 0.5,
                   'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
@@ -129,7 +129,7 @@ def main():
                 ax.axvline(fiducial[nj], color='k', lw=1.0, ls=':')
                 ax.axhline(fiducial[ni], color='k', lw=1.0, ls=':')
 
-    plt.suptitle('7-param vs 2-cosmology vs 5-subgrid MCMC — fiducial prior on $\\Omega_m h^2$, $\\sigma_8$',
+    plt.suptitle('GSMF only — 7-param vs 2-cosmology vs 5-subgrid MCMC (same forward model)',
                  y=1.005, fontsize=14)
 
     os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)

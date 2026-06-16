@@ -9,16 +9,17 @@ Both chains use the shared project-default cosmology prior (moderate
 truncated Gaussian centered on the fiducial; configs/_defaults.yaml), so the
 only difference is fixed vs. marginalized hydro.
 
-Chains compared (GSMF+CGD+fGas, 3 observables)
-----------------------------------------------
+Chains compared (GSMF + CGD, 2 observables)
+-------------------------------------------
   1. 7p marginalized to (omega_m, sigma_8)        [if present]
-       results/samples_GSMF_CGD_fGas_7p.npy
-  2. 2p, hydro FIXED at design midpoints
-       results/samples_GSMF_CGD_fGas_2cosmo.npy
+       results/samples_GSMF_CGD_7p.npy
+  2. 2p, hydro FIXED at design midpoints          [if present]
+       results/samples_GSMF_CGD_2cosmo.npy
 
-The 3-observable 7p chain has not been run under the new prior yet; until it
-exists the script just skips it and prints a note, so it is safe to re-run
-while the MCMCs are still going.
+(The GSMF+CGD+fGas variant was retired — CGD+fGas drove cosmology to the
+design-box edge; its chains live in old_results/retired_GSMF_CGD_fGas/.)
+Each chain that does not exist yet is skipped with a note, so it is safe to
+re-run while the MCMCs are still going.
 
 Outputs (in this directory)
 ---------------------------
@@ -52,13 +53,13 @@ LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
 
 CANDIDATES = [
     dict(
-        label='7p, hydro marginalized (GSMF+CGD+fGas)',
-        path=f'{V2}/Inference/results/samples_GSMF_CGD_fGas_7p.npy',
+        label='7p, hydro marginalized (GSMF+CGD)',
+        path=f'{V2}/Inference/results/samples_GSMF_CGD_7p.npy',
         cols=(5, 6), color='tab:red', ls='-',
     ),
     dict(
-        label='2p, hydro FIXED at midpoints (GSMF+CGD+fGas)',
-        path=f'{V2}/Inference/results/samples_GSMF_CGD_fGas_2cosmo.npy',
+        label='2p, hydro FIXED at midpoints (GSMF+CGD)',
+        path=f'{V2}/Inference/results/samples_GSMF_CGD_2cosmo.npy',
         cols=(0, 1), color='tab:blue', ls='-',
     ),
 ]

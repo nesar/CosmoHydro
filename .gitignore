@@ -14,6 +14,9 @@ plots/*.pdf
 # Inference results (large MCMC chains)
 Inference/results/*.npy
 
+# Retired MCMC sample arrays (large binaries, regenerable)
+Inference/old_results/**/samples_*.npy
+
 # Python
 __pycache__/
 *.pyc
