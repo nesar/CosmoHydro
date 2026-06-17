@@ -37,7 +37,7 @@ flat_prior_indices: []
 # H0=67.66, sigma_8=0.8102 -> omega_m = Omega_m*h^2 = 0.14176, sigma_8 = 0.8102).
 # Replaces the old weak fallback (midpoint Gaussian, sigma = half-range), which
 # let cosmology rail against the design-box edge. Trials may override per-param
-# (e.g. GSMF_CGD_fGas_7p_fidprior pins tighter). Runs where omega_m/sigma_8 are
+# by adding their own `gaussian_priors:` block. Runs where omega_m/sigma_8 are
 # fixed/absent ignore these entries automatically.
 gaussian_priors:
   omega_m: {mu: 0.14176, sigma: 0.005}
