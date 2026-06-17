@@ -95,7 +95,7 @@ def main():
     g = plots.get_subplot_plotter(subplot_size=2.0)
     g.settings.axes_fontsize = 12
     g.settings.axes_labelsize = 14
-    g.settings.legend_fontsize = 12
+    g.settings.legend_fontsize = 14
     g.settings.alpha_filled_add = 0.6
     g.settings.solid_contour_palefactor = 0.6
     g.settings.num_plot_contours = 2
