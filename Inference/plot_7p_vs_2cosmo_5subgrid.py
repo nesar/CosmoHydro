@@ -76,7 +76,7 @@ def main():
         samples=s2c,
         names=names_2c,
         labels=[n.strip('$') for n in names_2c],
-        label='2 cosmo only (GSMF, hydro fixed at midpoints)',
+        label='2 cosmo only (GSMF, hydro fixed at fiducial)',
         ranges=ranges_2c,
         settings={'mult_bias_correction_order': 0.5,
                   'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
