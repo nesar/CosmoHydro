@@ -1,96 +1,94 @@
 #!/usr/bin/env python
 """
-Overlay plot: 7-parameter MCMC posterior with two reduced-dimension posteriors
-overlaid on their respective subspaces:
-  - the 2-cosmology-parameter (fiducial-prior) posterior on the cosmology panels,
-  - the 5-subgrid-parameter (fixed-cosmology) posterior on the subgrid panels.
+Overlay plots comparing MCMC posteriors that share a forward model.
 
-Run after all three MCMC trials are complete:
+For each observable suite (GSMF, and GSMF+CGD) it builds a triangle in the
+7-parameter space with two reduced-dimension posteriors overlaid:
+  - the 2-cosmology-parameter (hydro fixed) posterior on the cosmology panels,
+  - the 5-subgrid-parameter (cosmology fixed) posterior on the subgrid panels.
+
+It also makes a 7-parameter comparison of GSMF vs GSMF+CGD (how adding CGD
+shifts the joint posterior, especially cosmology).
+
+Chains are skipped if missing, so this is safe to run while runs are ongoing.
+
     python plot_7p_vs_2cosmo_5subgrid.py
 """
 
 import os
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from getdist import plots, MCSamples
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'codes'))
-from cosmo_hydro_emu.load_hacc import PARAM_NAME
-
 RESULTS = os.path.join(os.path.dirname(__file__), 'results')
 
-SAMPLES_7P = os.path.join(RESULTS, 'samples_GSMF_7p.npy')
-PARAMS_7P  = os.path.join(RESULTS, 'params_list_GSMF_7p.npy')
+# Project fiducial cosmology (crosshairs on the cosmology panels).
+FID_OM, FID_S8 = 0.14176, 0.8102
 
-# GSMF-only 2-cosmology run (hydro fixed at midpoints). Matched to the GSMF-only
-# 7p and 5p chains above so the whole triangle is one consistent observable set.
-# Uses the shared project-default cosmology prior (configs/_defaults.yaml).
-# (The GSMF+CGD+fGas 2cosmo run was retired to old_results/retired_GSMF_CGD_fGas/
-# because CGD+fGas drive cosmology to the design-box edge.)
-SAMPLES_2C = os.path.join(RESULTS, 'samples_GSMF_2cosmo.npy')
-PARAMS_2C  = os.path.join(RESULTS, 'params_list_GSMF_2cosmo.npy')
-
-SAMPLES_5P = os.path.join(RESULTS, 'samples_GSMF_5p_fid_cosmo.npy')
-PARAMS_5P  = os.path.join(RESULTS, 'params_list_GSMF_5p_fid_cosmo.npy')
-
-OUTPUT = os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid.png')
+SETTINGS = {'mult_bias_correction_order': 0.5,
+            'smooth_scale_2D': 4, 'smooth_scale_1D': 4}
 
 
-def load(samples_path, params_path):
-    samples = np.load(samples_path)
-    params_list = np.load(params_path, allow_pickle=True).tolist()
-    names = [p[0] for p in params_list]
-    ranges = {p[0]: (float(p[2]), float(p[3])) for p in params_list}
+def load(trial):
+    """Load (samples, names, ranges) for a trial_name, or None if absent."""
+    s = os.path.join(RESULTS, f'samples_{trial}.npy')
+    p = os.path.join(RESULTS, f'params_list_{trial}.npy')
+    if not (os.path.exists(s) and os.path.exists(p)):
+        print(f"  skip (missing): {trial}")
+        return None
+    samples = np.load(s)
+    params_list = np.load(p, allow_pickle=True).tolist()
+    names = [q[0] for q in params_list]
+    ranges = {q[0]: (float(q[2]), float(q[3])) for q in params_list}
+    print(f"  loaded {trial}: {samples.shape}")
     return samples, names, ranges
 
 
-def main():
-    for f in (SAMPLES_7P, PARAMS_7P, SAMPLES_2C, PARAMS_2C, SAMPLES_5P, PARAMS_5P):
-        if not os.path.exists(f):
-            print(f"ERROR: missing {f}")
-            sys.exit(1)
+def mcsamples(loaded, label):
+    s, names, ranges = loaded
+    return MCSamples(samples=s, names=names, labels=[n.strip('$') for n in names],
+                     label=label, ranges=ranges, settings=SETTINGS)
 
-    s7p, names_7p, ranges_7p = load(SAMPLES_7P, PARAMS_7P)
-    s2c, names_2c, ranges_2c = load(SAMPLES_2C, PARAMS_2C)
-    s5p, names_5p, ranges_5p = load(SAMPLES_5P, PARAMS_5P)
 
-    print(f"7p: samples shape {s7p.shape}, names {names_7p}")
-    print(f"2cosmo: samples shape {s2c.shape}, names {names_2c}")
-    print(f"5subgrid: samples shape {s5p.shape}, names {names_5p}")
+def fiducial_crosshairs(g, names):
+    """Dotted crosshairs at fiducial cosmology on the (omega_m, sigma_8) panels."""
+    fid = {names[5]: FID_OM, names[6]: FID_S8}
+    for i, ni in enumerate(names):
+        for j, nj in enumerate(names):
+            if j > i:
+                continue
+            ax = g.subplots[i, j]
+            if ax is None:
+                continue
+            if i == j and ni in fid:
+                ax.axvline(fid[ni], color='k', lw=1.0, ls=':')
+            elif ni in fid and nj in fid:
+                ax.axvline(fid[nj], color='k', lw=1.0, ls=':')
+                ax.axhline(fid[ni], color='k', lw=1.0, ls=':')
 
-    # MCSamples: each reduced chain shares its names with the 7p chain. getdist
-    # overlays the 2cosmo chain only on the omega_m / sigma_8 panels and the
-    # 5subgrid chain only on the 5 subgrid panels of the 7p triangle.
-    mc_7p = MCSamples(
-        samples=s7p,
-        names=names_7p,
-        labels=[n.strip('$') for n in names_7p],
-        label='7 params (GSMF, cosmo + hydro free)',
-        ranges=ranges_7p,
-        settings={'mult_bias_correction_order': 0.5,
-                  'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
-    )
 
-    mc_2c = MCSamples(
-        samples=s2c,
-        names=names_2c,
-        labels=[n.strip('$') for n in names_2c],
-        label='2 cosmo only (GSMF, hydro fixed at fiducial)',
-        ranges=ranges_2c,
-        settings={'mult_bias_correction_order': 0.5,
-                  'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
-    )
+def make_triangle(suite, obs_label, output):
+    """7p triangle with 2cosmo (cosmo panels) and 5subgrid (subgrid panels)
+    overlaid, for one observable suite. suite is the trial-name prefix, e.g.
+    'GSMF' or 'GSMF_CGD'."""
+    print(f"\n=== triangle: {obs_label} ({suite}) ===")
+    l7 = load(f'{suite}_7p')
+    if l7 is None:
+        print(f"  no 7p chain for {suite} — skipping this triangle")
+        return
+    l2 = load(f'{suite}_2cosmo')
+    l5 = load(f'{suite}_5p_fid_cosmo')
 
-    mc_5p = MCSamples(
-        samples=s5p,
-        names=names_5p,
-        labels=[n.strip('$') for n in names_5p],
-        label='5 subgrid only (GSMF, cosmology fixed at fiducial)',
-        ranges=ranges_5p,
-        settings={'mult_bias_correction_order': 0.5,
-                  'smooth_scale_2D': 4, 'smooth_scale_1D': 4},
-    )
+    names_7p, ranges_7p = l7[1], l7[2]
+    mcs, colors, labels = [], [], []
+    mcs.append(mcsamples(l7, f'7 params ({obs_label}, cosmo + hydro free)'))
+    colors.append('#1f77b4'); labels.append(mcs[-1].label)
+    if l2 is not None:
+        mcs.append(mcsamples(l2, f'2 cosmo only ({obs_label}, hydro fixed at fiducial)'))
+        colors.append('#d62728'); labels.append(mcs[-1].label)
+    if l5 is not None:
+        mcs.append(mcsamples(l5, f'5 subgrid only ({obs_label}, cosmology fixed at fiducial)'))
+        colors.append('#2ca02c'); labels.append(mcs[-1].label)
 
     g = plots.get_subplot_plotter(subplot_size=2.0)
     g.settings.axes_fontsize = 12
@@ -100,41 +98,59 @@ def main():
     g.settings.solid_contour_palefactor = 0.6
     g.settings.num_plot_contours = 2
 
-    # Triangle plotted in 7p parameter space; getdist drops each reduced chain
-    # from panels whose parameter it lacks, overlaying 2cosmo on the cosmology
-    # panels and 5subgrid on the subgrid panels.
-    g.triangle_plot(
-        [mc_7p, mc_2c, mc_5p],
-        params=names_7p,
-        filled=True,
-        legend_labels=[mc_7p.label, mc_2c.label, mc_5p.label],
-        param_limits=ranges_7p,
-        contour_colors=['#1f77b4', '#d62728', '#2ca02c'],
-    )
+    g.triangle_plot(mcs, params=names_7p, filled=True, legend_labels=labels,
+                    param_limits=ranges_7p, contour_colors=colors)
+    fiducial_crosshairs(g, names_7p)
+    plt.suptitle(f'{obs_label} — 7-param vs 2-cosmology vs 5-subgrid MCMC '
+                 '(same forward model)', y=1.005, fontsize=14)
+    plt.savefig(output, bbox_inches='tight', dpi=150)
+    plt.close()
+    print(f"  saved: {output}")
 
-    # Mark project fiducial cosmology as crosshairs on the cosmology panels.
-    # omega_m = Omega_m*h^2 from Omega_cdm=0.26067, Omega_b*h^2=0.02242, H0=67.66.
-    fiducial = {names_7p[5]: 0.14176, names_7p[6]: 0.8102}
-    n = len(names_7p)
-    for i, ni in enumerate(names_7p):
-        for j, nj in enumerate(names_7p):
-            if j > i:
-                continue
-            ax = g.subplots[i, j]
-            if ax is None:
-                continue
-            if i == j and ni in fiducial:
-                ax.axvline(fiducial[ni], color='k', lw=1.0, ls=':')
-            elif ni in fiducial and nj in fiducial:
-                ax.axvline(fiducial[nj], color='k', lw=1.0, ls=':')
-                ax.axhline(fiducial[ni], color='k', lw=1.0, ls=':')
 
-    plt.suptitle('GSMF only — 7-param vs 2-cosmology vs 5-subgrid MCMC (same forward model)',
+def make_7p_comparison(suites, output):
+    """Overlay the 7-parameter posteriors of several suites (e.g. GSMF vs
+    GSMF+CGD) on one triangle. suites = [(trial_prefix, label, color), ...]."""
+    print("\n=== 7p comparison: GSMF vs GSMF+CGD ===")
+    mcs, colors, labels, names_ref, ranges_ref = [], [], [], None, None
+    for prefix, label, color in suites:
+        l = load(f'{prefix}_7p')
+        if l is None:
+            continue
+        mcs.append(mcsamples(l, label)); colors.append(color); labels.append(label)
+        if names_ref is None:
+            names_ref, ranges_ref = l[1], l[2]
+    if len(mcs) < 2:
+        print("  fewer than 2 7p chains available — skipping comparison")
+        return
+
+    g = plots.get_subplot_plotter(subplot_size=2.0)
+    g.settings.axes_fontsize = 12
+    g.settings.axes_labelsize = 14
+    g.settings.legend_fontsize = 14
+    g.settings.alpha_filled_add = 0.6
+    g.settings.solid_contour_palefactor = 0.6
+    g.settings.num_plot_contours = 2
+
+    g.triangle_plot(mcs, params=names_ref, filled=True, legend_labels=labels,
+                    param_limits=ranges_ref, contour_colors=colors)
+    fiducial_crosshairs(g, names_ref)
+    plt.suptitle('7-param MCMC — GSMF vs GSMF+CGD (how adding CGD shifts the posterior)',
                  y=1.005, fontsize=14)
+    plt.savefig(output, bbox_inches='tight', dpi=150)
+    plt.close()
+    print(f"  saved: {output}")
 
-    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
-    plt.savefig(OUTPUT, bbox_inches='tight', dpi=150)
-    print(f"Plot saved: {OUTPUT}")
+
+def main():
+    make_triangle('GSMF', 'GSMF',
+                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid.png'))
+    make_triangle('GSMF_CGD', 'GSMF+CGD',
+                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_GSMF_CGD.png'))
+    make_7p_comparison(
+        [('GSMF', 'GSMF (7p)', '#1f77b4'),
+         ('GSMF_CGD', 'GSMF+CGD (7p)', '#ff7f0e')],
+        os.path.join(RESULTS, 'plot_7p_GSMF_vs_GSMF_CGD.png'))
 
 
 if __name__ == '__main__':
