@@ -12,8 +12,10 @@ evaluations (fast).
 
 Outputs (in this directory)
 ---------------------------
-  likelihood_sweep_omega_m.png   (LL vs omega_m at sigma_8 = fiducial)
-  likelihood_sweep_sigma_8.png   (LL vs sigma_8 at omega_m = fiducial)
+  likelihood_sweep_omega_m.png   (1D: LL vs omega_m at sigma_8 = fiducial)
+  likelihood_sweep_sigma_8.png   (1D: LL vs sigma_8 at omega_m = fiducial)
+  likelihood_sweep_2d.png        (2D: LL heatmaps over (omega_m, sigma_8),
+                                  one panel per case: GSMF, CGD, GSMF+CGD)
 """
 import os, sys
 import numpy as np
@@ -36,6 +38,15 @@ FID_OM, FID_S8 = 0.14176, 0.8102
 OM_RANGE = (0.12, 0.155)                      # design box
 S8_RANGE = (0.70, 0.90)
 OBS_LIST = ['GSMF', 'CGD']
+
+# MCMC cosmology prior (matches configs/_defaults.yaml): moderate fiducial-
+# centered truncated Gaussian. mu == fiducial; sigmas below.
+PRIOR_SIGMA = {'omega_m': 0.005, 'sigma_8': 0.03}
+# params_list rows for R.ln_prior: [name, init, lower, upper]
+_PRIOR_PLIST = [['omega_m', FID_OM, OM_RANGE[0], OM_RANGE[1]],
+                ['sigma_8', FID_S8, S8_RANGE[0], S8_RANGE[1]]]
+_PRIOR_GP = {0: (FID_OM, PRIOR_SIGMA['omega_m']),
+             1: (FID_S8, PRIOR_SIGMA['sigma_8'])}
 COLORS = {'GSMF': 'tab:blue', 'CGD': 'tab:green'}
 
 
@@ -93,6 +104,71 @@ def plot_sweep(grid, res, xlabel, fid, edge_lo, edge_hi, title, fname):
     print(f'wrote {p}')
 
 
+def sweep_2d(packs, om_grid, s8_grid):
+    """Return {case: 2D LL array of shape (len(s8_grid), len(om_grid))}.
+    Cases: each observable plus the GSMF+CGD combination."""
+    ll_obs = {o: np.zeros((s8_grid.size, om_grid.size)) for o in packs}
+    for j, s8 in enumerate(s8_grid):
+        for i, om in enumerate(om_grid):
+            for o, pack in packs.items():
+                ll_obs[o][j, i] = ll(pack, om, s8)
+    cases = dict(ll_obs)
+    cases['GSMF+CGD'] = sum(ll_obs[o] for o in packs)
+    return cases
+
+
+def ln_prior_grid(om_grid, s8_grid):
+    """2D log-prior over (omega_m, sigma_8), using the exact MCMC ln_prior
+    (configs/_defaults.yaml cosmology prior). Shape (len(s8), len(om))."""
+    lp = np.zeros((s8_grid.size, om_grid.size))
+    for j, s8 in enumerate(s8_grid):
+        for i, om in enumerate(om_grid):
+            lp[j, i] = R.ln_prior(np.array([om, s8]), _PRIOR_PLIST,
+                                  flat_indices=[], gaussian_priors=_PRIOR_GP)
+    return lp
+
+
+def _panel(ax, fig, OM, S8, field, om_grid, s8_grid, title, cbar_label):
+    d = np.clip(field - np.nanmax(field), -30, 0)
+    pcm = ax.pcolormesh(OM, S8, d, cmap='viridis', shading='gouraud', vmin=-30, vmax=0)
+    ax.contour(OM, S8, d, levels=[-11.83, -6.17, -2.30],
+               colors='w', linewidths=0.8, alpha=0.7)
+    ax.axvline(FID_OM, color='red', ls='--', lw=1.2)
+    ax.axhline(FID_S8, color='red', ls='--', lw=1.2)
+    j, i = np.unravel_index(np.nanargmax(field), field.shape)
+    ax.plot(om_grid[i], s8_grid[j], marker='*', ms=14, mfc='gold', mec='k', mew=0.8,
+            label=f'peak ({om_grid[i]:.4f}, {s8_grid[j]:.3f})')
+    ax.set_title(title, fontsize=11)
+    ax.set_xlabel(r'$\omega_m \equiv \Omega_m h^2$')
+    ax.set_ylabel(r'$\sigma_8$')
+    ax.legend(loc='upper left', fontsize=8, framealpha=0.85)
+    fig.colorbar(pcm, ax=ax, label=cbar_label, shrink=0.85)
+
+
+def plot_2d(om_grid, s8_grid, cases, fname):
+    """Two rows: top = likelihood, bottom = posterior (likelihood + MCMC prior)."""
+    order = [c for c in ('GSMF', 'CGD', 'GSMF+CGD') if c in cases]
+    OM, S8 = np.meshgrid(om_grid, s8_grid)
+    lp = ln_prior_grid(om_grid, s8_grid)
+    fig, axes = plt.subplots(2, len(order), figsize=(5.2 * len(order), 9.0),
+                             constrained_layout=True, squeeze=False)
+    print('\nposterior (lnL + MCMC prior) max location (omega_m, sigma_8):')
+    for col, case in enumerate(order):
+        _panel(axes[0, col], fig, OM, S8, cases[case], om_grid, s8_grid,
+               f'{case} — likelihood', r'$\Delta\ln\mathcal{L}$')
+        post = cases[case] + lp
+        _panel(axes[1, col], fig, OM, S8, post, om_grid, s8_grid,
+               f'{case} — posterior (× MCMC prior)', r'$\Delta\ln\mathcal{P}$')
+        j, i = np.unravel_index(np.nanargmax(post), post.shape)
+        print(f'  {case:10s}: ({om_grid[i]:.4f}, {s8_grid[j]:.3f})')
+    fig.suptitle('Hydro fixed at fiducial — top: likelihood, bottom: posterior '
+                 f'(MCMC prior σ_ωm={PRIOR_SIGMA["omega_m"]}, σ_σ8={PRIOR_SIGMA["sigma_8"]}). '
+                 'Red lines = fiducial cosmology.', fontsize=12)
+    p = os.path.join(OUT, fname)
+    fig.savefig(p, dpi=150, bbox_inches='tight'); plt.close(fig)
+    print(f'wrote {p}')
+
+
 def main():
     cfg = R.load_config(CONFIG)
     design_params = R.load_design(os.path.join(INFER, cfg['data']['design_file']),
@@ -121,6 +197,16 @@ def main():
     plot_sweep(s8_grid, res_s8, r'$\sigma_8$', FID_S8, S8_RANGE[0], S8_RANGE[1],
                'Likelihood vs $\\sigma_8$ (hydro + $\\omega_m$ fixed at fiducial)',
                'likelihood_sweep_sigma_8.png')
+
+    # 2D heatmaps over (omega_m, sigma_8), hydro fixed at fiducial
+    om2 = np.linspace(*OM_RANGE, 70)
+    s82 = np.linspace(*S8_RANGE, 70)
+    cases = sweep_2d(packs, om2, s82)
+    print('\n2D max-lnL location (omega_m, sigma_8):')
+    for c in ('GSMF', 'CGD', 'GSMF+CGD'):
+        j, i = np.unravel_index(np.argmax(cases[c]), cases[c].shape)
+        print(f'  {c:10s}: ({om2[i]:.4f}, {s82[j]:.3f})')
+    plot_2d(om2, s82, cases, 'likelihood_sweep_2d.png')
 
 
 if __name__ == '__main__':
