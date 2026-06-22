@@ -441,6 +441,22 @@ def build_param_space(cfg, design_params):
     for bp in bias_cfg:
         params_list.append([bp['name'], bp['initial'], bp['min'], bp['max']])
 
+    # Optional hard truncation: narrow a free parameter's [min, max] below the
+    # design-box range. This makes ln_prior return -inf outside the window AND
+    # keeps chain_init's walkers inside it (both use params_list[i][2:4]).
+    # Config form (short keys):
+    #   param_ranges:
+    #     omega_m: [0.13676, 0.14676]
+    #     sigma_8: [0.7802, 0.8402]
+    range_overrides = cfg.get('param_ranges', {}) or {}
+    override_by_label = {SHORT_KEY_TO_LABEL[k]: v for k, v in range_overrides.items()}
+    for entry in params_list:
+        if entry[0] in override_by_label:
+            lo, hi = override_by_label[entry[0]]
+            entry[2], entry[3] = float(lo), float(hi)
+            entry[1] = 0.5 * (entry[2] + entry[3])   # re-center init in the window
+            print(f"  [param_ranges] {entry[0]}: hard-truncated to [{lo}, {hi}]")
+
     return params_list, fixed_params, param_names, with_bias
 
 
