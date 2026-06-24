@@ -1,0 +1,30 @@
+# Trial: GSMF only, 2 cosmology params free, hydro fixed at FIDUCIAL, with the
+# cosmology prior HARD-TRUNCATED to fiducial ±1sigma. Same as GSMF_2cosmo but
+# with param_ranges (see GSMF_7p_trunc).
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_2cosmo_trunc
+
+observables:
+  - GSMF
+
+param_mode: custom
+free_params:
+  - omega_m
+  - sigma_8
+
+# Hydro fixed at the project FIDUCIAL hydro values.
+fixed_params:
+  kappa_w: 3.0
+  e_w: 0.5
+  M_seed: 0.8
+  v_kin: 0.51
+  eps_kin: 0.13
+
+# Planck-tight cosmology prior (sigma 0.0011 / 0.006), hard-truncated at
+# fiducial ±1sigma. Overrides the moderate gaussian_priors from _defaults.
+gaussian_priors:
+  omega_m: {mu: 0.14176, sigma: 0.0011}
+  sigma_8: {mu: 0.8102, sigma: 0.006}
+param_ranges:
+  omega_m: [0.14066, 0.14286]
+  sigma_8: [0.8042, 0.8162]

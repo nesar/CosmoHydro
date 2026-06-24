@@ -98,7 +98,7 @@ def plot_sweep(grid, res, xlabel, fid, edge_lo, edge_hi, title, fname):
     ax.set_ylim(-30, 2)
     ax.set_xlabel(xlabel); ax.set_ylabel(r'$\Delta \ln\,\mathcal{L}$ (max-subtracted)')
     ax.set_title(title, fontsize=11)
-    ax.legend(fontsize=9, loc='lower center'); ax.grid(True, ls=':', alpha=0.3)
+    ax.legend(fontsize=9, loc='upper right'); ax.grid(True, ls=':', alpha=0.3)
     p = os.path.join(OUT, fname)
     fig.savefig(p, dpi=150, bbox_inches='tight'); plt.close(fig)
     print(f'wrote {p}')
@@ -141,7 +141,7 @@ def _panel(ax, fig, OM, S8, field, om_grid, s8_grid, title, cbar_label):
     ax.set_title(title, fontsize=11)
     ax.set_xlabel(r'$\omega_m \equiv \Omega_m h^2$')
     ax.set_ylabel(r'$\sigma_8$')
-    ax.legend(loc='upper left', fontsize=8, framealpha=0.85)
+    ax.legend(loc='upper right', fontsize=8, framealpha=0.85)
     fig.colorbar(pcm, ax=ax, label=cbar_label, shrink=0.85)
 
 
