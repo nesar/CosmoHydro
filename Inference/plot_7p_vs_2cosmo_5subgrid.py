@@ -75,20 +75,24 @@ def _cosmo_kind(name):
 
 
 def fiducial_crosshairs(g, names):
-    """Dotted crosshairs at fiducial cosmology on the (omega_m, sigma_8) panels."""
-    fid = {names[5]: FID_OM, names[6]: FID_S8}
+    """Dotted crosshairs at fiducial cosmology on the (omega_m, sigma_8) panels.
+    Identifies cosmo params by name, so it works for any param subset."""
+    fidval = {'omega_m': FID_OM, 'sigma_8': FID_S8}
     for i, ni in enumerate(names):
-        for j, nj in enumerate(names):
-            if j > i:
-                continue
+        for j in range(i + 1):
+            nj = names[j]
             ax = g.subplots[i, j]
             if ax is None:
                 continue
-            if i == j and ni in fid:
-                ax.axvline(fid[ni], color='k', lw=1.0, ls=':')
-            elif ni in fid and nj in fid:
-                ax.axvline(fid[nj], color='k', lw=1.0, ls=':')
-                ax.axhline(fid[ni], color='k', lw=1.0, ls=':')
+            ki, kj = _cosmo_kind(ni), _cosmo_kind(nj)
+            if i == j:
+                if ki in fidval:
+                    ax.axvline(fidval[ki], color='k', lw=1.0, ls=':')
+            else:
+                if kj in fidval:
+                    ax.axvline(fidval[kj], color='k', lw=1.0, ls=':')
+                if ki in fidval:
+                    ax.axhline(fidval[ki], color='k', lw=1.0, ls=':')
 
 
 def overlay_priors(g, names, ranges, cosmo_prior):
@@ -136,32 +140,38 @@ def _plotter():
 
 
 def make_triangle(obs_label, t7p, t2c, t5p, output, cosmo_prior=MODERATE_PRIOR):
-    """7p triangle with 2cosmo (cosmo panels) and 5subgrid (subgrid panels)
-    overlaid. cosmo_prior defaults to the moderate _defaults prior."""
+    """Triangle with 7p, 2cosmo (cosmo panels) and 5subgrid (subgrid panels)
+    overlaid. The param-space is anchored on the richest AVAILABLE chain, so it
+    still renders if the 7p chain isn't done yet (e.g. only 2cosmo present).
+    Each chain keeps its own range, so getdist clips truncated chains at their
+    hard wall instead of smearing the KDE past it."""
     print(f"\n=== triangle: {obs_label} ===")
-    l7 = load(t7p)
-    if l7 is None:
-        print(f"  no 7p chain ({t7p}) — skipping this triangle")
+    specs = [(t7p, '#1f77b4', f'7 params ({obs_label}, cosmo + hydro free)'),
+             (t5p, '#2ca02c', f'5 subgrid only ({obs_label}, cosmology fixed at fiducial)'),
+             (t2c, '#d62728', f'2 cosmo only ({obs_label}, hydro fixed at fiducial)')]
+    avail = []
+    for trial, color, label in specs:
+        if not trial:
+            continue
+        l = load(trial)
+        if l is not None:
+            avail.append((l, color, label))
+    if not avail:
+        print(f"  no chains for {obs_label} — skipping this triangle")
         return
-    l2 = load(t2c) if t2c else None
-    l5 = load(t5p) if t5p else None
 
-    names_7p, ranges_7p = l7[1], l7[2]
-
-    mcs, colors, labels = [mcsamples(l7, f'7 params ({obs_label}, cosmo + hydro free)')], ['#1f77b4'], []
-    labels.append(mcs[-1].label)
-    if l2 is not None:
-        mcs.append(mcsamples(l2, f'2 cosmo only ({obs_label}, hydro fixed at fiducial)'))
-        colors.append('#d62728'); labels.append(mcs[-1].label)
-    if l5 is not None:
-        mcs.append(mcsamples(l5, f'5 subgrid only ({obs_label}, cosmology fixed at fiducial)'))
-        colors.append('#2ca02c'); labels.append(mcs[-1].label)
+    # Anchor the triangle param-space on the chain with the most parameters.
+    anchor = max(avail, key=lambda t: len(t[0][1]))
+    names, ranges = anchor[0][1], anchor[0][2]
+    mcs    = [mcsamples(l, label) for (l, _, label) in avail]
+    colors = [color for (_, color, _) in avail]
+    labels = [label for (_, _, label) in avail]
 
     g = _plotter()
-    g.triangle_plot(mcs, params=names_7p, filled=True, legend_labels=labels,
-                    param_limits=ranges_7p, contour_colors=colors)
-    fiducial_crosshairs(g, names_7p)
-    overlay_priors(g, names_7p, ranges_7p, cosmo_prior)
+    g.triangle_plot(mcs, params=names, filled=True, legend_labels=labels,
+                    param_limits=ranges, contour_colors=colors)
+    fiducial_crosshairs(g, names)
+    overlay_priors(g, names, ranges, cosmo_prior)
     plt.suptitle(f'{obs_label} — 7-param vs 2-cosmology vs 5-subgrid MCMC '
                  '(dashed = prior)', y=1.005, fontsize=14)
     plt.savefig(output, bbox_inches='tight', dpi=150)
