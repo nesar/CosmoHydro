@@ -1,0 +1,20 @@
+# Trial: GSMF + CGD, all 7 params. Same as GSMF_CGD_7p but the cosmology prior is
+# a Planck-width Gaussian (sigma 0.0011 / 0.006), NO hard truncation (design box
+# only) -> a complete cosmology posterior. Companion to GSMF_CGD_7p_trunc.
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_CGD_7p_pk
+
+observables:
+  - GSMF
+  - CGD
+
+param_mode: subgrid+cosmo
+
+flat_prior_indices: [4]
+
+# Planck-tight Gaussian cosmology prior (sigma 0.0011 / 0.006), overriding the
+# moderate _defaults. NO hard truncation: only the design box bounds it, so the
+# posterior is a complete (closed) distribution rather than cut at a wall.
+gaussian_priors:
+  omega_m: {mu: 0.14176, sigma: 0.0011}
+  sigma_8: {mu: 0.8102, sigma: 0.006}

@@ -104,6 +104,70 @@ def plot_sweep(grid, res, xlabel, fid, edge_lo, edge_hi, title, fname):
     print(f'wrote {p}')
 
 
+def _trunc_logprior(x, mu, sigma, win):
+    """1D log Gaussian prior, -inf (here: very negative) outside hard window."""
+    lp = -0.5 * ((x - mu) / sigma) ** 2
+    if win is not None:
+        lp = np.where((x < win[0]) | (x > win[1]), -np.inf, lp)
+    return lp
+
+
+# Priors to compare: (label, sigma_om, sigma_s8, hard-window or None=design box).
+DESIGN_WIN = {'om': (0.12, 0.155), 's8': (0.70, 0.90)}
+TRUNC_WIN_1S = {'om': (0.14066, 0.14286), 's8': (0.8042, 0.8162)}  # fiducial +/-1 Planck sigma
+PRIOR_SET = [
+    ('flat (likelihood only)',          None,   None,   None,        'tab:gray'),
+    ('moderate Gaussian (0.005/0.03)',  0.005,  0.03,   DESIGN_WIN,  'tab:orange'),
+    ('Planck Gaussian, no hard cut',    0.0011, 0.006,  DESIGN_WIN,  'tab:green'),
+    ('Planck Gaussian + ±1σ hard cut',  0.0011, 0.006,  TRUNC_WIN_1S,'tab:red'),
+]
+
+
+def plot_prior_comparison(packs, fname):
+    """For GSMF+CGD (hydro at fiducial), overlay the 1D posterior on omega_m and
+    sigma_8 under several priors, to show which yields a COMPLETE (closed)
+    posterior vs which rails to the box edge or gets cut at a hard wall."""
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5.2))
+    for ax, param, (lo, hi), mu, label in [
+            (axes[0], 'om', OM_RANGE, FID_OM, r'$\omega_m \equiv \Omega_m h^2$'),
+            (axes[1], 's8', S8_RANGE, FID_S8, r'$\sigma_8$')]:
+        grid = np.linspace(lo, hi, 600)
+        # GSMF+CGD log-likelihood along this axis (other param at fiducial)
+        lnL = np.zeros_like(grid)
+        for k, v in enumerate(grid):
+            om, s8 = (v, FID_S8) if param == 'om' else (FID_OM, v)
+            lnL[k] = sum(ll(p, om, s8) for p in packs.values())
+        # likelihood (max-subtracted), shown as a filled gray curve
+        ax.fill_between(grid, np.exp(np.clip(lnL - lnL.max(), -40, 0)), color='0.85',
+                        label='likelihood (flat-prior)')
+        for plabel, s_om, s_s8, win, color in PRIOR_SET:
+            if s_om is None:                       # flat: posterior = likelihood
+                post = lnL.copy()
+            else:
+                sig = s_om if param == 'om' else s_s8
+                w = None if win is None else win[param]
+                post = lnL + _trunc_logprior(grid, mu, sig, w)
+            if not np.isfinite(post).any():
+                continue
+            y = np.exp(post - np.nanmax(post[np.isfinite(post)]))
+            y[~np.isfinite(post)] = 0.0
+            ax.plot(grid, y, color=color, lw=2, label=plabel)
+        ax.axvline(mu, color='k', ls=':', lw=1.2)
+        for v in DESIGN_WIN[param]:
+            ax.axvline(v, color='k', ls='-', lw=0.8, alpha=0.4)
+        for v in TRUNC_WIN_1S[param]:
+            ax.axvline(v, color='tab:red', ls='--', lw=0.8, alpha=0.5)
+        ax.set_xlabel(label); ax.set_ylabel('posterior (peak-normalized)')
+        ax.set_ylim(0, 1.08); ax.grid(True, ls=':', alpha=0.3)
+    axes[0].legend(fontsize=8, loc='upper left')
+    fig.suptitle('GSMF+CGD cosmology posterior under different priors (hydro at fiducial)\n'
+                 'dotted=fiducial, thin solid=design-box edge, dashed red=±1σ hard window',
+                 fontsize=11)
+    p = os.path.join(OUT, fname)
+    fig.savefig(p, dpi=150, bbox_inches='tight'); plt.close(fig)
+    print(f'wrote {p}')
+
+
 def sweep_2d(packs, om_grid, s8_grid):
     """Return {case: 2D LL array of shape (len(s8_grid), len(om_grid))}.
     Cases: each observable plus the GSMF+CGD combination."""
@@ -207,6 +271,10 @@ def main():
         j, i = np.unravel_index(np.argmax(cases[c]), cases[c].shape)
         print(f'  {c:10s}: ({om2[i]:.4f}, {s82[j]:.3f})')
     plot_2d(om2, s82, cases, 'likelihood_sweep_2d.png')
+
+    # posterior under different priors (the "which prior gives a complete
+    # posterior" exploration)
+    plot_prior_comparison(packs, 'prior_comparison.png')
 
 
 if __name__ == '__main__':

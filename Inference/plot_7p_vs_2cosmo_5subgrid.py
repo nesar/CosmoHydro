@@ -38,6 +38,12 @@ MODERATE_PRIOR = {'omega_m': (FID_OM, 0.005, 0.12, 0.155),
 TRUNC_PRIOR = {'omega_m': (FID_OM, 0.0011, 0.14066, 0.14286),
                'sigma_8': (FID_S8, 0.006,  0.8042, 0.8162)}
 
+# Full design-box (valid emulator) range for the cosmology params. Used to pad
+# the axis a bit OUTSIDE a tight prior window so the hard wall is visible (the
+# chain's KDE is still clipped at its own range, so nothing leaks).
+COSMO_VALID = {'omega_m': (0.12, 0.155), 'sigma_8': (0.70, 0.90)}
+AXIS_PAD_FRAC = 0.8   # pad each side by this fraction of the prior-window width
+
 SETTINGS = {'mult_bias_correction_order': 0.5,
             'smooth_scale_2D': 4, 'smooth_scale_1D': 4}
 
@@ -128,6 +134,23 @@ def overlay_priors(g, names, ranges, cosmo_prior):
         ax.set_ylim(0, 1.15)
 
 
+def axis_limits(names, ranges):
+    """Axis limits per parameter. Subgrid params use the chain range (= valid
+    range). Cosmology params get padded a bit OUTSIDE the (possibly tight) prior
+    window, clamped to the design box, so the hard wall is visible on the plot."""
+    lim = {}
+    for nm in names:
+        kind = _cosmo_kind(nm)
+        lo, hi = ranges[nm]
+        if kind in COSMO_VALID:
+            pad = (hi - lo) * AXIS_PAD_FRAC
+            vlo, vhi = COSMO_VALID[kind]
+            lim[nm] = (max(vlo, lo - pad), min(vhi, hi + pad))
+        else:
+            lim[nm] = (lo, hi)
+    return lim
+
+
 def _plotter():
     g = plots.get_subplot_plotter(subplot_size=2.0)
     g.settings.axes_fontsize = 12
@@ -169,7 +192,7 @@ def make_triangle(obs_label, t7p, t2c, t5p, output, cosmo_prior=MODERATE_PRIOR):
 
     g = _plotter()
     g.triangle_plot(mcs, params=names, filled=True, legend_labels=labels,
-                    param_limits=ranges, contour_colors=colors)
+                    param_limits=axis_limits(names, ranges), contour_colors=colors)
     fiducial_crosshairs(g, names)
     overlay_priors(g, names, ranges, cosmo_prior)
     plt.suptitle(f'{obs_label} — 7-param vs 2-cosmology vs 5-subgrid MCMC '
@@ -196,7 +219,7 @@ def make_7p_comparison(suites, output, cosmo_prior=MODERATE_PRIOR):
         return
     g = _plotter()
     g.triangle_plot(mcs, params=names_ref, filled=True, legend_labels=labels,
-                    param_limits=ranges_ref, contour_colors=colors)
+                    param_limits=axis_limits(names_ref, ranges_ref), contour_colors=colors)
     fiducial_crosshairs(g, names_ref)
     overlay_priors(g, names_ref, ranges_ref, cosmo_prior)
     plt.suptitle('7-param MCMC comparison (dashed = prior)', y=1.005, fontsize=14)
