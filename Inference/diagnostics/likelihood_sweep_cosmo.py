@@ -39,14 +39,15 @@ OM_RANGE = (0.12, 0.155)                      # design box
 S8_RANGE = (0.70, 0.90)
 OBS_LIST = ['GSMF', 'CGD']
 
-# MCMC cosmology prior (matches configs/_defaults.yaml): moderate fiducial-
-# centered truncated Gaussian. mu == fiducial; sigmas below.
-PRIOR_SIGMA = {'omega_m': 0.005, 'sigma_8': 0.03}
+# Two live cosmology priors (both fiducial-centered Gaussians, mu == fiducial):
+#   moderate = configs/_defaults.yaml ;  Planck = the *_pk configs.
+PRIOR_SIGMA = {'omega_m': 0.005, 'sigma_8': 0.03}     # moderate
+PK_SIGMA    = {'omega_m': 0.0011, 'sigma_8': 0.006}   # Planck-width (*_pk)
 # params_list rows for R.ln_prior: [name, init, lower, upper]
 _PRIOR_PLIST = [['omega_m', FID_OM, OM_RANGE[0], OM_RANGE[1]],
                 ['sigma_8', FID_S8, S8_RANGE[0], S8_RANGE[1]]]
-_PRIOR_GP = {0: (FID_OM, PRIOR_SIGMA['omega_m']),
-             1: (FID_S8, PRIOR_SIGMA['sigma_8'])}
+_MOD_GP = {0: (FID_OM, PRIOR_SIGMA['omega_m']), 1: (FID_S8, PRIOR_SIGMA['sigma_8'])}
+_PK_GP  = {0: (FID_OM, PK_SIGMA['omega_m']),    1: (FID_S8, PK_SIGMA['sigma_8'])}
 COLORS = {'GSMF': 'tab:blue', 'CGD': 'tab:green'}
 
 
@@ -181,14 +182,15 @@ def sweep_2d(packs, om_grid, s8_grid):
     return cases
 
 
-def ln_prior_grid(om_grid, s8_grid):
-    """2D log-prior over (omega_m, sigma_8), using the exact MCMC ln_prior
-    (configs/_defaults.yaml cosmology prior). Shape (len(s8), len(om))."""
+def ln_prior_grid(om_grid, s8_grid, gp=_MOD_GP):
+    """2D log-prior over (omega_m, sigma_8) using the exact MCMC ln_prior.
+    gp selects the prior: _MOD_GP (moderate) or _PK_GP (Planck-width).
+    Shape (len(s8), len(om))."""
     lp = np.zeros((s8_grid.size, om_grid.size))
     for j, s8 in enumerate(s8_grid):
         for i, om in enumerate(om_grid):
             lp[j, i] = R.ln_prior(np.array([om, s8]), _PRIOR_PLIST,
-                                  flat_indices=[], gaussian_priors=_PRIOR_GP)
+                                  flat_indices=[], gaussian_priors=gp)
     return lp
 
 
@@ -209,25 +211,45 @@ def _panel(ax, fig, OM, S8, field, om_grid, s8_grid, title, cbar_label):
     fig.colorbar(pcm, ax=ax, label=cbar_label, shrink=0.85)
 
 
-def plot_2d(om_grid, s8_grid, cases, fname):
-    """Two rows: top = likelihood, bottom = posterior (likelihood + MCMC prior)."""
+def plot_2d(packs, om_grid, s8_grid, cases, fname):
+    """Three rows (hydro fixed at fiducial):
+      row 0: likelihood                        (full design box)
+      row 1: posterior x moderate prior        (full design box)
+      row 2: posterior x Planck prior (*_pk)   (ZOOMED near fiducial so the
+             tight Planck posterior is actually visible)."""
     order = [c for c in ('GSMF', 'CGD', 'GSMF+CGD') if c in cases]
     OM, S8 = np.meshgrid(om_grid, s8_grid)
-    lp = ln_prior_grid(om_grid, s8_grid)
-    fig, axes = plt.subplots(2, len(order), figsize=(5.2 * len(order), 9.0),
+    lp_mod = ln_prior_grid(om_grid, s8_grid, _MOD_GP)
+
+    # Zoomed grid for the Planck row: fiducial +/- 6 Planck sigma (clamped to box).
+    def _zoom(mu, sig, lo, hi):
+        return (max(lo, mu - 6 * sig), min(hi, mu + 6 * sig))
+    omz = np.linspace(*_zoom(FID_OM, PK_SIGMA['omega_m'], *OM_RANGE), om_grid.size)
+    s8z = np.linspace(*_zoom(FID_S8, PK_SIGMA['sigma_8'], *S8_RANGE), s8_grid.size)
+    cases_z = sweep_2d(packs, omz, s8z)
+    lp_pk = ln_prior_grid(omz, s8z, _PK_GP)
+    OMZ, S8Z = np.meshgrid(omz, s8z)
+
+    fig, axes = plt.subplots(3, len(order), figsize=(5.2 * len(order), 13.5),
                              constrained_layout=True, squeeze=False)
-    print('\nposterior (lnL + MCMC prior) max location (omega_m, sigma_8):')
+    print('\nposterior max location (omega_m, sigma_8):')
     for col, case in enumerate(order):
         _panel(axes[0, col], fig, OM, S8, cases[case], om_grid, s8_grid,
                f'{case} — likelihood', r'$\Delta\ln\mathcal{L}$')
-        post = cases[case] + lp
-        _panel(axes[1, col], fig, OM, S8, post, om_grid, s8_grid,
-               f'{case} — posterior (× MCMC prior)', r'$\Delta\ln\mathcal{P}$')
-        j, i = np.unravel_index(np.nanargmax(post), post.shape)
-        print(f'  {case:10s}: ({om_grid[i]:.4f}, {s8_grid[j]:.3f})')
-    fig.suptitle('Hydro fixed at fiducial — top: likelihood, bottom: posterior '
-                 f'(MCMC prior σ_ωm={PRIOR_SIGMA["omega_m"]}, σ_σ8={PRIOR_SIGMA["sigma_8"]}). '
-                 'Red lines = fiducial cosmology.', fontsize=12)
+        post_mod = cases[case] + lp_mod
+        _panel(axes[1, col], fig, OM, S8, post_mod, om_grid, s8_grid,
+               f'{case} — posterior x moderate prior', r'$\Delta\ln\mathcal{P}$')
+        post_pk = cases_z[case] + lp_pk
+        _panel(axes[2, col], fig, OMZ, S8Z, post_pk, omz, s8z,
+               f'{case} — posterior x Planck prior (zoom)', r'$\Delta\ln\mathcal{P}$')
+        jm, im = np.unravel_index(np.nanargmax(post_mod), post_mod.shape)
+        jp, ip = np.unravel_index(np.nanargmax(post_pk), post_pk.shape)
+        print(f'  {case:10s}: moderate=({om_grid[im]:.4f}, {s8_grid[jm]:.3f})  '
+              f'Planck=({omz[ip]:.4f}, {s8z[jp]:.4f})')
+    fig.suptitle('Hydro fixed at fiducial. Rows: likelihood / x moderate prior '
+                 f'(σ={PRIOR_SIGMA["omega_m"]}, {PRIOR_SIGMA["sigma_8"]}) / x Planck prior '
+                 f'(σ={PK_SIGMA["omega_m"]}, {PK_SIGMA["sigma_8"]}, zoomed). '
+                 'Red lines = fiducial.', fontsize=12)
     p = os.path.join(OUT, fname)
     fig.savefig(p, dpi=150, bbox_inches='tight'); plt.close(fig)
     print(f'wrote {p}')
@@ -270,7 +292,7 @@ def main():
     for c in ('GSMF', 'CGD', 'GSMF+CGD'):
         j, i = np.unravel_index(np.argmax(cases[c]), cases[c].shape)
         print(f'  {c:10s}: ({om2[i]:.4f}, {s82[j]:.3f})')
-    plot_2d(om2, s82, cases, 'likelihood_sweep_2d.png')
+    plot_2d(packs, om2, s82, cases, 'likelihood_sweep_2d.png')
 
     # posterior under different priors (the "which prior gives a complete
     # posterior" exploration)
