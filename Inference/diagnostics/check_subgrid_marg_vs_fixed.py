@@ -5,25 +5,16 @@ What this answers
   "If we fix the cosmology instead of marginalizing over it, how much do the
    subgrid (hydro) constraints change?"
 
-This is the subgrid-space analog of check_cosmo_marg_vs_fixed.py (which asks the
-mirror question for cosmology). Both runs are GSMF-only and use the shared
-project-default priors (configs/_defaults.yaml), so the only difference is
-whether cosmology is free or pinned at the fiducial.
+Mirror of check_cosmo_marg_vs_fixed.py (same question for cosmology). Run for
+each observable suite (GSMF and GSMF+CGD); the only difference between the two
+chains in a suite is whether cosmology is free (7p) or pinned at fiducial (5p).
 
-Chains compared (GSMF only)
----------------------------
-  1. 7p, cosmo marginalized -> 5 subgrid params      [if present]
-       results/samples_GSMF_7p.npy            (cols 0..4)
-  2. 5p, cosmo FIXED at fiducial
-       results/samples_GSMF_5p_fid_cosmo.npy  (cols 0..4)
+Chains per suite (skipped if absent):
+  - <suite>_7p            cosmo marginalized -> 5 subgrid params  (cols 0..4)
+  - <suite>_5p_fid_cosmo  cosmo FIXED at fiducial                 (cols 0..4)
 
-For each chain that does not yet exist on disk, the script just skips it and
-prints a note, so it is safe to re-run while the MCMCs are still going.
-
-Outputs (in this directory)
----------------------------
-  subgrid_marg_vs_fixed.png
-  subgrid_marg_vs_fixed_medians.txt
+Outputs (in this directory), one per suite:
+  subgrid_marg_vs_fixed.png / _GSMF_CGD.png  (+ matching *_medians.txt)
 """
 import os
 import numpy as np
@@ -33,11 +24,9 @@ import matplotlib.pyplot as plt
 from getdist import plots as gd_plots
 from getdist import MCSamples
 
+RES = '/home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results'
+OUT = os.path.dirname(os.path.abspath(__file__))
 
-V2  = '/home/nramachandra/Projects/Hydro_runs/CosmoHydro'
-OUT = os.path.join(V2, 'Inference/diagnostics')
-
-# 5 subgrid params (scaled units, matching the design matrix / check_v1_v2.py)
 NAMES  = ['kappa_w', 'e_w', 'M_seed_e6', 'v_kin_e4', 'eps_kin_e1']
 LABELS = [r'\kappa_\mathrm{w}', r'e_\mathrm{w}',
           r'M_\mathrm{seed}/10^{6}', r'v_\mathrm{kin}/10^{4}',
@@ -45,80 +34,71 @@ LABELS = [r'\kappa_\mathrm{w}', r'e_\mathrm{w}',
 RANGES = {'kappa_w': (2.0, 4.0), 'e_w': (0.2, 1.0),
           'M_seed_e6': (0.6, 2.0), 'v_kin_e4': (0.1, 1.2),
           'eps_kin_e1': (0.02, 1.2)}
+COLS = (0, 1, 2, 3, 4)   # both chains carry the 5 subgrid params in cols 0..4
 
-# both chains carry the 5 subgrid params in columns 0..4
-SUBGRID_COLS = (0, 1, 2, 3, 4)
-
-CANDIDATES = [
-    dict(
-        label='7p, cosmo marginalized (GSMF)',
-        path=f'{V2}/Inference/results/samples_GSMF_7p.npy',
-        color='tab:red', ls='-',
-    ),
-    dict(
-        label='5p, cosmo FIXED at fiducial (GSMF)',
-        path=f'{V2}/Inference/results/samples_GSMF_5p_fid_cosmo.npy',
-        color='tab:blue', ls='-',
-    ),
+# One entry per observable suite: (obs_label, trial_prefix, out_suffix)
+SUITES = [
+    ('GSMF',     'GSMF',     ''),
+    ('GSMF+CGD', 'GSMF_CGD', '_GSMF_CGD'),
 ]
 
 
-def _mcsamples(chain5d, label):
-    return MCSamples(samples=chain5d, names=NAMES, labels=LABELS,
-                     label=label, ranges=RANGES)
+def _load(trial, label):
+    p = os.path.join(RES, f'samples_{trial}.npy')
+    if not os.path.exists(p):
+        print(f'  MISSING  {label:34s} ({trial})')
+        return None
+    arr = np.load(p)
+    if arr.ndim != 2 or arr.shape[1] <= max(COLS):
+        print(f'  SKIP     {label:34s} bad shape {arr.shape}')
+        return None
+    sub = arr[:, list(COLS)]
+    print(f'  LOADED   {label:34s} {arr.shape} -> 5D subgrid')
+    return dict(label=label, samples=sub,
+                mc=MCSamples(samples=sub, names=NAMES, labels=LABELS,
+                             label=label, ranges=RANGES))
 
 
-loaded = []
-print('chain inventory:')
-for c in CANDIDATES:
-    if not os.path.exists(c['path']):
-        print(f'  MISSING  {c["label"]:40s}  ({c["path"]})')
-        continue
-    arr = np.load(c['path'])
-    if arr.ndim != 2 or arr.shape[1] <= max(SUBGRID_COLS):
-        print(f'  SKIP     {c["label"]:40s}  bad shape {arr.shape}')
-        continue
-    sub = arr[:, list(SUBGRID_COLS)]
-    print(f'  LOADED   {c["label"]:40s}  shape={arr.shape}  -> 5D subgrid {sub.shape}')
-    loaded.append({**c, 'samples': sub, 'mc': _mcsamples(sub, c['label'])})
+def make_check(obs_label, prefix, suffix):
+    print(f'\n=== subgrid marg-vs-fixed: {obs_label} ===')
+    loaded = [c for c in (
+        _load(f'{prefix}_7p',           f'7p, cosmo marginalized ({obs_label})'),
+        _load(f'{prefix}_5p_fid_cosmo', f'5p, cosmo FIXED at fiducial ({obs_label})'),
+    ) if c is not None]
+    if not loaded:
+        print('  no chains — skipping')
+        return
 
-if not loaded:
-    raise SystemExit('No chains found — nothing to plot.')
+    colors = ['tab:red', 'tab:blue'][:len(loaded)]
+    g = gd_plots.get_subplot_plotter(width_inch=9)
+    g.settings.alpha_filled_add = 0.55
+    g.settings.legend_fontsize = 12
+    g.settings.axes_fontsize = 11
+    g.settings.lab_fontsize = 13
+    g.triangle_plot([c['mc'] for c in loaded], NAMES, filled=True,
+                    contour_colors=colors,
+                    line_args=[{'color': c, 'ls': '-', 'lw': 1.6} for c in colors],
+                    legend_loc='upper right')
+    g.fig.suptitle(f'{obs_label} subgrid posteriors: cosmology marginalized (7p) '
+                   'vs. fixed (5p)', y=1.02, fontsize=13)
+    png = os.path.join(OUT, f'subgrid_marg_vs_fixed{suffix}.png')
+    g.export(png)
+    print(f'  wrote {png}')
 
-
-# ----- triangle plot --------------------------------------------------------
-g = gd_plots.get_subplot_plotter(width_inch=9)
-g.settings.alpha_filled_add = 0.55
-g.settings.legend_fontsize  = 12
-g.settings.axes_fontsize    = 11
-g.settings.lab_fontsize     = 13
-
-g.triangle_plot(
-    [c['mc'] for c in loaded], NAMES, filled=True,
-    contour_colors=[c['color'] for c in loaded],
-    line_args=[{'color': c['color'], 'ls': c['ls'], 'lw': 1.6} for c in loaded],
-    legend_loc='upper right',
-)
-
-g.fig.suptitle(
-    'GSMF subgrid posteriors: cosmology marginalized (7p) vs. fixed (5p)',
-    y=1.02, fontsize=13,
-)
-
-out_path = os.path.join(OUT, 'subgrid_marg_vs_fixed.png')
-g.export(out_path)
-print(f'\nwrote {out_path}')
+    txt = os.path.join(OUT, f'subgrid_marg_vs_fixed{suffix}_medians.txt')
+    with open(txt, 'w') as f:
+        f.write(f'Subgrid posterior summary (scaled units) — {obs_label} fits\n\n')
+        f.write(f'{"param":12s}  ' + '  '.join(f'{c["label"]:38s}' for c in loaded) + '\n')
+        for i, nm in enumerate(NAMES):
+            row = f'  {nm:10s}  '
+            for c in loaded:
+                s = c['samples'][:, i]
+                row += f'{np.median(s):8.4f} +/- {np.std(s):7.4f}                '
+            f.write(row.rstrip() + '\n')
+    print(f'  wrote {txt}')
 
 
-# ----- text summary ---------------------------------------------------------
-sumpath = os.path.join(OUT, 'subgrid_marg_vs_fixed_medians.txt')
-with open(sumpath, 'w') as f:
-    f.write('Subgrid posterior summary (scaled units) — GSMF-only fits\n\n')
-    f.write(f'{"param":14s}  ' + '  '.join(f'{c["label"]:32s}' for c in loaded) + '\n')
-    for i, nm in enumerate(NAMES):
-        row = f'  {nm:12s}  '
-        for c in loaded:
-            s = c['samples'][:, i]
-            row += f'{np.median(s):8.4f} +/- {np.std(s):7.4f}            '
-        f.write(row.rstrip() + '\n')
-print(f'wrote {sumpath}')
+if __name__ == '__main__':
+    print('chain inventory:')
+    for obs_label, prefix, suffix in SUITES:
+        make_check(obs_label, prefix, suffix)
