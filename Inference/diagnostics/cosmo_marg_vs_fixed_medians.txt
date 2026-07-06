@@ -1,7 +1,7 @@
-Cosmology posterior on (omega_m, sigma_8)
+Cosmology posterior on (omega_m, sigma_8) — GSMF
 fiducial: omega_m=0.14176, sigma_8=0.8102
 Planck +/-1sig: omega_m(0.14066, 0.14286), sigma_8(0.8042, 0.8162)
 
 chain                         omega_m med [min,max]               sigma_8 med [min,max]
-  7p marg, moderate prior       0.15452 [0.12734,0.15500]  0.83599 [0.74247,0.89996]
-  2p fixed, moderate prior      0.15442 [0.14798,0.15500]  0.72970 [0.70342,0.76070]
+  7p marg, moderate prior       0.14182 [0.12093,0.15500]  0.80785 [0.70003,0.89999]
+  2p fixed, moderate prior      0.12121 [0.12000,0.12610]  0.89944 [0.88898,0.90000]
