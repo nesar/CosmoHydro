@@ -39,6 +39,9 @@ FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
 # Planck +/-1 sigma reference band (drawn as a box for context; *_pk uses this
 # as the Gaussian width, NOT a hard wall).
 PLANCK_1SIG = {'omega_m': (0.14066, 0.14286), 'sigma_8': (0.8042, 0.8162)}
+# The two cosmology priors, overlaid as dashed curves on the 1D diagonals.
+MOD_SIGMA = {'omega_m': 0.005,  'sigma_8': 0.03}    # moderate (_defaults)
+PK_SIGMA  = {'omega_m': 0.0011, 'sigma_8': 0.006}   # Planck-width (_pk)
 
 NAMES = ['omega_m', 'sigma_8']
 LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
@@ -110,9 +113,20 @@ def make_check(obs_label, prefix, suffix):
     for v in (slo, shi):
         ax_s8.axvline(v, color='k', ls='--', lw=1.0, alpha=0.6)
 
+    # dashed prior curves on the 1D diagonals: moderate (grey) and Planck (black)
+    for ax, key in ((ax_om, 'omega_m'), (ax_s8, 'sigma_8')):
+        lo, hi = AXIS[key]
+        x = np.linspace(lo, hi, 600)
+        top = ax.get_ylim()[1]
+        for sig, style in ((MOD_SIGMA[key], dict(color='0.45', ls='--', lw=1.2)),
+                           (PK_SIGMA[key],  dict(color='k',    ls=':',  lw=1.5))):
+            y = np.exp(-0.5 * ((x - FID[key]) / sig) ** 2)
+            ax.plot(x, y / y.max() * top, **style)
+
     g.fig.suptitle(f'{obs_label} cosmology: marginalized vs fixed hydro, '
                    'moderate vs Planck prior\n'
-                   '(dashed box = Planck ±1σ; star = fiducial)', y=1.04, fontsize=12)
+                   '(dashed box = Planck ±1σ; grey dash = moderate prior, '
+                   'black dot = Planck prior; star = fiducial)', y=1.05, fontsize=11)
     png = os.path.join(OUT, f'cosmo_marg_vs_fixed{suffix}.png')
     g.export(png)
     print(f'  wrote {png}')
