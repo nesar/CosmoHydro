@@ -1,6 +1,6 @@
 Subgrid posterior summary (scaled units) — GSMF+CGD fits
 
-param         7p, cosmo marginalized (GSMF+CGD)       5p, cosmo FIXED at fiducial (GSMF+CGD)
+param         7p, cosmo marg (moderate) (GSMF+CGD)    5p, cosmo FIXED (GSMF+CGD)            
   kappa_w       3.2411 +/-  0.0877                  3.2940 +/-  0.1141
   e_w           0.5752 +/-  0.0322                  0.4719 +/-  0.0125
   M_seed_e6     1.1719 +/-  0.0333                  1.1938 +/-  0.0470
