@@ -60,9 +60,15 @@ params otherwise use the broad default Gaussian (midpoint, σ=half-range).
 ### Cosmology-only / custom
 | Config | Observables | Notes |
 |---|---|---|
-| `GSMF_2cosmo.yaml` | GSMF | `omega_m`, `sigma_8` free, hydro fixed at midpoints. GSMF-only control; pairs with `GSMF_7p` for a GSMF-only cosmo marg-vs-fixed check. |
-| `GSMF_CGD_2cosmo.yaml` | GSMF + CGD | `omega_m`, `sigma_8` free, hydro fixed at midpoints. Fixed partner for the GSMF+CGD cosmo marg-vs-fixed check (pairs with `GSMF_CGD_7p`). |
+| `GSMF_2cosmo.yaml` | GSMF | `omega_m`, `sigma_8` free, hydro fixed at fiducial. GSMF-only control; pairs with `GSMF_7p` for a GSMF-only cosmo marg-vs-fixed check. |
+| `GSMF_CGD_2cosmo.yaml` | GSMF + CGD | `omega_m`, `sigma_8` free, hydro fixed at fiducial. Fixed partner for the GSMF+CGD cosmo marg-vs-fixed check (pairs with `GSMF_CGD_7p`). |
 | `sigma8_vkin_custom.yaml` | GSMF + CGD | Custom: `v_kin`, `eps_kin`, `sigma_8` free. |
+
+#### Planck-prior variants (`*_pk`)
+`GSMF_7p_pk`, `GSMF_2cosmo_pk`, `GSMF_CGD_7p_pk`, `GSMF_CGD_2cosmo_pk` — same as
+the base configs but the cosmology prior is a **Planck-width Gaussian**
+(σ_ωm=0.0011, σ_σ8=0.006, via `gaussian_priors`), bounded only by the design box
+(no hard cut). Use these for a Planck-informed, complete cosmology posterior.
 
 ### Bias / multi-redshift
 | Config | Observables | Notes |
@@ -79,3 +85,7 @@ params otherwise use the broad default Gaussian (midpoint, σ=half-range).
 > `old_results/retired_GSMF_CGD_fGas/`: adding CGD **and** fGas drove cosmology
 > to the upper design-box edge (Ωₘ→0.155, σ₈→0.9) in both hydro-free and
 > hydro-fixed runs. The `GSMF_CGD_*` trio above is the fGas-free replacement.
+>
+> The hard-truncated `*_trunc` cosmology priors were retired to
+> `old_results/retired_trunc/`: the ±1σ hard wall amputated the real posterior
+> (see `diagnostics/2p_cosmology_issue.md`). Use `*_pk` (Gaussian, no hard cut).

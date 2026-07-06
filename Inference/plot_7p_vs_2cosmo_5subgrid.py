@@ -8,7 +8,7 @@ For each observable suite (GSMF, GSMF+CGD) it builds a triangle in the
   - the 5-subgrid-parameter (cosmology fixed) posterior on the subgrid panels.
 
 It also makes a 7-parameter comparison of GSMF vs GSMF+CGD, and the same set for
-the hard-truncated-prior (`*_trunc`) runs.
+the Planck-prior (`*_pk`) runs.
 
 The 1D diagonal panels show the prior as a dashed line (peak-normalized):
 cosmology = the (truncated) fiducial Gaussian, eps_kin = flat, other subgrid =
@@ -33,16 +33,17 @@ FID_OM, FID_S8 = 0.14176, 0.8102
 # Moderate = configs/_defaults.yaml (Gaussian truncated only by the design box).
 MODERATE_PRIOR = {'omega_m': (FID_OM, 0.005, 0.12, 0.155),
                   'sigma_8': (FID_S8, 0.03,  0.70, 0.90)}
-# Trunc = Planck-tight Gaussian hard-truncated at fiducial +/- 1 sigma
-# (matches the *_trunc configs).
-TRUNC_PRIOR = {'omega_m': (FID_OM, 0.0011, 0.14066, 0.14286),
-               'sigma_8': (FID_S8, 0.006,  0.8042, 0.8162)}
+# PK = Planck-width Gaussian (no hard cut; bounded only by the design box).
+# Matches the *_pk configs. (The hard-truncated *_trunc runs were retired to
+# old_results/retired_trunc/ — the wall amputated the real posterior.)
+PK_PRIOR = {'omega_m': (FID_OM, 0.0011, 0.12, 0.155),
+            'sigma_8': (FID_S8, 0.006,  0.70, 0.90)}
 
 # Full design-box (valid emulator) range for the cosmology params. Used to pad
 # the axis a bit OUTSIDE a tight prior window so the hard wall is visible (the
 # chain's KDE is still clipped at its own range, so nothing leaks).
 COSMO_VALID = {'omega_m': (0.12, 0.155), 'sigma_8': (0.70, 0.90)}
-AXIS_PAD_FRAC = 0.8   # pad each side by this fraction of the prior-window width
+AXIS_PAD_FRAC = 0.3   # pad each side by this fraction of the cosmo data span
 
 SETTINGS = {'mult_bias_correction_order': 0.5,
             'smooth_scale_2D': 4, 'smooth_scale_1D': 4}
@@ -105,8 +106,8 @@ def overlay_priors(g, names, ranges, cosmo_prior):
     """Dashed prior curve (peak-normalized) on each 1D diagonal panel.
 
     cosmo_prior : dict {'omega_m': (mu, sigma, lo, hi), 'sigma_8': (...)} giving
-    the cosmology Gaussian and its hard-truncation window (MODERATE_PRIOR for the
-    moderate runs, TRUNC_PRIOR for the *_trunc runs).
+    the cosmology Gaussian and its truncation window (MODERATE_PRIOR for the
+    moderate runs, PK_PRIOR for the *_pk Planck-prior runs).
     """
     for i, name in enumerate(names):
         ax = g.subplots[i, i]
@@ -134,20 +135,28 @@ def overlay_priors(g, names, ranges, cosmo_prior):
         ax.set_ylim(0, 1.15)
 
 
-def axis_limits(names, ranges):
-    """Axis limits per parameter. Subgrid params use the chain range (= valid
-    range). Cosmology params get padded a bit OUTSIDE the (possibly tight) prior
-    window, clamped to the design box, so the hard wall is visible on the plot."""
+def axis_limits(loaded, names):
+    """Axis limits per parameter. Subgrid params use the chain range. Cosmology
+    params are auto-zoomed to where the posteriors actually live (data 0.3-99.7
+    percentile across all chains, fiducial always included, padded), clamped to
+    the design box. This shows the railing moderate runs over the full box AND
+    the tight Planck (_pk) runs zoomed near fiducial, without manual tuning."""
+    anchor = max(loaded, key=lambda l: len(l[1]))
+    ranges = anchor[2]
     lim = {}
     for nm in names:
         kind = _cosmo_kind(nm)
-        lo, hi = ranges[nm]
         if kind in COSMO_VALID:
-            pad = (hi - lo) * AXIS_PAD_FRAC
+            vals = [l[0][:, l[1].index(nm)] for l in loaded if nm in l[1]]
+            allv = np.concatenate(vals)
+            lo, hi = np.percentile(allv, 0.3), np.percentile(allv, 99.7)
+            fid = FID_OM if kind == 'omega_m' else FID_S8
+            lo, hi = min(lo, fid), max(hi, fid)
+            pad = (hi - lo) * AXIS_PAD_FRAC + 1e-6
             vlo, vhi = COSMO_VALID[kind]
             lim[nm] = (max(vlo, lo - pad), min(vhi, hi + pad))
         else:
-            lim[nm] = (lo, hi)
+            lim[nm] = ranges[nm]
     return lim
 
 
@@ -192,7 +201,8 @@ def make_triangle(obs_label, t7p, t2c, t5p, output, cosmo_prior=MODERATE_PRIOR):
 
     g = _plotter()
     g.triangle_plot(mcs, params=names, filled=True, legend_labels=labels,
-                    param_limits=axis_limits(names, ranges), contour_colors=colors)
+                    param_limits=axis_limits([l for (l, _, _) in avail], names),
+                    contour_colors=colors)
     fiducial_crosshairs(g, names)
     overlay_priors(g, names, ranges, cosmo_prior)
     plt.suptitle(f'{obs_label} — 7-param vs 2-cosmology vs 5-subgrid MCMC '
@@ -206,12 +216,13 @@ def make_7p_comparison(suites, output, cosmo_prior=MODERATE_PRIOR):
     """Overlay the 7-parameter posteriors of several suites on one triangle.
     suites = [(trial_name, label, color), ...]."""
     print("\n=== 7p comparison ===")
-    mcs, colors, labels, names_ref, ranges_ref = [], [], [], None, None
+    mcs, colors, labels, loaded, names_ref, ranges_ref = [], [], [], [], None, None
     for trial, label, color in suites:
         l = load(trial)
         if l is None:
             continue
         mcs.append(mcsamples(l, label)); colors.append(color); labels.append(label)
+        loaded.append(l)
         if names_ref is None:
             names_ref, ranges_ref = l[1], l[2]
     if len(mcs) < 2:
@@ -219,7 +230,7 @@ def make_7p_comparison(suites, output, cosmo_prior=MODERATE_PRIOR):
         return
     g = _plotter()
     g.triangle_plot(mcs, params=names_ref, filled=True, legend_labels=labels,
-                    param_limits=axis_limits(names_ref, ranges_ref), contour_colors=colors)
+                    param_limits=axis_limits(loaded, names_ref), contour_colors=colors)
     fiducial_crosshairs(g, names_ref)
     overlay_priors(g, names_ref, ranges_ref, cosmo_prior)
     plt.suptitle('7-param MCMC comparison (dashed = prior)', y=1.005, fontsize=14)
@@ -239,18 +250,18 @@ def main():
          ('GSMF_CGD_7p', 'GSMF+CGD (7p)', '#ff7f0e')],
         os.path.join(RESULTS, 'plot_7p_GSMF_vs_GSMF_CGD.png'))
 
-    # --- hard-truncated-prior runs (Planck-tight Gaussian, fiducial +/-1 sigma) ---
-    make_triangle('GSMF, Planck prior', 'GSMF_7p_trunc', 'GSMF_2cosmo_trunc', None,
-                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_trunc.png'),
-                  cosmo_prior=TRUNC_PRIOR)
-    make_triangle('GSMF+CGD, Planck prior', 'GSMF_CGD_7p_trunc', 'GSMF_CGD_2cosmo_trunc', None,
-                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_GSMF_CGD_trunc.png'),
-                  cosmo_prior=TRUNC_PRIOR)
+    # --- Planck-prior runs (Planck-width Gaussian, no hard cut) ---
+    make_triangle('GSMF, Planck prior', 'GSMF_7p_pk', 'GSMF_2cosmo_pk', None,
+                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_pk.png'),
+                  cosmo_prior=PK_PRIOR)
+    make_triangle('GSMF+CGD, Planck prior', 'GSMF_CGD_7p_pk', 'GSMF_CGD_2cosmo_pk', None,
+                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_GSMF_CGD_pk.png'),
+                  cosmo_prior=PK_PRIOR)
     make_7p_comparison(
-        [('GSMF_7p_trunc', 'GSMF (7p, Planck)', '#1f77b4'),
-         ('GSMF_CGD_7p_trunc', 'GSMF+CGD (7p, Planck)', '#ff7f0e')],
-        os.path.join(RESULTS, 'plot_7p_GSMF_vs_GSMF_CGD_trunc.png'),
-        cosmo_prior=TRUNC_PRIOR)
+        [('GSMF_7p_pk', 'GSMF (7p, Planck)', '#1f77b4'),
+         ('GSMF_CGD_7p_pk', 'GSMF+CGD (7p, Planck)', '#ff7f0e')],
+        os.path.join(RESULTS, 'plot_7p_GSMF_vs_GSMF_CGD_pk.png'),
+        cosmo_prior=PK_PRIOR)
 
 
 if __name__ == '__main__':

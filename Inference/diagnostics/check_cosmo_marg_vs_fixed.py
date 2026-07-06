@@ -1,22 +1,24 @@
 """2D (omega_m, sigma_8) overlay: marginalized-hydro vs fixed-hydro, and the
-moderate-prior vs hard-truncated-prior (*_trunc) runs.
+moderate-prior vs Planck-prior (*_pk) runs.
 
 What this answers
 -----------------
   - "If we fix hydro instead of marginalizing, how much does cosmology change?"
-  - "Does the Planck-tight hard-truncated prior actually confine cosmology?"
+  - "What does the cosmology posterior look like under a Planck-width prior?"
 
-IMPORTANT: each chain's MCSamples is given ITS OWN range (read from the saved
-params_list), so getdist's KDE is boundary-corrected at the true hard wall. If
-you instead pass the wide design-box range for a *_trunc chain, getdist smears
-the wall-piled density well past the wall and it *looks* like the run escaped
-the truncation — it didn't. The truncation is enforced in the sampler.
+Each chain's MCSamples is given ITS OWN range (read from the saved params_list),
+so getdist's KDE is boundary-corrected at the right place and nothing leaks.
+
+(The hard-truncated *_trunc runs were retired to old_results/retired_trunc/: the
+±1σ wall amputated the real posterior — see diagnostics/2p_cosmology_issue.md.
+The *_pk runs keep the Planck-width Gaussian but no hard cut, giving a complete
+posterior.)
 
 Chains (GSMF + CGD); each skipped if absent:
-  - GSMF_CGD_7p           moderate prior, hydro marginalized   (cols 5,6)
-  - GSMF_CGD_2cosmo       moderate prior, hydro FIXED          (cols 0,1)
-  - GSMF_CGD_7p_trunc     Planck-tight prior, hydro marginalized (cols 5,6)
-  - GSMF_CGD_2cosmo_trunc Planck-tight prior, hydro FIXED        (cols 0,1)
+  - GSMF_CGD_7p        moderate prior, hydro marginalized   (cols 5,6)
+  - GSMF_CGD_2cosmo    moderate prior, hydro FIXED          (cols 0,1)
+  - GSMF_CGD_7p_pk     Planck prior,   hydro marginalized   (cols 5,6)
+  - GSMF_CGD_2cosmo_pk Planck prior,   hydro FIXED          (cols 0,1)
 
 Outputs: cosmo_marg_vs_fixed.png, cosmo_marg_vs_fixed_medians.txt
 """
@@ -35,7 +37,8 @@ OUT = os.path.join(V2, 'Inference/diagnostics')
 # Axis limits (design box) and fiducial.
 AXIS = {'omega_m': (0.12, 0.155), 'sigma_8': (0.70, 0.90)}
 FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
-# Hard-truncation window of the *_trunc runs (drawn as a box).
+# Planck +/-1 sigma reference band (drawn as a box for context; the *_pk runs use
+# this as the Gaussian width, NOT a hard wall).
 TRUNC_WIN = {'omega_m': (0.14066, 0.14286), 'sigma_8': (0.8042, 0.8162)}
 
 NAMES = ['omega_m', 'sigma_8']
@@ -44,8 +47,8 @@ LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
 CANDIDATES = [
     dict(label='7p marg, moderate prior',  trial='GSMF_CGD_7p',          cols=(5, 6), color='tab:red'),
     dict(label='2p fixed, moderate prior',  trial='GSMF_CGD_2cosmo',      cols=(0, 1), color='tab:blue'),
-    dict(label='7p marg, Planck-trunc',     trial='GSMF_CGD_7p_trunc',    cols=(5, 6), color='tab:purple'),
-    dict(label='2p fixed, Planck-trunc',    trial='GSMF_CGD_2cosmo_trunc', cols=(0, 1), color='tab:green'),
+    dict(label='7p marg, Planck prior',     trial='GSMF_CGD_7p_pk',    cols=(5, 6), color='tab:purple'),
+    dict(label='2p fixed, Planck prior',    trial='GSMF_CGD_2cosmo_pk', cols=(0, 1), color='tab:green'),
 ]
 
 
@@ -100,7 +103,7 @@ ax_2d.axvline(FID['omega_m'], color='k', ls=':', lw=1.0)
 ax_2d.axhline(FID['sigma_8'], color='k', ls=':', lw=1.0)
 ax_2d.plot([FID['omega_m']], [FID['sigma_8']], marker='*', ms=12, mfc='gold',
            mec='k', mew=0.8, ls='', zorder=20)
-# hard-truncation window (the wall the *_trunc runs live inside)
+# Planck +/-1 sigma reference band (context only; *_pk has no hard wall)
 (olo, ohi), (slo, shi) = TRUNC_WIN['omega_m'], TRUNC_WIN['sigma_8']
 ax_2d.add_patch(plt.Rectangle((olo, slo), ohi - olo, shi - slo, fill=False,
                               ec='k', lw=1.4, ls='--', zorder=19))
@@ -110,8 +113,8 @@ for v in (slo, shi):
     ax_s8.axvline(v, color='k', ls='--', lw=1.0, alpha=0.6)
 
 g.fig.suptitle('GSMF+CGD cosmology: marginalized vs fixed hydro, '
-               'moderate vs Planck-truncated prior\n'
-               '(dashed box = truncation window; star = fiducial)',
+               'moderate vs Planck prior\n'
+               '(dashed box = Planck ±1σ; star = fiducial)',
                y=1.04, fontsize=12)
 out_path = os.path.join(OUT, 'cosmo_marg_vs_fixed.png')
 g.export(out_path)
@@ -122,7 +125,7 @@ sumpath = os.path.join(OUT, 'cosmo_marg_vs_fixed_medians.txt')
 with open(sumpath, 'w') as f:
     f.write('Cosmology posterior on (omega_m, sigma_8)\n')
     f.write(f'fiducial: omega_m={FID["omega_m"]:.5f}, sigma_8={FID["sigma_8"]:.4f}\n')
-    f.write(f'trunc window: omega_m{TRUNC_WIN["omega_m"]}, sigma_8{TRUNC_WIN["sigma_8"]}\n\n')
+    f.write(f'Planck +/-1sig: omega_m{TRUNC_WIN["omega_m"]}, sigma_8{TRUNC_WIN["sigma_8"]}\n\n')
     f.write(f'{"chain":28s}  {"omega_m med [min,max]":34s}  {"sigma_8 med [min,max]"}\n')
     for c in loaded:
         s = c['samples']

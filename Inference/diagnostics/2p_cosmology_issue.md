@@ -114,6 +114,27 @@ This is **not a bug** — it is the expected behaviour of a degeneracy-broken fi
 
 ---
 
+## Update: hard-truncated (`*_trunc`) priors retired in favour of `*_pk`
+
+We tried a **hard ±1σ truncation** of the Planck Gaussian (`*_trunc` configs:
+σ=0.0011/0.006, with `param_ranges` forcing `ln_prior → -inf` outside the
+window). The sampler respected it (every point stayed inside), but the result
+was misleading: the prior-comparison sweep showed the true GSMF+CGD posterior
+peaks at **σ₈ ≈ 0.786**, which lies *below* the cut window [0.804, 0.816]. So the
+hard wall **amputated** the real posterior and piled 54% of σ₈ samples against
+the lower wall. A hard ±1σ wall is an arbitrary fence — not a physical bound — so
+it has no place in inference.
+
+**Resolution:** retired all `*_trunc` configs/chains to
+`old_results/retired_trunc/`. Use **`*_pk`** instead — same Planck-width Gaussian
+(σ=0.0011/0.006) but **no hard cut** (only the design box bounds it), giving a
+complete (closed) posterior at (Ωₘ≈0.1415, σ₈≈0.786). The deeper signal is a
+**σ₈ tension**: the data (GSMF+CGD, hydro fixed) prefer σ₈≈0.77 vs Planck 0.81,
+and the likelihood peaks *inside* the box (it is not trying to escape it — the
+"railing" was the Ωₘ–σ₈ degeneracy ridge). See `diagnostics/prior_comparison.png`.
+
+---
+
 ## How to reproduce
 
 ```bash
@@ -124,7 +145,11 @@ python diagnostics/likelihood_sweep_cosmo.py
 python plot_7p_vs_2cosmo_5subgrid.py
 ```
 
-Relevant configs (all inherit the cosmology prior from `_defaults.yaml`):
-`GSMF_7p`, `GSMF_2cosmo`, `GSMF_5p_fid_cosmo`,
-`GSMF_CGD_7p`, `GSMF_CGD_2cosmo`, `GSMF_CGD_5p_fid_cosmo`.
-The `*_2cosmo` runs fix hydro at the **fiducial** values (3, 0.5, 0.8, 0.51, 0.13).
+Relevant configs:
+- moderate prior (from `_defaults.yaml`): `GSMF_7p`, `GSMF_2cosmo`,
+  `GSMF_5p_fid_cosmo`, `GSMF_CGD_7p`, `GSMF_CGD_2cosmo`, `GSMF_CGD_5p_fid_cosmo`.
+- Planck prior (Planck-width Gaussian, no hard cut): `GSMF_7p_pk`,
+  `GSMF_2cosmo_pk`, `GSMF_CGD_7p_pk`, `GSMF_CGD_2cosmo_pk`.
+- retired hard-cut (`*_trunc`) and `GSMF_CGD_fGas_*` live under `old_results/`.
+
+The `*_2cosmo*` runs fix hydro at the **fiducial** values (3, 0.5, 0.8, 0.51, 0.13).
