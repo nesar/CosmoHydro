@@ -1,8 +1,8 @@
-Subgrid posterior summary (scaled units) — GSMF-only fits
+Subgrid posterior summary (scaled units) — GSMF fits
 
-param           7p, cosmo marginalized (GSMF)     5p, cosmo FIXED at fiducial (GSMF)
-  kappa_w         2.8701 +/-  0.2621              2.9360 +/-  0.2305
-  e_w             0.4815 +/-  0.0563              0.5115 +/-  0.0143
-  M_seed_e6       1.0825 +/-  0.1646              1.1123 +/-  0.1495
-  v_kin_e4        0.6961 +/-  0.2954              0.6901 +/-  0.2963
-  eps_kin_e1      0.5935 +/-  0.2029              0.5096 +/-  0.2050
+param         7p, cosmo marginalized (GSMF)           5p, cosmo FIXED at fiducial (GSMF)    
+  kappa_w       2.9255 +/-  0.2354                  2.9360 +/-  0.2305
+  e_w           0.5081 +/-  0.0348                  0.5115 +/-  0.0143
+  M_seed_e6     1.1074 +/-  0.1525                  1.1123 +/-  0.1495
+  v_kin_e4      0.6925 +/-  0.2960                  0.6901 +/-  0.2963
+  eps_kin_e1    0.5258 +/-  0.2001                  0.5096 +/-  0.2050
