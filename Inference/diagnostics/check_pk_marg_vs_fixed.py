@@ -34,7 +34,9 @@ from getdist import plots as gd_plots
 from getdist import MCSamples
 
 RES = '/home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results'
-OUT = os.path.dirname(os.path.abspath(__file__))
+# These marg-vs-fixed figures are the headline Planck-prior result, so they are
+# written to the main results/ dir (not this scratch diagnostics/ dir).
+OUT = RES
 
 FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
 # Planck-width Gaussian used by the *_pk configs (dashed prior overlay).
