@@ -330,12 +330,12 @@ def add_parameter_textboxes(ax_triangle, p_mcmc_list, chains_labels, params_rang
         colors = ["gray", "#E03424", "#006FED", "#009966", "#000866"]
 
     param_display_names = list(params_range_list.keys())
-    n_chains = len(p_mcmc_list)
-    y_positions = np.linspace(0.9, 0.9 - 0.12 * n_chains, n_chains)
-    x_positions = np.array([0.65] * n_chains)
-    if n_chains != 2:
-        x_positions = np.array([0.475, 0.7, 0.7])[:n_chains]
-        y_positions = np.array([0.88, 0.88, 0.65])[:n_chains]
+    n_params = len(param_display_names)
+    # Stack boxes tightly in the empty upper-right; vertical step scales with box
+    # height (#params) so they sit close without overlapping each other or panels.
+    step = 0.037 * (n_params + 2)
+    x0 = 0.62 if n_params >= 4 else 0.58
+    y0 = 0.95
 
     for i, (p_mcmc, label) in enumerate(zip(p_mcmc_list, chains_labels)):
         text_color = colors[i % len(colors)]
@@ -343,7 +343,7 @@ def add_parameter_textboxes(ax_triangle, p_mcmc_list, chains_labels, params_rang
         chain_text = f"{label}:\n"
         for name, value in zip(param_display_names, p_mcmc):
             chain_text += f"{name}: {value:.4f}\n"
-        ax_triangle.text(x_positions[i], y_positions[i], chain_text,
+        ax_triangle.text(x0, y0 - i * step, chain_text.rstrip(),
                          transform=ax_triangle.transAxes,
                          fontsize=12, verticalalignment='top',
                          bbox=props, color=text_color, weight='bold')
@@ -354,8 +354,14 @@ def add_parameter_textboxes(ax_triangle, p_mcmc_list, chains_labels, params_rang
 # ---------------------------------------------------------------------------
 
 def combined_plot(chains_samples, chains_labels, params_list, p_mcmc_list,
-                  save_path, fixed_params, data_dict, obs_list, param_names):
-    """Create combined triangle plot + best-fit overlay for multiple chains."""
+                  save_path, fixed_params, data_dict, obs_list, param_names,
+                  prior_overlay=None):
+    """Create combined triangle plot + best-fit overlay for multiple chains.
+
+    prior_overlay : optional callable(g, param_display_names) invoked after
+    triangle_plot and before export, e.g. to draw dashed prior curves on the
+    1D diagonals.
+    """
     param_display_names = [param[0] for param in params_list]
 
     # Build param_limits from params_list ranges
@@ -387,6 +393,9 @@ def combined_plot(chains_samples, chains_labels, params_list, p_mcmc_list,
                     filled=True,
                     legend_labels=chains_labels,
                     param_limits=params_range_list)
+
+    if prior_overlay is not None:
+        prior_overlay(g, param_display_names)
 
     with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpfile:
         triangle_plot_path = tmpfile.name
