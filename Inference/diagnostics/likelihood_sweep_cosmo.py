@@ -30,7 +30,7 @@ import run_mcmc as R           # reuse the exact loaders + log_likelihood
 from cosmo_hydro_emu.snapshot_utils import SNAPSHOT_IDS
 
 OUT = HERE
-CONFIG = os.path.join(INFER, 'configs', 'GSMF_CGD_2cosmo.yaml')
+CONFIG = os.path.join(INFER, 'configs', 'GSMF_CGD_2cosmo_pk.yaml')  # only for data/emulator paths; priors are built internally below
 
 # Fiducial point (hydro + cosmology), scaled units in PARAM_NAME order.
 FID_HYDRO = [3.0, 0.5, 0.8, 0.51, 0.13]      # kappa_w, e_w, M_seed/1e6, v_kin/1e4, eps_kin/1e1

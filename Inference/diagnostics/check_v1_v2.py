@@ -44,7 +44,7 @@ def quiet():
 # ============================================================ chains
 v1_chain = np.load(f'{V1}/plots/universal/npy/samples_HACC_fixed_None_obs_GSMF.npy')
 v2_5p    = np.load(f'{V2}/Inference/results/samples_GSMF_5p_fid_cosmo.npy')
-v2_7p    = np.load(f'{V2}/Inference/results/samples_GSMF_7p.npy')
+v2_7p    = np.load(f'{V2}/Inference/results/samples_GSMF_7p_pk.npy')  # Planck-prior 7p (subgrid marginals are prior-independent)
 print(f'v1 GSMF chain: {v1_chain.shape}')
 print(f'v2 5p chain:   {v2_5p.shape}')
 print(f'v2 7p chain:   {v2_7p.shape}')

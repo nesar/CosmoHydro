@@ -7,8 +7,9 @@ For each observable suite (GSMF, GSMF+CGD) it builds a triangle in the
   - the 2-cosmology-parameter (hydro fixed) posterior on the cosmology panels,
   - the 5-subgrid-parameter (cosmology fixed) posterior on the subgrid panels.
 
-It also makes a 7-parameter comparison of GSMF vs GSMF+CGD, and the same set for
-the Planck-prior (`*_pk`) runs.
+It also makes a 7-parameter comparison of GSMF vs GSMF+CGD. All plots use the
+Planck-prior (`*_pk`) runs — the moderate-prior versions were retired to
+old_results/retired_moderate_prior/.
 
 The 1D diagonal panels show the prior as a dashed line (peak-normalized):
 cosmology = the (truncated) fiducial Gaussian, eps_kin = flat, other subgrid =
@@ -240,21 +241,20 @@ def make_7p_comparison(suites, output, cosmo_prior=MODERATE_PRIOR):
 
 
 def main():
-    # --- moderate-prior runs (design-box truncation) ---
-    make_triangle('GSMF', 'GSMF_7p', 'GSMF_2cosmo', 'GSMF_5p_fid_cosmo',
-                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid.png'))
-    make_triangle('GSMF+CGD', 'GSMF_CGD_7p', 'GSMF_CGD_2cosmo', 'GSMF_CGD_5p_fid_cosmo',
-                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_GSMF_CGD.png'))
-    make_7p_comparison(
-        [('GSMF_7p', 'GSMF (7p)', '#1f77b4'),
-         ('GSMF_CGD_7p', 'GSMF+CGD (7p)', '#ff7f0e')],
-        os.path.join(RESULTS, 'plot_7p_GSMF_vs_GSMF_CGD.png'))
-
-    # --- Planck-prior runs (Planck-width Gaussian, no hard cut) ---
-    make_triangle('GSMF, Planck prior', 'GSMF_7p_pk', 'GSMF_2cosmo_pk', None,
+    # Planck-prior (*_pk) runs only. The moderate-prior comparison plots and
+    # their chains were retired to old_results/retired_moderate_prior/ — the *_pk
+    # runs are the canonical, most intuitive result (complete, closed posteriors;
+    # see diagnostics/2p_cosmology_issue.md).
+    #
+    # The 5p (cosmology-fixed) chains are prior-independent — the cosmology prior
+    # never acts because cosmology is pinned at fiducial — so the same 5p run is
+    # the correct subgrid overlay here as in the moderate-prior plots above.
+    make_triangle('GSMF, Planck prior', 'GSMF_7p_pk', 'GSMF_2cosmo_pk',
+                  'GSMF_5p_fid_cosmo',
                   os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_pk.png'),
                   cosmo_prior=PK_PRIOR)
-    make_triangle('GSMF+CGD, Planck prior', 'GSMF_CGD_7p_pk', 'GSMF_CGD_2cosmo_pk', None,
+    make_triangle('GSMF+CGD, Planck prior', 'GSMF_CGD_7p_pk', 'GSMF_CGD_2cosmo_pk',
+                  'GSMF_CGD_5p_fid_cosmo',
                   os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_GSMF_CGD_pk.png'),
                   cosmo_prior=PK_PRIOR)
     make_7p_comparison(

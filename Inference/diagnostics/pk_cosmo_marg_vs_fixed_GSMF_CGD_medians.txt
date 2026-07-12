@@ -1,0 +1,5 @@
+Planck-prior marg-vs-fixed on cosmology (omega_m, sigma_8) — GSMF+CGD
+
+param         hydro marginalized (7p, Planck)         hydro fixed at fiducial (2p, Planck)  
+  omega_m        0.1424 +/-  0.0011   [0.1370,0.1475]      0.1430 +/-  0.0009   [0.1392,0.1474]
+  sigma_8        0.8115 +/-  0.0059   [0.7743,0.8413]      0.7844 +/-  0.0040   [0.7639,0.8036]

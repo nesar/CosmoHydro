@@ -5,3 +5,5 @@ Planck +/-1sig: omega_m(0.14066, 0.14286), sigma_8(0.8042, 0.8162)
 chain                         omega_m med [min,max]               sigma_8 med [min,max]
   7p marg, moderate prior       0.15452 [0.12734,0.15500]  0.83599 [0.74247,0.89996]
   2p fixed, moderate prior      0.15442 [0.14798,0.15500]  0.72970 [0.70342,0.76070]
+  7p marg, Planck prior         0.14239 [0.13696,0.14748]  0.81154 [0.77433,0.84134]
+  2p fixed, Planck prior        0.14298 [0.13922,0.14738]  0.78441 [0.76391,0.80359]
