@@ -243,7 +243,10 @@ def configure_axes(axes, obs_list, data_dict):
         axes[i].set_xlabel(x_label, fontsize=14)
         axes[i].set_ylabel(y_label, fontsize=14)
 
-        if obs in ('CGD', 'CGED', 'HMF'):
+        # GSMF panel: the plotted quantity (np.log10(model_grid), which recovers
+        # the number density dn/dlog10 M) is shown on a log y-axis, as is standard
+        # for stellar mass functions.
+        if obs in ('GSMF', 'CGD', 'CGED', 'HMF'):
             axes[i].set_yscale('log')
 
 
