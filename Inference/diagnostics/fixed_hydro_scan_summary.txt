@@ -1,0 +1,6 @@
+Fixed-hydro scan — 2p cosmology posterior vs fixed subgrid point
+suite: GSMF_CGD
+
+chain                                          omega_m             sigma_8   d(sigma_8) vs marg
+GSMF_CGD_7p_pk                      0.14239+/-0.00112  0.81154+/-0.00593             +0.00000
+GSMF_CGD_2cosmo_pk                  0.14298+/-0.00086  0.78441+/-0.00402             -0.02713

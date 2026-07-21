@@ -1,0 +1,10 @@
+[
+  {
+    "quantity": "logP_go",
+    "ztag": "0.0",
+    "source": "logP_go_z0.0",
+    "median_abs_err": 0.0016497283094425996,
+    "p95_abs_err": 0.005018183901349616,
+    "max_abs_err": 0.012339301090495525
+  }
+]

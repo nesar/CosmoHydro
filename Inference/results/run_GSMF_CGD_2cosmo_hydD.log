@@ -1,0 +1,25 @@
+=== Trial: GSMF_CGD_2cosmo_hydD ===
+  GSMF  z=0.0
+  CGD  z=0.0
+Design matrix: 109 simulations, 7 parameters
+  [gaussian_priors] omega_m (idx 0): N(mu=0.14176, sigma=0.0011) truncated to design range
+  [gaussian_priors] sigma_8 (idx 1): N(mu=0.8102, sigma=0.006) truncated to design range
+Free parameters (2):
+  $\Omega_\text{m}$               init=0.1375  range=[0.1200, 0.1550]
+  $\sigma_8$                      init=0.8000  range=[0.7000, 0.9000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 3.3468, '$e_\\text{w}$': 0.4548, '$M_\\text{seed}/10^{6}$': 1.1728, '$v_\\text{kin}/10^{4}$': 1.197, '$\\epsilon_\\text{kin}/10^{1}$': 0.2177}
+
+Loading GSMF (z=0.0)...
+  y_vals shape: (109, 16), y_ind shape: (16,)
+  Obs data: 7 points
+
+Loading CGD (z=0.0)...
+  y_vals shape: (109, 19), y_ind shape: (19,)
+  Obs data: 8 points
+
+Test theta: [0.1375 0.8   ]
+ln_prior = 1.1466
+  LL(GSMF, z=0.0) = -24.4365
+  LL(CGD, z=0.0) = -41.0189
+
+MCMC: ndim=2, nwalkers=400, nburn=100, nrun=4000

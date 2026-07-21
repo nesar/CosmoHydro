@@ -1,0 +1,38 @@
+Fixed-hydro scan: point selection
+========================================================================
+marginalized reference: GSMF_CGD_7p_pk  (1,600,000 samples)
+
+1) Is the CURRENT fixed point (project fiducial) the 7p peak?
+
+   param         fiducial  7p median   7p std    offset
+   kappa_w         3.0000     3.2909   0.1075    -2.71s
+   e_w             0.5000     0.4769   0.0174     1.33s
+   M_seed/1e6      0.8000     1.1914   0.0406    -9.63s
+   v_kin/1e4       0.5100     1.1395   0.1018    -6.18s
+   eps_kin/1e1     0.1300     0.2325   0.0871    -1.18s
+
+   => Mahalanobis distance of the fiducial from the 7p posterior: 21.8 sigma
+   => NO: the current fixed point is NOT the 7p peak. It is the project/Frontier-E
+      fiducial subgrid point, far outside the 7p posterior (esp. M_seed, v_kin).
+
+2) Chosen fixed points (drawn from the 7p posterior itself)
+
+   A: radius 0.00s  kappa_w=3.2909  e_w=0.4769  M_seed/1e6=1.1914  v_kin/1e4=1.1395  eps_kin/1e1=0.2325
+   B: radius 1.08s  kappa_w=3.3259  e_w=0.4734  M_seed/1e6=1.1765  v_kin/1e4=1.0915  eps_kin/1e1=0.2383
+   C: radius 2.06s  kappa_w=3.1672  e_w=0.4915  M_seed/1e6=1.2084  v_kin/1e4=1.1759  eps_kin/1e1=0.2633
+   D: radius 2.07s  kappa_w=3.3468  e_w=0.4548  M_seed/1e6=1.1728  v_kin/1e4=1.1970  eps_kin/1e1=0.2177
+
+   (for scale, the current fiducial fixed point sits at 21.8s)
+
+3) Configs written
+
+   configs/GSMF_CGD_2cosmo_hydA.yaml
+   configs/GSMF_CGD_2cosmo_hydB.yaml
+   configs/GSMF_CGD_2cosmo_hydC.yaml
+   configs/GSMF_CGD_2cosmo_hydD.yaml
+
+Run them with:
+   python run_mcmc.py configs/GSMF_CGD_2cosmo_hydA.yaml
+   python run_mcmc.py configs/GSMF_CGD_2cosmo_hydB.yaml
+   python run_mcmc.py configs/GSMF_CGD_2cosmo_hydC.yaml
+   python run_mcmc.py configs/GSMF_CGD_2cosmo_hydD.yaml

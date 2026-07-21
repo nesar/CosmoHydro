@@ -1,0 +1,15 @@
+# Shared defaults for cosmology-target (Pk) trials.
+# Trial configs deep-merge on top of this (same mechanism as Inference/).
+#
+# Parameter fixing convention: anything not freed defaults to the PROJECT
+# FIDUCIAL (subgrid: kappa_w=3, e_w=0.5, M_seed=0.8e6, v_kin=5100,
+# eps_kin=1.3; cosmology: omega_m=0.14176, sigma_8=0.8102), applied inside
+# run_mcmc_cosmo.py — NOT design midpoints.
+
+mcmc:
+  nwalkers: 32
+  nburn: 500
+  nrun: 2000
+  parallel: true
+
+output_dir: results/

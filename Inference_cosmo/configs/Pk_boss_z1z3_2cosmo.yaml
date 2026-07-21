@@ -1,0 +1,33 @@
+# BOSS DR12 P0+P2 (NGC z1 + NGC z3), cosmology free, subgrid fixed.
+# METHODS-LEVEL trial: Kaiser + linear bias + AP on the emulated matter
+# P(k, z_eff); NO survey-window convolution, no FoG/loop corrections.
+# k range restricted to quasi-linear scales accordingly.
+# Each z-bin gets its own free linear bias; shot-noise offsets are freed to
+# absorb residual small-scale systematics.
+
+trial_name: Pk_boss_z1z3_2cosmo
+
+targets:
+  - kind: boss
+    patch: NGC
+    zbin: z1
+    k_min: 0.03
+    k_max: 0.15
+    use_quad: true
+    bias:       {initial: 2.0, min: 0.5, max: 4.0}
+    shot_noise: {initial: 0.0, min: -5000.0, max: 5000.0}
+  - kind: boss
+    patch: NGC
+    zbin: z3
+    k_min: 0.03
+    k_max: 0.15
+    use_quad: true
+    bias:       {initial: 2.1, min: 0.5, max: 4.0}
+    shot_noise: {initial: 0.0, min: -5000.0, max: 5000.0}
+
+param_mode: cosmo
+
+mcmc:
+  nwalkers: 32
+  nburn: 800
+  nrun: 3000

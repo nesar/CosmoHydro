@@ -1,0 +1,47 @@
+== 1/2. Completeness and pk_2 vs pk_3 identity ==
+  expected files per dir: 2200
+  missing in pk_2: 0  []
+  missing in pk_3: 0  []
+  files differing between pk_2 and pk_3: 0  []
+  -> pk_2 and pk_3 are complete and byte-identical; using pk_3.
+
+== 3/4/5. File contents, common k grid, ErrorBar consistency ==
+  files scanned: 2200
+  k grid: 1385 bins, k = [0.02225, 21.7565] h/Mpc, dk ~ 0.01570
+  max |ErrorBar / (P*sqrt(2/nModes)) - 1| over all files: 2.93e-01
+  -> all files finite, positive, on one common k grid.
+
+== 6. Suppression-ratio outlier scan (per z) ==
+  z=0.0: ratio range at k~1: [0.906, 1.001]; runs with sustained >5 MAD deviation: []
+  z=0.1: ratio range at k~1: [0.905, 1.001]; runs with sustained >5 MAD deviation: []
+  z=0.5: ratio range at k~1: [0.906, 1.001]; runs with sustained >5 MAD deviation: []
+  z=1.0: ratio range at k~1: [0.917, 1.001]; runs with sustained >5 MAD deviation: [8]
+  z=2.0: ratio range at k~1: [0.980, 1.002]; runs with sustained >5 MAD deviation: [18, 25, 28, 66, 81, 85]
+  NOTE: flagged runs are extreme-feedback corners of the design, not
+  necessarily corrupt data — inspect them in pk_suite_overview.png.
+
+== 7. Redshift-interpolation accuracy (log P linear in a) ==
+  hydro.full: median |dP/P| = 0.0355, 95th pct = 0.0576, max = 0.0699
+  go: median |dP/P| = 0.0398, 95th pct = 0.0581, max = 0.0698
+  (This is the widest snapshot gap re-scaled; interpolating between
+   adjacent snapshots, e.g. for BOSS z_eff=0.38 or KiDS z=0.45, is
+   more accurate than the numbers above. Ratio interpolation errors
+   largely cancel between hydro and GO.)
+
+== 8. hydro.full vs cdm+bar composition (z=0, low k) ==
+  effective cdm-baryon correlation at k=0.02-0.1: mean 1.0000, min 1.0000 (expect ~1; runs violating |rho|<=1.05: 0)
+
+  wrote /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/diagnostics/pk_suite_overview.png
+
+== 9. KiDS-Legacy target files ==
+  nz1: 20 rows (expect 20), corr (20, 20), 68% band ordering ok: True, symmetric: True, unit diag: True, min eigenvalue: 3.249e-01
+  nz3: 60 rows (expect 60), corr (60, 60), 68% band ordering ok: True, symmetric: True, unit diag: True, min eigenvalue: 1.006e-01
+  nz1 mean fdelta at k=3-20: 0.671 (paper headline: 0.70 +/- 0.10)
+
+== 10. BOSS DR12 monoquad tables + Patchy covariance blocks ==
+  NGC z1: 40 k bins; multipole block order {'P0': 0, 'P2': 2}; sqrt(diag C00) vs sig_P0 max rel dev 4.09e-07; C22 vs sig_P2: 4.13e-07
+  NGC z3: 40 k bins; multipole block order {'P0': 0, 'P2': 2}; sqrt(diag C00) vs sig_P0 max rel dev 4.10e-07; C22 vs sig_P2: 3.82e-07
+  SGC z1: 40 k bins; multipole block order {'P0': 0, 'P2': 2}; sqrt(diag C00) vs sig_P0 max rel dev 2.91e-07; C22 vs sig_P2: 4.30e-07
+  SGC z3: 40 k bins; multipole block order {'P0': 0, 'P2': 2}; sqrt(diag C00) vs sig_P0 max rel dev 4.62e-07; C22 vs sig_P2: 3.05e-07
+
+Report written to /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/diagnostics/pk_data_validation.txt

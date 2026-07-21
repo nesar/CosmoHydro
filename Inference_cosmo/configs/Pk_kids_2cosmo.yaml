@@ -1,0 +1,17 @@
+# KiDS-Legacy deprojected Pm(k, z) alone, cosmology free, subgrid fixed at
+# the project fiducial. The cleanest direct matter-P(k) cosmology constraint:
+# model = suppression-ratio emulator x gravity-only emulator at z_fid.
+#
+# k_max=7 keeps every point inside the emulated range (Nyquist 8.04) with
+# margin; k_min=0.03 drops the two lowest KiDS bands where the sim box has
+# few modes.
+
+trial_name: Pk_kids_2cosmo
+
+targets:
+  - kind: kids
+    nz: nz3
+    k_min: 0.03
+    k_max: 7.0
+
+param_mode: cosmo

@@ -1,0 +1,15 @@
+# Joint KiDS-Legacy Pm + A_mod with all 7 parameters free: cosmology from
+# the direct Pm shape/amplitude, subgrid from the suppression. First
+# cosmology+astrophysics joint constraint from power spectra alone.
+
+trial_name: Pk_kids_amod_7p
+
+targets:
+  - kind: kids
+    nz: nz3
+    k_min: 0.03
+    k_max: 7.0
+  - kind: amod
+    constraint: DES_Y3_Planck
+
+param_mode: subgrid+cosmo
