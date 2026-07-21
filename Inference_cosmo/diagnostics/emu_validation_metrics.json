@@ -6,5 +6,77 @@
     "median_abs_err": 0.0016497283094425996,
     "p95_abs_err": 0.005018183901349616,
     "max_abs_err": 0.012339301090495525
+  },
+  {
+    "quantity": "logP_go",
+    "ztag": "0.1",
+    "source": "logP_go_z0.1",
+    "median_abs_err": 0.0014463203889052978,
+    "p95_abs_err": 0.0054515305594857065,
+    "max_abs_err": 0.009472547581782953
+  },
+  {
+    "quantity": "logP_go",
+    "ztag": "0.5",
+    "source": "logP_go_z0.5",
+    "median_abs_err": 0.001522306520623462,
+    "p95_abs_err": 0.004008305768791832,
+    "max_abs_err": 0.008267843175291945
+  },
+  {
+    "quantity": "logP_go",
+    "ztag": "1.0",
+    "source": "logP_go_z1.0",
+    "median_abs_err": 0.0011531756933309545,
+    "p95_abs_err": 0.004031964633745383,
+    "max_abs_err": 0.016058080165912036
+  },
+  {
+    "quantity": "logP_go",
+    "ztag": "2.0",
+    "source": "logP_go_z2.0",
+    "median_abs_err": 0.0011881138917932965,
+    "p95_abs_err": 0.004800871640569943,
+    "max_abs_err": 0.03029669830057069
+  },
+  {
+    "quantity": "ratio",
+    "ztag": "0.0",
+    "source": "Pk_multivariate_model_z_index0",
+    "median_abs_err": 0.006157729192348471,
+    "p95_abs_err": 0.01672137176645988,
+    "max_abs_err": 0.02088238956115218
+  },
+  {
+    "quantity": "ratio",
+    "ztag": "0.1",
+    "source": "ratio_z0.1",
+    "median_abs_err": 0.0065330197170361815,
+    "p95_abs_err": 0.018956043216131778,
+    "max_abs_err": 0.024448418767700097
+  },
+  {
+    "quantity": "ratio",
+    "ztag": "0.5",
+    "source": "ratio_z0.5",
+    "median_abs_err": 0.0043851692746401105,
+    "p95_abs_err": 0.023521901069562604,
+    "max_abs_err": 0.032363784280421304
+  },
+  {
+    "quantity": "ratio",
+    "ztag": "1.0",
+    "source": "ratio_z1.0",
+    "median_abs_err": 0.0034358133752586673,
+    "p95_abs_err": 0.021427826473532988,
+    "max_abs_err": 0.03051518651238294
+  },
+  {
+    "quantity": "ratio",
+    "ztag": "2.0",
+    "source": "ratio_z2.0",
+    "median_abs_err": 0.0027310010919968097,
+    "p95_abs_err": 0.009354631564052758,
+    "max_abs_err": 0.012111377546806246
   }
 ]

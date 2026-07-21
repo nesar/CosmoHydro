@@ -1,0 +1,9 @@
+=== Emulator vs targets at project fiducial (omega_m=0.14176, sigma_8=0.8102, fiducial subgrid) ===
+
+GO vs halofit(mead2020) at fiducial, k=0.03-5: median ratio 1.009, range [0.856, 1.102] (halofit itself is only ~5% accurate)
+KiDS nz3 (k=0.03-7): chi2 = 405.6 for 42 points (chi2/dof = 9.66) at fiducial
+A_mod: model-implied A_mod at fiducial = 0.955 (DES Y3+Planck: 0.858 +/- 0.052; chi2 = 3.49)
+BOSS NGC z1: best-fit b1 = 1.837, P_sn = +1639; chi2 = 112.7 for 24 pts - 2 fit params (chi2/dof = 5.12) [Kaiser+AP, no window]
+BOSS NGC z3: best-fit b1 = 2.006, P_sn = +1283; chi2 = 169.7 for 24 pts - 2 fit params (chi2/dof = 7.71) [Kaiser+AP, no window]
+BOSS SGC z1: best-fit b1 = 1.852, P_sn = +1005; chi2 = 79.0 for 24 pts - 2 fit params (chi2/dof = 3.59) [Kaiser+AP, no window]
+BOSS SGC z3: best-fit b1 = 2.113, P_sn = +0; chi2 = 77.9 for 24 pts - 2 fit params (chi2/dof = 3.54) [Kaiser+AP, no window]

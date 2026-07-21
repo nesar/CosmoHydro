@@ -5,6 +5,12 @@
 # k_max=7 keeps every point inside the emulated range (Nyquist 8.04) with
 # margin; k_min=0.03 drops the two lowest KiDS bands where the sim box has
 # few modes.
+#
+# z_bins drops the z_fid=1.3 bin: its fdelta = 1.24-1.68 (MORE power than
+# the DMO reference — baryonically impossible) marks it as the deprojection's
+# weakly-constrained corner, and its strong cross-bin correlations blow up
+# chi2 (405 -> 15 for the remaining 28 points at fiducial; see
+# diagnostics/compare_targets_summary.txt and pk_data_validation.txt).
 
 trial_name: Pk_kids_2cosmo
 
@@ -13,5 +19,6 @@ targets:
     nz: nz3
     k_min: 0.03
     k_max: 7.0
+    z_bins: [0.15, 0.45]
 
 param_mode: cosmo

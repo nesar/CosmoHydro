@@ -46,6 +46,11 @@ P_hydro(k,z; θ) = S(k,z; θ₇) × P_go(k,z; ω_m, σ₈)
   cosmology target: it is what the sims actually predict. (Their
   deprojection assumed Ω_m=0.305 in the lensing kernel — inherited model
   dependence, see the paper.)
+  **Default z-bin choice:** the nz3 z_fid=1.3 bin is excluded. Its fdelta
+  = 1.24–1.68 (more power than the DMO reference, baryonically impossible)
+  and its strong cross-bin correlations dominate χ² (405 → 15 at fiducial
+  when dropped, with per-bin fits all good). The wide nz1 bin (z_fid=1.0)
+  is available as an alternative (`nz: nz1`).
 * **A_mod (`kind: amod`)** — the constraint is ONE published number, so the
   emulated suppression is projected onto the template
   `1 + (A−1)(1 − P_L/P_go)` by least squares over 0.1 < k < 8, and the
