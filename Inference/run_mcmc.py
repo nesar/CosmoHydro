@@ -643,7 +643,11 @@ def main():
 
     if use_pool:
         from multiprocessing import Pool
-        with Pool() as pool:
+        # Worker count: defaults to all cores (unchanged). Set MCMC_NWORKERS to cap
+        # it when sharing the box with other jobs, so N_jobs x workers ~ n_cores
+        # (pair with OMP_NUM_THREADS=1 to keep each worker single-threaded).
+        _nw = os.environ.get('MCMC_NWORKERS')
+        with Pool(processes=int(_nw) if _nw else None) as pool:
             sampler = define_sampler(**sampler_kwargs, pool=pool)
             pos, prob, state, samples, sampler = do_mcmc(sampler, pos0, nburn, ndim, if_burn=True)
             pos, prob, state, samples, sampler = do_mcmc(sampler, pos, nrun, ndim, if_burn=False)

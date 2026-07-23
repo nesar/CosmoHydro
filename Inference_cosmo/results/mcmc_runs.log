@@ -1,0 +1,81 @@
+########## START Pk_kids_2cosmo 20:32
+=== Trial: Pk_kids_2cosmo ===
+Building targets and likelihoods...
+  target[0]: KiDS-Legacy nz3 -> PmLikelihood
+Free parameters (2):
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 3.0, '$e_\\text{w}$': 0.5, '$M_\\text{seed}/10^{6}$': 0.8, '$v_\\text{kin}/10^{4}$': 0.51, '$\\epsilon_\\text{kin}/10^{1}$': 0.13}
+
+ln_prob at init point: -138.4224
+
+MCMC: ndim=2, nwalkers=32, nburn=500, nrun=2000
+time (minutes): 68.28706443707148
+Burn-in phase
+time (minutes): 269.1782490134239
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_Pk_kids_2cosmo.npy
+  mean acceptance fraction: 0.705
+mcmc results: 0.13331791004301027 0.8047978745737838
+
+MCMC medians:
+  $\Omega_\text{m}$              = 0.1333
+  $\sigma_8$                     = 0.8048
+########## DONE Pk_kids_2cosmo 02:11
+########## START Pk_amod_5subgrid_fidcosmo 02:11
+  $e_\text{w}$                   init=0.6000 range=[0.2000, 1.0000]
+  $M_\text{seed}/10^{6}$         init=1.3000 range=[0.6000, 2.0000]
+  $v_\text{kin}/10^{4}$          init=0.6500 range=[0.1000, 1.2000]
+  $\epsilon_\text{kin}/10^{1}$   init=0.6100 range=[0.0200, 1.2000]
+Fixed parameters: {'$\\Omega_\\text{m}$': 0.14176, '$\\sigma_8$': 0.8102}
+
+ln_prob at init point: -2.8699
+
+MCMC: ndim=5, nwalkers=32, nburn=500, nrun=2000
+time (minutes): 9.321765196323394
+Burn-in phase
+time (minutes): 39.71887551943461
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_Pk_amod_5subgrid_fidcosmo.npy
+  mean acceptance fraction: 0.390
+mcmc results: 2.762347999209185 0.5673370929001315 1.3305358201019084 0.721241267745843 0.7236789951816371
+
+MCMC medians:
+  $\kappa_\text{w}$              = 2.7623
+  $e_\text{w}$                   = 0.5673
+  $M_\text{seed}/10^{6}$         = 1.3305
+  $v_\text{kin}/10^{4}$          = 0.7212
+  $\epsilon_\text{kin}/10^{1}$   = 0.7237
+########## DONE Pk_amod_5subgrid_fidcosmo 03:01
+########## START Pk_kids_amod_7p 03:01
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+Fixed parameters: {}
+
+ln_prob at init point: -140.3394
+
+MCMC: ndim=7, nwalkers=32, nburn=500, nrun=2000
+time (minutes): 64.38061986366908
+Burn-in phase
+time (minutes): 247.40494393905004
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_Pk_kids_amod_7p.npy
+  mean acceptance fraction: 0.341
+mcmc results: 2.6928059937538276 0.5151431314214938 1.3543768371044198 0.7076831488476071 0.760118573148355 0.13366250150912007 0.8142112702338515
+
+MCMC medians:
+  $\kappa_\text{w}$              = 2.6928
+  $e_\text{w}$                   = 0.5151
+  $M_\text{seed}/10^{6}$         = 1.3544
+  $v_\text{kin}/10^{4}$          = 0.7077
+  $\epsilon_\text{kin}/10^{1}$   = 0.7601
+  $\Omega_\text{m}$              = 0.1337
+  $\sigma_8$                     = 0.8142
+########## DONE Pk_kids_amod_7p 08:14
+########## START Pk_boss_z1z3_2cosmo 08:14

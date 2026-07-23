@@ -14,12 +14,9 @@ KiDS-Legacy (Broxterman et al. 2025, A&A 703, L3):
     Caveats baked into the measurement (see paper): lensing kernel assumes
     Omega_m = 0.305 +/- 0.012 flat LCDM; NLA-M intrinsic alignments.
 
-A_mod (Amon & Efstathiou 2022; Preston, Amon & Efstathiou 2023):
-    scalar suppression parameter defined through
-        P_obs = P_L + A_mod (P_NL^DMO - P_L).
-    The constraint is ONE number, so the correct likelihood treats it as a
-    single datum: project the emulated suppression S(k) = P_hydro/P_GO onto
-    the A_mod template (see pk_likelihood.AmodLikelihood).
+A_mod: quarantined to amod_exploratory/ (2026-07-23) — it modulates the
+    nonlinear boost at fixed Planck cosmology and is NOT a measurement of
+    P_hydro/P_GO; see amod_exploratory/README.md.
 
 BOSS DR12 (Beutler & McDonald 2021):
     pre-recon galaxy power spectrum multipoles, rebinned to dk = 0.01, with
@@ -45,15 +42,6 @@ BOSS_ZEFF = {'z1': 0.38, 'z3': 0.61}
 # Fiducial cosmology of the BOSS DR12 catalogue analysis (Beutler & McDonald
 # 2021, Sec. 2; standard BOSS DR12 fiducial), needed for Alcock-Paczynski.
 BOSS_FIDUCIAL = {'Omega_m': 0.31, 'h': 0.676}
-
-AMOD_CONSTRAINTS = {
-    # Preston, Amon & Efstathiou 2023 (arXiv:2305.09827): DES Y3 + Planck prior
-    'DES_Y3_Planck': {'Amod': 0.858, 'sigma': 0.052, 'ref': 'arXiv:2305.09827'},
-    # Amon & Efstathiou 2022 (arXiv:2206.11794): KiDS-1000; no published sigma,
-    # central value only — usable for plots, NOT for a Gaussian likelihood.
-    'KiDS1000': {'Amod': 0.69, 'sigma': None, 'ref': 'arXiv:2206.11794'},
-}
-
 
 # ---------------------------------------------------------------------------
 # KiDS-Legacy
@@ -117,18 +105,111 @@ def load_kids(nz='nz3', k_min=None, k_max=None, z_bins=None,
 
 
 # ---------------------------------------------------------------------------
-# A_mod
+# A_mod: MOVED to amod_exploratory/amod_likelihood.py (2026-07-23).
+# It is a Planck-conditioned modulation of the NONLINEAR BOOST (P_NL - P_L),
+# not a measurement of P_hydro/P_GO — see amod_exploratory/README.md.
 # ---------------------------------------------------------------------------
-def load_amod(constraint='DES_Y3_Planck'):
-    """Return the A_mod scalar constraint dict (Amod, sigma, ref)."""
-    c = dict(AMOD_CONSTRAINTS[constraint])
-    c['name'] = f'A_mod {constraint}'
-    c['kind'] = 'amod'
-    if c['sigma'] is None:
-        raise ValueError(
-            f"constraint '{constraint}' has no published uncertainty; it can "
-            f"be plotted but not used in a Gaussian likelihood")
-    return c
+
+
+# ---------------------------------------------------------------------------
+# GAMA DR4 halo mass function (Driver et al. 2022)
+# ---------------------------------------------------------------------------
+HMF_TARGET_DIR = os.path.join(_HERE, '..', 'data', 'Halo_mass_function_targets',
+                              'hmf_targets')
+# Driver et al. 2022 analysis cosmology (Planck 2018): H0 = 67.37
+GAMA_H = 0.6737
+
+
+def load_gama_hmf(logM_min=12.8, logM_max=None, include_cosvar=True,
+                  hmf_dir=None):
+    """GAMA DR4 empirical HMF (Driver et al. 2022, Table 1) in simulation
+    units.
+
+    UNITS (verified against the published paper, MNRAS 515, 2138, Sec. 2:
+    "our units are Msun h^-1_P18" and space densities "Mpc^-3 h^3_P18"):
+    the table masses are ALREADY Msun/h and phi ALREADY (Mpc/h)^-3 dex^-1,
+    so the conversion to simulation units is the IDENTITY (h-unit quantities
+    are h-invariant; the 0.4% h_P18=0.6737 vs h_sim=0.6766 difference is
+    absorbed by the h-unit convention). NOTE: the local data-package README
+    header suggests physical-Mpc units — the paper text is authoritative.
+
+    Rows kept: credible_flag=1 AND logM >= 12.8 (the paper's stated mass
+    completeness limit; the file flags 16 rows down to logM=12.4, but the
+    12.4/12.6 bins sit below the completeness turnover — visible as a break
+    in the phi trend — and the paper adopts 10^12.8 as the limit).
+    Uses the Eddington-bias-corrected column log10_phi_corr.
+
+    Errors: sigma_phi = phi * sqrt(fsig_combined^2 [+ fsig_cosvar^2]),
+    treated as independent Gaussian per bin (the paper publishes no
+    covariance).
+
+    z_eff ~ 0.1 — matched by evaluating the sim HMF emulator at snapshot 567
+    (z = 0.0998), so NO redshift shift is applied to the data.
+
+    Known systematic (paper Sec. 4): the absolute mass scale rides on the
+    dynamical-mass calibration A = 13.9; enable the `mass_shift` nuisance in
+    the MCMC config to marginalize a rigid log-mass offset.
+
+    Returns dict with logM (Msun/h), y = phi, sigma, and bookkeeping.
+    """
+    hmf_dir = hmf_dir or HMF_TARGET_DIR
+    d = np.loadtxt(os.path.join(hmf_dir, 'GAMA_DR4_HMF_Driver2022_Table1.txt'))
+    # columns: log10M  N  log10_phi_raw  log10_phi_corr  fsig_p  fsig_MC
+    #          fsig_cosvar  fsig_comb  credible
+    cred = d[:, 8] == 1
+    d = d[cred]
+    logM = d[:, 0]                # already Msun/h (h_P18) per the paper
+    phi = 10 ** d[:, 3]           # already (Mpc/h)^-3 dex^-1 per the paper
+    fsig = d[:, 7]
+    if include_cosvar:
+        fsig = np.sqrt(fsig ** 2 + d[:, 6] ** 2)
+    sigma = phi * fsig
+
+    keep = np.ones(logM.size, dtype=bool)
+    if logM_min is not None:
+        keep &= logM >= logM_min
+    if logM_max is not None:
+        keep &= logM <= logM_max
+    return {
+        'name': 'GAMA DR4 HMF (Driver et al. 2022)',
+        'kind': 'gama_hmf',
+        'logM': logM[keep], 'y': phi[keep], 'sigma': sigma[keep],
+        'n_groups': d[keep, 1],
+        'z_eff': 0.1,
+        'ref': 'Driver et al. 2022, MNRAS 515, 2138',
+    }
+
+
+def load_mrp_fits(hmf_dir=None):
+    """MRP fit parameters (Driver et al. 2022, Table 2) for PLOTTING only.
+
+    phi(log10 M) = ln(10) * phistar * beta * (M/Mstar)^(alpha+1)
+                   * exp(-(M/Mstar)^beta)
+    Valid over 10^12.7-10^15.5 Msun at z ~ 0.1, in the paper's units
+    (Msun, Mpc^-3 dex^-1) — convert like the binned data before overplotting.
+    No parameter covariance is published, so these must NOT be used as a
+    likelihood.
+    """
+    hmf_dir = hmf_dir or HMF_TARGET_DIR
+    out = {}
+    path = os.path.join(hmf_dir, 'MRP_fits_Driver2022_Table2.txt')
+    with open(path) as f:
+        for line in f:
+            if not line.strip() or line.startswith('#'):
+                continue
+            p = line.split()
+            out[p[0]] = {'log10Mstar': float(p[1]),
+                         'log10phistar': float(p[4]),
+                         'alpha': float(p[7]),
+                         'beta': float(p[10])}
+    return out
+
+
+def mrp_phi(logM_data_units, fit):
+    """Evaluate an MRP fit at log10 M in the paper's (Msun) units."""
+    x = 10 ** (logM_data_units - fit['log10Mstar'])
+    return (np.log(10.0) * 10 ** fit['log10phistar'] * fit['beta']
+            * x ** (fit['alpha'] + 1) * np.exp(-x ** fit['beta']))
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,29 @@
+finished trials found: ['HMF_gama_2cosmo', 'Pk_amod_5subgrid_fidcosmo', 'Pk_kids_2cosmo', 'Pk_kids_amod_7p', 'Pk_kids_amod_hmf_7p']
+loading emulators + targets (few minutes)...
+
+=== summary figure: plot_summary_cosmo_marg_vs_fixed.png ===
+mcmc results (modes): 2.2810 0.4971 1.4421 0.6309 0.9070 0.1386 0.8166
+  Pk_kids_amod_7p: mode theta7 = (2.281, 0.4971, 1.4421, 0.6309, 0.907, 0.1386, 0.8166)
+mcmc results (modes): 0.1316 0.8070
+  Pk_kids_2cosmo: mode theta7 = (3.0, 0.5, 0.8, 0.51, 0.13, 0.1316, 0.807)
+Removed no burn in
+Removed no burn in
+  saved: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/plot_summary_cosmo_marg_vs_fixed.png
+
+=== summary figure: plot_summary_subgrid_marg_vs_fixed.png ===
+mcmc results (modes): 2.2810 0.4971 1.4421 0.6309 0.9070 0.1386 0.8166
+  Pk_kids_amod_7p: mode theta7 = (2.281, 0.4971, 1.4421, 0.6309, 0.907, 0.1386, 0.8166)
+mcmc results (modes): 2.5814 0.5083 1.4926 0.7324 0.8823
+  Pk_amod_5subgrid_fidcosmo: mode theta7 = (2.5814, 0.5083, 1.4926, 0.7324, 0.8823, 0.1418, 0.8102)
+Removed no burn in
+Removed no burn in
+  saved: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/plot_summary_subgrid_marg_vs_fixed.png
+
+=== summary figure: plot_summary_hmf_vs_kids_cosmo.png ===
+mcmc results (modes): 0.1219 0.8943 -0.0649
+  HMF_gama_2cosmo: mode theta7 = (3.0, 0.5, 0.8, 0.51, 0.13, 0.1219, 0.8943)
+mcmc results (modes): 0.1316 0.8070
+  Pk_kids_2cosmo: mode theta7 = (3.0, 0.5, 0.8, 0.51, 0.13, 0.1316, 0.807)
+Removed no burn in
+Removed no burn in
+  saved: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/plot_summary_hmf_vs_kids_cosmo.png

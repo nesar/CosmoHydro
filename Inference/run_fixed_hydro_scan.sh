@@ -18,6 +18,25 @@
 set -u -o pipefail
 
 cd "$(dirname "$0")" || exit 1
+
+# --- CRITICAL: one BLAS thread per worker ------------------------------------
+# run_mcmc.py runs emcee with a multiprocessing Pool (~24 workers). Without these,
+# every worker's numpy/BLAS spawns a full thread pool (all cores), so 24 workers x
+# ~24 threads oversubscribe the 24-core box ~25x and each run crawls for DAYS.
+# Pinning to 1 thread/worker makes 24 workers == 24 cores and cuts runtime from
+# days to minutes. Must be exported BEFORE python imports numpy.
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+
+# Worker count: for this cheap 2-param GSMF+CGD likelihood, emcee's Pool overhead
+# dominates. A benchmark (200 steps x 400 walkers) gave:
+#   serial 551s | pool-4 317s | pool-8 520s | pool-24 far worse (never finished)
+# so a SMALL pool wins; 24 workers left a single point unfinished after 4+ hours.
+export MCMC_NWORKERS=4
+
 POINTS=(A B C D)
 SUITE=GSMF_CGD
 

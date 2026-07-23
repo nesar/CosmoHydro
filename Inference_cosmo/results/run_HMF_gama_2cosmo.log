@@ -1,0 +1,26 @@
+=== Trial: HMF_gama_2cosmo ===
+Building targets and likelihoods...
+  target[0]: GAMA DR4 HMF (Driver et al. 2022) -> HmfLikelihood
+Free parameters (3):
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+  $\Delta\log M$ GAMA            init=0.0000 range=[-0.3000, 0.3000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 3.0, '$e_\\text{w}$': 0.5, '$M_\\text{seed}/10^{6}$': 0.8, '$v_\\text{kin}/10^{4}$': 0.51, '$\\epsilon_\\text{kin}/10^{1}$': 0.13}
+
+ln_prob at init point: -15.8217
+
+MCMC: ndim=3, nwalkers=32, nburn=500, nrun=2000
+time (minutes): 0.20005098581314087
+Burn-in phase
+time (minutes): 0.7878397981325785
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_HMF_gama_2cosmo.npy
+  mean acceptance fraction: 0.570
+mcmc results: 0.12663055694354228 0.8547374558454515 -0.06699761656422298
+
+MCMC medians:
+  $\Omega_\text{m}$              = 0.1266
+  $\sigma_8$                     = 0.8547
+  $\Delta\log M$ GAMA            = -0.0670

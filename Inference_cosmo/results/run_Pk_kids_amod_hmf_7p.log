@@ -1,0 +1,38 @@
+=== Trial: Pk_kids_amod_hmf_7p ===
+Building targets and likelihoods...
+  target[0]: KiDS-Legacy nz3 -> PmLikelihood
+  target[1]: A_mod DES_Y3_Planck -> AmodLikelihood
+  target[2]: GAMA DR4 HMF (Driver et al. 2022) -> HmfLikelihood
+Free parameters (8):
+  $\kappa_\text{w}$              init=3.0000 range=[2.0000, 4.0000]
+  $e_\text{w}$                   init=0.6000 range=[0.2000, 1.0000]
+  $M_\text{seed}/10^{6}$         init=1.3000 range=[0.6000, 2.0000]
+  $v_\text{kin}/10^{4}$          init=0.6500 range=[0.1000, 1.2000]
+  $\epsilon_\text{kin}/10^{1}$   init=0.6100 range=[0.0200, 1.2000]
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+  $\Delta\log M$ GAMA            init=0.0000 range=[-0.3000, 0.3000]
+Fixed parameters: {}
+
+ln_prob at init point: -164.8060
+
+MCMC: ndim=8, nwalkers=32, nburn=800, nrun=3000
+time (minutes): 2.758234079678853
+Burn-in phase
+time (minutes): 10.180222304662069
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_Pk_kids_amod_hmf_7p.npy
+  mean acceptance fraction: 0.308
+mcmc results: 2.241229842030343 0.644513052255788 1.6795250184514607 0.7703306776228487 0.3898512186124369 0.1260453680621472 0.8181571581029408 -0.09903794696474275
+
+MCMC medians:
+  $\kappa_\text{w}$              = 2.2412
+  $e_\text{w}$                   = 0.6445
+  $M_\text{seed}/10^{6}$         = 1.6795
+  $v_\text{kin}/10^{4}$          = 0.7703
+  $\epsilon_\text{kin}/10^{1}$   = 0.3899
+  $\Omega_\text{m}$              = 0.1260
+  $\sigma_8$                     = 0.8182
+  $\Delta\log M$ GAMA            = -0.0990

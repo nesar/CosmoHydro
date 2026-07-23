@@ -23,3 +23,17 @@ ln_prior = 1.1466
   LL(CGD, z=0.0) = -40.4950
 
 MCMC: ndim=2, nwalkers=400, nburn=100, nrun=4000
+time (minutes): 2.713069772720337
+Burn-in phase
+time (minutes): 99.92041554848353
+Sampling phase
+
+=== Results saved ===
+  Samples:     /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/samples_GSMF_CGD_2cosmo_hydA.npy
+  Params list: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/params_list_GSMF_CGD_2cosmo_hydA.npy
+  Config copy: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/config_GSMF_CGD_2cosmo_hydA.yaml
+mcmc results: 0.14229581181112977 0.811804107519908
+
+MCMC median results:
+  $\Omega_\text{m}$               = 0.1423
+  $\sigma_8$                      = 0.8118

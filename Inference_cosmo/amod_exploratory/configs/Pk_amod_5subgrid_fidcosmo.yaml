@@ -1,0 +1,16 @@
+# A_mod (DES Y3 + Planck prior: 0.858 +/- 0.052) as a single-datum constraint
+# on the baryonic suppression, subgrid free, cosmology fixed at fiducial.
+# This asks: which feedback strengths are consistent with the weak-lensing
+# preference for suppressed nonlinear power?
+
+trial_name: Pk_amod_5subgrid_fidcosmo
+
+targets:
+  - kind: amod
+    constraint: DES_Y3_Planck
+    k_fit_min: 0.1
+    k_fit_max: 8.0
+
+param_mode: subgrid
+
+output_dir: amod_exploratory/results/

@@ -136,6 +136,44 @@ def load_pk_suite(pk_dir=PK_DIR_DEFAULT,
     return out
 
 
+HMF_EXTRACT_DIR_DEFAULT = os.path.join(
+    _HERE, '..', 'data', 'scidac-400MPC_RUNS_5SG_2COSMO_PARAM-extracts_20260323')
+HMF_SNAPSHOT_Z01 = 567          # snapshot 567 -> z = 0.0998 (GAMA z_eff ~ 0.1)
+BOX_VOLUME = 400.0 ** 3         # (Mpc/h)^3
+
+
+def load_hmf_snapshot(snap_id=HMF_SNAPSHOT_Z01,
+                      extract_dir=HMF_EXTRACT_DIR_DEFAULT,
+                      num_sims=NUM_SIMS_DEFAULT,
+                      start_sim_idx=START_SIM_IDX_DEFAULT):
+    """Load the SOD halo mass function for all sims at one snapshot.
+
+    File format (HaloMassFunction_{snap}.txt):
+        Halo_Mass [Msun/h], HMF_SOD, HMF_SOD_err, halo_counts, HMF_TINKER_2008
+    where HMF_SOD = dn/dlog10M in (Mpc/h)^-3 dex^-1 — verified empirically:
+    HMF_SOD == halo_counts / (V_box * dlog10M) exactly.
+
+    Returns dict: M (Msun/h), phi (num_sims, nbins), counts (num_sims, nbins),
+    tinker (nbins,) from the last file read, dlog10M.
+    """
+    phi = counts = M = tinker = None
+    for i in range(num_sims):
+        sim_idx = i + start_sim_idx
+        d = np.loadtxt(os.path.join(extract_dir, f'RUN{sim_idx:03d}',
+                                    'extract', f'HaloMassFunction_{snap_id}.txt'))
+        if phi is None:
+            M = d[:, 0]
+            phi = np.zeros((num_sims, d.shape[0]))
+            counts = np.zeros((num_sims, d.shape[0]))
+        elif not np.allclose(d[:, 0], M, rtol=1e-8):
+            raise ValueError(f'HMF mass grid mismatch in RUN{sim_idx:03d}')
+        phi[i] = d[:, 1]
+        counts[i] = d[:, 3]
+        tinker = d[:, 4]
+    return {'M': M, 'phi': phi, 'counts': counts, 'tinker': tinker,
+            'dlog10M': float(np.median(np.diff(np.log10(M))))}
+
+
 def k_trust_mask(k):
     """Boolean mask for the trusted k range (fundamental mode .. Nyquist)."""
     kmin, kmax = mass_conds('Pk')

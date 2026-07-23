@@ -10,22 +10,18 @@ configs/_defaults.yaml), emcee ensemble sampling, results saved as
 (same format as Inference/, so the existing plot tooling applies).
 
 Usage:
-    python run_mcmc_cosmo.py configs/Pk_amod_5subgrid_fidcosmo.yaml
-    python run_mcmc_cosmo.py configs/Pk_kids_amod_7p.yaml --dry-run
+    python run_mcmc_cosmo.py configs/Pk_kids_2cosmo.yaml
+    python run_mcmc_cosmo.py configs/Pk_kids_7p.yaml --dry-run
 
 Config schema (see configs/*.yaml for working examples):
 
-    trial_name: Pk_kids_amod_7p
+    trial_name: Pk_kids_7p
     targets:
       - kind: kids            # direct Pm(k, z_fid) likelihood
         nz: nz3               # 'nz1' or 'nz3'
         k_min: 0.03           # h/Mpc; must stay within emulated [0.0157, 8.04]
         k_max: 7.0
         z_bins: [0.15, 0.45]  # optional subset of fiducial redshifts
-      - kind: amod            # scalar A_mod projection likelihood
-        constraint: DES_Y3_Planck
-        k_fit_min: 0.1
-        k_fit_max: 8.0
       - kind: boss            # Kaiser+AP multipoles (methods-level: no window)
         patch: NGC
         zbin: z1
@@ -49,6 +45,13 @@ import os
 import shutil
 import sys
 
+# Pin BLAS/OpenMP to one thread per process BEFORE numpy loads: with a
+# 24-worker emcee Pool, multi-threaded BLAS oversubscribes the machine and
+# slowed early runs by ~40x (5.6 h instead of ~13 min for the same chain).
+for _v in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS',
+           'NUMEXPR_NUM_THREADS'):
+    os.environ.setdefault(_v, '1')
+
 import numpy as np
 import yaml
 
@@ -64,12 +67,17 @@ from cosmo_hydro_emu.mcmc import (                             # noqa: E402
 from run_mcmc import SHORT_KEY_TO_LABEL, load_config           # noqa: E402
 
 from pk_data import load_design                                # noqa: E402
-from targets import load_kids, load_amod, load_boss            # noqa: E402
+from targets import (                                          # noqa: E402
+    load_kids, load_boss, load_gama_hmf,
+)
 from pk_likelihood import (                                    # noqa: E402
-    PkEmulator, PmLikelihood, AmodLikelihood, BossLikelihood,
+    PkEmulator, PmLikelihood, BossLikelihood, HmfLikelihood,
     setup_global_posterior, ln_prob_global,
 )
-from linear_theory import LinearPk                             # noqa: E402
+
+# Plug-in registry for non-standard target kinds (e.g. the quarantined A_mod
+# in amod_exploratory/run_mcmc_amod.py). builder(spec, get_emu) -> (name, like)
+EXTRA_TARGET_KINDS = {}
 
 # Fiducial subgrid parameters in scaled design units
 # (kappa_w, e_w, M_seed/1e6, v_kin/1e4, eps_kin/1e1) — the project fiducial
@@ -140,12 +148,17 @@ def build_components(cfg, params_list):
 
     Returns (components, nuisance_map).
     """
-    # Which emulator redshifts are needed decides nothing here — all 5
-    # snapshots of both quantities are loaded once and shared.
-    emu = PkEmulator()
-    lin = None
+    # The Pk emulator set (10 models, slow load) is only built if a target
+    # needs it; the HMF likelihood loads its own (pre-existing) model.
+    emu = None
     components = []
     nuisance_map = {}
+
+    def get_emu():
+        nonlocal emu
+        if emu is None:
+            emu = PkEmulator()
+        return emu
 
     for i, spec in enumerate(cfg['targets']):
         kind = spec['kind']
@@ -154,24 +167,16 @@ def build_components(cfg, params_list):
                                k_min=spec.get('k_min', 0.03),
                                k_max=spec.get('k_max', 7.0),
                                z_bins=spec.get('z_bins'))
-            like = PmLikelihood(target, emu,
+            like = PmLikelihood(target, get_emu(),
                                 interp_sys_frac=spec.get('interp_sys_frac', 0.01))
             name = f'kids_{spec.get("nz", "nz3")}'
-        elif kind == 'amod':
-            if lin is None:
-                lin = LinearPk()
-            target = load_amod(spec.get('constraint', 'DES_Y3_Planck'))
-            like = AmodLikelihood(target, emu, linear_pk=lin,
-                                  k_fit_min=spec.get('k_fit_min', 0.1),
-                                  k_fit_max=spec.get('k_fit_max', 8.0))
-            name = f'amod_{spec.get("constraint", "DES_Y3_Planck")}'
         elif kind == 'boss':
             target = load_boss(patch=spec.get('patch', 'NGC'),
                                zbin=spec.get('zbin', 'z1'),
                                k_min=spec.get('k_min', 0.03),
                                k_max=spec.get('k_max', 0.15),
                                use_quad=spec.get('use_quad', True))
-            like = BossLikelihood(target, emu)
+            like = BossLikelihood(target, get_emu())
             name = f'boss_{spec.get("patch", "NGC")}_{spec.get("zbin", "z1")}'
             # nuisance: linear bias (required), shot noise (optional)
             bias = spec.get('bias', {'initial': 2.0, 'min': 0.5, 'max': 4.0})
@@ -183,8 +188,25 @@ def build_components(cfg, params_list):
                 params_list.append([f'$P_{{sn}}$ {name}', float(sn['initial']),
                                     float(sn['min']), float(sn['max'])])
                 nuisance_map[name]['P_sn'] = len(params_list) - 1
+        elif kind == 'gama_hmf':
+            target = load_gama_hmf(logM_min=spec.get('logM_min', 12.8),
+                                   logM_max=spec.get('logM_max', 14.9),
+                                   include_cosvar=spec.get('include_cosvar', True))
+            like = HmfLikelihood(target)
+            name = 'gama_hmf'
+            if 'mass_shift' in spec:
+                ms = spec['mass_shift']
+                params_list.append([r'$\Delta\log M$ GAMA', float(ms['initial']),
+                                    float(ms['min']), float(ms['max'])])
+                nuisance_map[name] = {'dlogM': len(params_list) - 1}
+        elif kind in EXTRA_TARGET_KINDS:
+            name, like = EXTRA_TARGET_KINDS[kind](spec, get_emu)
+            target = {'name': name}
         else:
-            raise ValueError(f'unknown target kind: {kind}')
+            raise ValueError(
+                f"unknown target kind: {kind}"
+                + (" — 'amod' is quarantined; use "
+                   "amod_exploratory/run_mcmc_amod.py" if kind == 'amod' else ''))
         components.append((name, like))
         print(f'  target[{i}]: {target["name"] if "name" in target else name} '
               f'-> {like.__class__.__name__}')
@@ -256,7 +278,10 @@ def main():
         # fork-based Pool inherits the module-level _GLOBAL state; only theta
         # is pickled per call.
         from multiprocessing import Pool
-        with Pool() as pool:
+        # Worker count defaults to all cores (unchanged). Set MCMC_NWORKERS to cap
+        # it when sharing the box; pair with OMP_NUM_THREADS=1 (see mcmc_env.sh).
+        _nw = os.environ.get('MCMC_NWORKERS')
+        with Pool(processes=int(_nw) if _nw else None) as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, ln_prob_global,
                                             pool=pool)
             pos, _, _, _, sampler = do_mcmc(sampler, pos0, nburn, ndim, if_burn=True)

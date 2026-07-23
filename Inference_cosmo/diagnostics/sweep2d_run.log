@@ -1,0 +1,108 @@
+loading emulators + targets (few minutes)...
+  [wide] row 1/36
+  [wide] row 2/36
+  [wide] row 3/36
+  [wide] row 4/36
+  [wide] row 5/36
+  [wide] row 6/36
+  [wide] row 7/36
+  [wide] row 8/36
+  [wide] row 9/36
+  [wide] row 10/36
+  [wide] row 11/36
+  [wide] row 12/36
+  [wide] row 13/36
+  [wide] row 14/36
+  [wide] row 15/36
+  [wide] row 16/36
+  [wide] row 17/36
+  [wide] row 18/36
+  [wide] row 19/36
+  [wide] row 20/36
+  [wide] row 21/36
+  [wide] row 22/36
+  [wide] row 23/36
+  [wide] row 24/36
+  [wide] row 25/36
+  [wide] row 26/36
+  [wide] row 27/36
+  [wide] row 28/36
+  [wide] row 29/36
+  [wide] row 30/36
+  [wide] row 31/36
+  [wide] row 32/36
+  [wide] row 33/36
+  [wide] row 34/36
+  [wide] row 35/36
+  [wide] row 36/36
+  [zoom] row 1/30
+  [zoom] row 2/30
+  [zoom] row 3/30
+  [zoom] row 4/30
+  [zoom] row 5/30
+  [zoom] row 6/30
+  [zoom] row 7/30
+  [zoom] row 8/30
+  [zoom] row 9/30
+  [zoom] row 10/30
+  [zoom] row 11/30
+  [zoom] row 12/30
+  [zoom] row 13/30
+  [zoom] row 14/30
+  [zoom] row 15/30
+  [zoom] row 16/30
+  [zoom] row 17/30
+  [zoom] row 18/30
+  [zoom] row 19/30
+  [zoom] row 20/30
+  [zoom] row 21/30
+  [zoom] row 22/30
+  [zoom] row 23/30
+  [zoom] row 24/30
+  [zoom] row 25/30
+  [zoom] row 26/30
+  [zoom] row 27/30
+  [zoom] row 28/30
+  [zoom] row 29/30
+  [zoom] row 30/30
+Traceback (most recent call last):
+  File "/home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/diagnostics/likelihood_sweep_2d_cosmo_targets.py", line 159, in <module>
+    main()
+  File "/home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/diagnostics/likelihood_sweep_2d_cosmo_targets.py", line 153, in main
+    fig.tight_layout(rect=[0, 0, 1, 0.98])
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/figure.py", line 3540, in tight_layout
+    engine.execute(self)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/layout_engine.py", line 183, in execute
+    kwargs = get_tight_layout_figure(
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/_tight_layout.py", line 266, in get_tight_layout_figure
+    kwargs = _auto_adjust_subplotpars(fig, renderer,
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/_tight_layout.py", line 82, in _auto_adjust_subplotpars
+    bb += [martist._get_tightbbox_for_layout_only(ax, renderer)]
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/artist.py", line 1411, in _get_tightbbox_for_layout_only
+    return obj.get_tightbbox(*args, **{**kwargs, "for_layout_only": True})
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/_api/deprecation.py", line 454, in wrapper
+    return func(*args, **kwargs)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/axes/_base.py", line 4398, in get_tightbbox
+    self._update_title_position(renderer)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/axes/_base.py", line 2988, in _update_title_position
+    if title.get_window_extent(renderer).ymin < top:
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/text.py", line 956, in get_window_extent
+    bbox, info, descent = self._get_layout(self._renderer)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/text.py", line 381, in _get_layout
+    w, h, d = _get_text_metrics_with_cache(
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/text.py", line 69, in _get_text_metrics_with_cache
+    return _get_text_metrics_with_cache_impl(
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/text.py", line 77, in _get_text_metrics_with_cache_impl
+    return renderer_ref().get_text_width_height_descent(text, fontprop, ismath)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/backends/backend_agg.py", line 217, in get_text_width_height_descent
+    self.mathtext_parser.parse(s, self.dpi, prop)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/mathtext.py", line 79, in parse
+    return self._parse_cached(s, dpi, prop, antialiased)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/mathtext.py", line 100, in _parse_cached
+    box = self._parser.parse(s, fontset, fontsize, dpi)
+  File "/home/nramachandra/anaconda3/envs/qom_torch_tf/lib/python3.9/site-packages/matplotlib/_mathtext.py", line 2165, in parse
+    raise ValueError("\n" + ParseException.explain(err, 0)) from None
+ValueError: 
+KiDS+$A_{m mod}$+HMF — likelihood
+     ^
+ParseException: Expected end of text, found '$'  (at char 5), (line:1, col:6)

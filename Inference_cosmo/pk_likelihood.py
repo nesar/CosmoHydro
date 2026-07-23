@@ -25,14 +25,7 @@ Redshift interpolation between the 5 snapshots (z = 0, 0.1, 0.5, 1, 2):
 Likelihood components (select by 'kind' in the config):
   pm    : direct matter-P(k) data points, e.g. KiDS-Legacy Pm(k, z_fid).
           Gaussian in Pm with the published covariance + emulator variance.
-  amod  : the A_mod scalar constraint. The emulated suppression S(k, z=0) is
-          projected onto the Amon-Efstathiou template
-              S_template(k) = 1 + (A_mod - 1) * (1 - P_L/P_go)
-          by weighted least squares over a log-k grid, giving the model-
-          implied A_mod(theta); the likelihood is Gaussian in that ONE number
-          (0.858 +/- 0.052 for DES Y3 + Planck prior). Treating each k-bin as
-          an independent datum would badly overcount a single published
-          constraint.
+  (amod  : quarantined to amod_exploratory/ — not a standard target.)
   boss  : BOSS DR12 galaxy P0 (+P2) with the Patchy covariance (Hartlap
           corrected), modeled as linear-bias Kaiser RSD of the emulated
           matter P(k, z_eff) with Alcock-Paczynski dilation from the BOSS
@@ -60,7 +53,7 @@ from cosmo_hydro_emu.load_hacc import PARAM_NAME              # noqa: E402
 
 from pk_data import PK_REDSHIFTS, PK_REDSHIFT_TAGS, COSMO_COLS  # noqa: E402
 from linear_theory import (                                   # noqa: E402
-    FIXED_COSMO, LinearPk, growth_factor_and_rate,
+    FIXED_COSMO, growth_factor_and_rate,
     comoving_distance, Ez, omega_to_Omega_m,
 )
 
@@ -216,45 +209,9 @@ class PmLikelihood:
         return -0.5 * (x @ x) - 0.5 * logdet
 
 
-class AmodLikelihood:
-    """Scalar A_mod constraint, evaluated at z=0.
-
-    Model-implied A_mod: weighted least squares of the emulated suppression
-    S(k) against the template 1 + (A - 1) * t(k), t = 1 - P_L/P_go, over a
-    log-uniform k grid in [k_fit_min, k_fit_max]:
-
-        A_hat(theta) = 1 + sum[t (S - 1)] / sum[t^2]
-
-    Gaussian likelihood in A_hat against the published (Amod, sigma).
-    """
-
-    def __init__(self, target, emu, linear_pk=None,
-                 k_fit_min=0.1, k_fit_max=8.0, n_k_fit=40):
-        self.t = target
-        self.emu = emu
-        self.lin = linear_pk or LinearPk()
-        self.k_fit = np.logspace(np.log10(k_fit_min), np.log10(k_fit_max),
-                                 n_k_fit)
-
-    def model_amod(self, params7):
-        omega_m, sigma_8 = params7[IDX_OMEGA_M], params7[IDX_SIGMA_8]
-        S, _ = self.emu.ratio(0.0, params7)
-        P_go, _ = self.emu.P_go(0.0, params7)
-        S_f = np.interp(self.k_fit, self.emu.k_grid, S)
-        Pgo_f = np.interp(self.k_fit, self.emu.k_grid, P_go)
-        P_L = self.lin(self.k_fit, 0.0, omega_m, sigma_8)
-        t = 1.0 - P_L / Pgo_f
-        # only scales where nonlinear enhancement is meaningful contribute
-        pos = t > 0.05
-        if pos.sum() < 5:
-            return np.nan
-        return 1.0 + np.sum(t[pos] * (S_f[pos] - 1.0)) / np.sum(t[pos] ** 2)
-
-    def __call__(self, params7):
-        A_hat = self.model_amod(params7)
-        if not np.isfinite(A_hat):
-            return -np.inf
-        return -0.5 * ((A_hat - self.t['Amod']) / self.t['sigma']) ** 2
+# AmodLikelihood: MOVED to amod_exploratory/amod_likelihood.py (2026-07-23).
+# A_mod modulates the nonlinear boost at fixed Planck cosmology; it is NOT a
+# measurement of P_hydro/P_GO. See amod_exploratory/README.md.
 
 
 class BossLikelihood:
@@ -333,6 +290,82 @@ class BossLikelihood:
         return -0.5 * (r @ self.icov @ r)
 
 
+class HmfLikelihood:
+    """GAMA DR4 HMF vs the PRE-EXISTING notebook-trained HMF emulator.
+
+    Reuses models/HMF_multiz/multivariate_model_z_index9 (snapshot 567,
+    z = 0.0998 — matches GAMA z_eff ~ 0.1; no z interpolation). The notebook
+    trained on y = 10**phi (phi = dn/dlog10M, (Mpc/h)^-3 dex^-1), so
+    predictions are inverted with log10.
+
+    Error model per data bin i (independent Gaussians in phi):
+        sigma_i^2 = sigma_data_i^2                    (Poisson+MC[+cosvar])
+                  + Var_emu_i                          (GP predictive)
+                  + phi_model_i / (V_box * dlog10M)    (box halo shot noise;
+                    holdout residuals are consistent with this Poisson term)
+
+    Optional nuisance dlogM (config `mass_shift`): rigid shift of the data
+    mass scale, marginalizing the dynamical-mass calibration systematic that
+    Driver et al. flag themselves (A = 13.9 adopted vs A ~ 6+-3 from Coma).
+    The model is evaluated at logM_data + dlogM.
+    """
+
+    def __init__(self, target, snap_id=None):
+        import contextlib as _ctx
+        import io as _io
+        from cosmo_hydro_emu.load_hacc import mass_conds, sepia_data_format
+        from cosmo_hydro_emu.emu import load_model_autosync
+        from pk_data import (load_design, load_hmf_snapshot, BOX_VOLUME,
+                             TRAIN_INDICES, HMF_SNAPSHOT_Z01)
+
+        self.t = target
+        snap_id = snap_id or HMF_SNAPSHOT_Z01
+        hmf = load_hmf_snapshot(snap_id=snap_id)
+        m1, m2 = mass_conds('HMF')
+        cond = (hmf['M'] > m1) & (hmf['M'] < m2)
+        y_all = 10 ** hmf['phi'][:, cond]     # notebook 02 cell 16 convention
+        self.logM_grid = np.log10(hmf['M'][cond])
+        self.shot_norm = BOX_VOLUME * hmf['dlog10M']
+
+        if (target['logM'].min() < self.logM_grid.min()
+                or target['logM'].max() > self.logM_grid.max()):
+            raise ValueError(
+                f"GAMA logM range [{target['logM'].min():.2f}, "
+                f"{target['logM'].max():.2f}] exceeds emulator grid "
+                f"[{self.logM_grid.min():.2f}, {self.logM_grid.max():.2f}] — "
+                f"apply logM_min/logM_max cuts in load_gama_hmf")
+
+        params_all = load_design()
+        train_idx = np.array(TRAIN_INDICES)
+        sepia_data = sepia_data_format(params_all[train_idx],
+                                       y_all[train_idx], self.logM_grid)
+        model_base = os.path.join(_HERE, '..', 'models', 'HMF_multiz',
+                                  f'multivariate_model_z_index9')
+        with _ctx.redirect_stdout(_io.StringIO()):
+            self.model = load_model_autosync(model_base, sepia_data,
+                                             exp_variance=0.999)
+
+    def model_phi(self, params7, dlogM=0.0):
+        """phi and its (emulator) std on the data mass points."""
+        y_pred, y_std = emulate(self.model, np.asarray(params7))
+        y_pred, y_std = y_pred[:, 0], y_std[:, 0]
+        # invert the 10**phi training transform; y ~ 1 + phi ln10 >= tiny
+        phi_grid = np.log10(np.maximum(y_pred, 1e-12))
+        # d(phi)/d(y) = 1/(y ln10)
+        phi_std_grid = y_std / (np.maximum(y_pred, 1e-12) * np.log(10.0))
+        logM_eval = self.t['logM'] + dlogM
+        phi = np.interp(logM_eval, self.logM_grid, phi_grid)
+        phi_std = np.interp(logM_eval, self.logM_grid, phi_std_grid)
+        return phi, phi_std
+
+    def __call__(self, params7, dlogM=0.0):
+        phi, phi_std = self.model_phi(params7, dlogM)
+        shot_var = np.maximum(phi, 0.0) / self.shot_norm
+        sigma2 = self.t['sigma'] ** 2 + phi_std ** 2 + shot_var
+        r = self.t['y'] - phi
+        return -0.5 * np.sum(r ** 2 / sigma2)
+
+
 # ---------------------------------------------------------------------------
 # Global posterior assembly (module-level state so a forked emcee Pool can
 # evaluate ln_prob without re-pickling the GP models on every call)
@@ -395,6 +428,9 @@ def ln_prob_global(theta):
             b1 = theta[nmap['b1']]
             P_sn = theta[nmap['P_sn']] if 'P_sn' in nmap else 0.0
             ll_i = like(params7, b1, P_sn)
+        elif isinstance(like, HmfLikelihood):
+            dlogM = theta[nmap['dlogM']] if 'dlogM' in nmap else 0.0
+            ll_i = like(params7, dlogM)
         else:
             ll_i = like(params7)
         if not np.isfinite(ll_i):

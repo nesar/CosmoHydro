@@ -1,0 +1,34 @@
+=== Trial: Pk_kids_7p ===
+Building targets and likelihoods...
+  target[0]: KiDS-Legacy nz3 -> PmLikelihood
+Free parameters (7):
+  $\kappa_\text{w}$              init=3.0000 range=[2.0000, 4.0000]
+  $e_\text{w}$                   init=0.6000 range=[0.2000, 1.0000]
+  $M_\text{seed}/10^{6}$         init=1.3000 range=[0.6000, 2.0000]
+  $v_\text{kin}/10^{4}$          init=0.6500 range=[0.1000, 1.2000]
+  $\epsilon_\text{kin}/10^{1}$   init=0.6100 range=[0.0200, 1.2000]
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+Fixed parameters: {}
+
+ln_prob at init point: -139.7879
+
+MCMC: ndim=7, nwalkers=32, nburn=800, nrun=3000
+time (minutes): 2.773503053188324
+Burn-in phase
+time (minutes): 10.394954427083333
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_Pk_kids_7p.npy
+  mean acceptance fraction: 0.332
+mcmc results: 2.79084680407443 0.5625661203971172 1.3462677721958927 0.7111060971355568 0.6840773278343957 0.13451299659058982 0.8129356892373482
+
+MCMC medians:
+  $\kappa_\text{w}$              = 2.7908
+  $e_\text{w}$                   = 0.5626
+  $M_\text{seed}/10^{6}$         = 1.3463
+  $v_\text{kin}/10^{4}$          = 0.7111
+  $\epsilon_\text{kin}/10^{1}$   = 0.6841
+  $\Omega_\text{m}$              = 0.1345
+  $\sigma_8$                     = 0.8129

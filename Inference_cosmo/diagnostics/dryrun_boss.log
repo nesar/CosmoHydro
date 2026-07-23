@@ -1,0 +1,15 @@
+=== Trial: Pk_boss_z1z3_2cosmo ===
+Building targets and likelihoods...
+  target[0]: BOSS DR12 NGC z1 -> BossLikelihood
+  target[1]: BOSS DR12 NGC z3 -> BossLikelihood
+Free parameters (6):
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+  $b_1$ boss_NGC_z1              init=2.0000 range=[0.5000, 4.0000]
+  $P_{sn}$ boss_NGC_z1           init=0.0000 range=[-5000.0000, 5000.0000]
+  $b_1$ boss_NGC_z3              init=2.1000 range=[0.5000, 4.0000]
+  $P_{sn}$ boss_NGC_z3           init=0.0000 range=[-5000.0000, 5000.0000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 3.0, '$e_\\text{w}$': 0.5, '$M_\\text{seed}/10^{6}$': 0.8, '$v_\\text{kin}/10^{4}$': 0.51, '$\\epsilon_\\text{kin}/10^{1}$': 0.13}
+
+ln_prob at init point: -211.1196
+--- DRY RUN: skipping MCMC ---

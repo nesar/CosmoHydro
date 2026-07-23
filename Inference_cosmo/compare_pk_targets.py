@@ -6,7 +6,6 @@ should be inspected BEFORE trusting any MCMC run.
 
 Figures (written to diagnostics/):
   compare_kids.png       emulated P_hydro(k, z_fid) vs KiDS-Legacy Pm bands
-  compare_amod.png       emulated suppression vs A_mod template bands
   compare_boss.png       Kaiser-model multipoles (best-fit b1) vs BOSS data
   compare_go_halofit.png emulated GO P(k) vs CAMB halofit (absolute check)
 
@@ -30,9 +29,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from pk_data import load_design, TEST_INDICES
-from targets import load_kids, load_amod, load_boss, AMOD_CONSTRAINTS
+from targets import load_kids, load_boss
 from pk_likelihood import (
-    PkEmulator, PmLikelihood, AmodLikelihood, BossLikelihood,
+    PkEmulator, PmLikelihood, BossLikelihood,
     IDX_OMEGA_M, IDX_SIGMA_8,
 )
 from linear_theory import LinearPk, FIXED_COSMO
@@ -93,52 +92,7 @@ def fig_kids(emu):
     plt.close(fig)
 
 
-def fig_amod(emu, lin):
-    target = load_amod('DES_Y3_Planck')
-    like = AmodLikelihood(target, emu, linear_pk=lin)
-    A_fid = like.model_amod(FIDUCIAL7)
-    chi2 = -2.0 * like(FIDUCIAL7)
-    log(f'A_mod: model-implied A_mod at fiducial = {A_fid:.3f} '
-        f'(DES Y3+Planck: {target["Amod"]} +/- {target["sigma"]}; '
-        f'chi2 = {chi2:.2f})')
-
-    # suppression plane figure
-    k = emu.k_grid
-    S_fid, S_err = emu.ratio(0.0, FIDUCIAL7)
-    P_go, _ = emu.P_go(0.0, FIDUCIAL7)
-    P_L = lin(k, 0.0, FIDUCIAL7[IDX_OMEGA_M], FIDUCIAL7[IDX_SIGMA_8])
-    t = 1.0 - P_L / P_go
-
-    # design envelope from the raw suite
-    from pk_data import load_pk_suite, k_trust_mask, PK_DIR_DEFAULT
-    suite = load_pk_suite(PK_DIR_DEFAULT, ztag='0.0')
-    mm = k_trust_mask(suite['k'])
-    S_all = suite['ratio'][:, mm]
-
-    fig, ax = plt.subplots(figsize=(8, 5.5))
-    ax.fill_between(k, S_all.min(axis=0) - 1, S_all.max(axis=0) - 1,
-                    color='gray', alpha=0.25, label='design envelope (110 sims)')
-    ax.plot(k, S_fid - 1, 'r-', lw=2, label='emulated fiducial suppression')
-    ax.fill_between(k, S_fid - 1 - S_err, S_fid - 1 + S_err, color='r', alpha=0.2)
-    A, sA = target['Amod'], target['sigma']
-    ax.plot(k, (A - 1) * t, 'b-', lw=1.5,
-            label=f'A_mod = {A} (DES Y3+Planck)')
-    ax.fill_between(k, (A - sA - 1) * t, (A + sA - 1) * t, color='b', alpha=0.15)
-    A_k = AMOD_CONSTRAINTS['KiDS1000']['Amod']
-    ax.plot(k, (A_k - 1) * t, 'g--', lw=1.2,
-            label=f'A_mod = {A_k} (KiDS-1000, central only)')
-    ax.set_xscale('log')
-    ax.set_xlim(0.02, 9)
-    ax.axhline(0, color='k', ls=':', lw=0.8)
-    ax.set_xlabel(r'$k$ [$h$/Mpc]')
-    ax.set_ylabel(r'$P_{\rm hydro}/P_{\rm GO} - 1$')
-    ax.set_title(r'Baryonic suppression vs weak-lensing $A_{\rm mod}$ '
-                 r'templates ($z=0$)')
-    ax.legend(fontsize=9)
-    fig.tight_layout()
-    fig.savefig(os.path.join(DIAG, 'compare_amod.png'), dpi=130,
-                bbox_inches='tight')
-    plt.close(fig)
+# fig_amod: MOVED to amod_exploratory/compare_amod.py (2026-07-23).
 
 
 def fig_boss(emu):
@@ -247,21 +201,100 @@ def fig_go_halofit(emu, lin):
         f'(halofit itself is only ~5% accurate)')
 
 
+def fig_hmf():
+    """GAMA DR4 HMF vs the (pre-existing) HMF emulator at z=0.0998.
+
+    Everything in simulation units: Msun/h, (Mpc/h)^-3 dex^-1 — the Driver
+    tables are already in h-units per the paper (Sec. 2), identity conversion.
+    """
+    from targets import load_gama_hmf, load_mrp_fits, mrp_phi
+    from pk_likelihood import HmfLikelihood
+    from pk_data import load_hmf_snapshot
+
+    target = load_gama_hmf(logM_max=14.9)
+    like = HmfLikelihood(target)
+    phi_fid, phi_std = like.model_phi(FIDUCIAL7)
+    chi2 = -2.0 * like(FIDUCIAL7)
+    log(f'GAMA HMF (logM=12.8-14.9): chi2 = {chi2:.1f} for {target["y"].size} '
+        f'points at fiducial (data excess at logM~13.6-14.2 is the '
+        f'intermediate-mass excess Driver et al. discuss)')
+
+    hmf = load_hmf_snapshot()
+    grid_logM = like.logM_grid
+    yg, _ = __import__('cosmo_hydro_emu.emu', fromlist=['emulate']).emulate(
+        like.model, FIDUCIAL7)
+    # invert the notebook's 10**phi training transform: phi_lin is linear phi
+    phi_lin = np.log10(np.maximum(yg[:, 0], 1e-12))
+
+    mrp = load_mrp_fits()['GAMA5+SDSS5+REFLEXII']
+    logM_mrp = np.linspace(12.7, 15.2, 100)     # Msun/h (paper units)
+    phi_mrp = mrp_phi(logM_mrp, mrp)
+
+    fig, (ax, axr) = plt.subplots(2, 1, figsize=(8, 8), sharex=True,
+                                  gridspec_kw={'height_ratios': [2, 1]})
+    m = hmf['M'] > 10 ** 12.3
+    for i in range(hmf['phi'].shape[0]):
+        nz = hmf['phi'][i, m] > 0
+        ax.plot(np.log10(hmf['M'][m][nz]), np.log10(hmf['phi'][i, m][nz]),
+                '-', color='gray', alpha=0.15, lw=0.5)
+    ax.plot(grid_logM, np.log10(np.maximum(phi_lin, 1e-12)), 'r-', lw=2,
+            label='emulated fiducial (z=0.0998)')
+    ax.plot(logM_mrp, np.log10(phi_mrp), 'g--', lw=1.5,
+            label='MRP joint fit (GAMA+SDSS+REFLEX II)')
+    ax.errorbar(target['logM'], np.log10(target['y']),
+                yerr=[np.log10(target['y']) - np.log10(np.maximum(target['y'] - target['sigma'], 1e-12)),
+                      np.log10(target['y'] + target['sigma']) - np.log10(target['y'])],
+                fmt='o', ms=5, color='k', capsize=2,
+                label='GAMA DR4 (Driver+22, Eddington-corr.)')
+    ax.set_ylabel(r'$\log_{10}\,\phi$ [(Mpc/$h$)$^{-3}$ dex$^{-1}$]')
+    ax.set_ylim(-7, -1.5)
+    ax.legend(fontsize=9)
+    ax.set_title('Halo mass function: sims (gray: 110 runs) vs GAMA DR4 at '
+                 r'$z_{\rm eff}\simeq0.1$')
+    phi_at_data = np.interp(target['logM'], grid_logM, phi_lin)
+    ratio = target['y'] / phi_at_data
+    axr.errorbar(target['logM'], ratio, yerr=target['sigma'] / phi_at_data,
+                 fmt='o', ms=5, color='k', capsize=2)
+    axr.axhline(1, color='r', lw=1)
+    axr.set_yscale('log')
+    axr.set_ylim(0.2, 5)
+    axr.set_xlabel(r'$\log_{10}\,M_{\rm 200c}$ [$M_\odot/h$]')
+    axr.set_ylabel('data / model')
+    fig.tight_layout()
+    fig.savefig(os.path.join(DIAG, 'compare_hmf.png'), dpi=130,
+                bbox_inches='tight')
+    plt.close(fig)
+
+
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--only', nargs='+',
+                    choices=['halofit', 'kids', 'boss', 'hmf'],
+                    default=None, help='run only these comparison figures')
+    args = ap.parse_args()
+    todo = set(args.only or ['halofit', 'kids', 'boss', 'hmf'])
+
     os.makedirs(DIAG, exist_ok=True)
     log('=== Emulator vs targets at project fiducial '
         f'(omega_m={FIDUCIAL7[IDX_OMEGA_M]}, sigma_8={FIDUCIAL7[IDX_SIGMA_8]}, '
         'fiducial subgrid) ===\n')
-    emu = PkEmulator()
-    lin = LinearPk()
+    need_pk_emu = todo & {'halofit', 'kids', 'boss'}
+    emu = PkEmulator() if need_pk_emu else None
+    lin = LinearPk() if 'halofit' in todo else None
 
-    fig_go_halofit(emu, lin)
-    fig_kids(emu)
-    fig_amod(emu, lin)
-    fig_boss(emu)
+    if 'halofit' in todo:
+        fig_go_halofit(emu, lin)
+    if 'kids' in todo:
+        fig_kids(emu)
+    if 'boss' in todo:
+        fig_boss(emu)
+    if 'hmf' in todo:
+        fig_hmf()
 
     out = os.path.join(DIAG, 'compare_targets_summary.txt')
-    with open(out, 'w') as f:
+    mode = 'a' if args.only else 'w'
+    with open(out, mode) as f:
         f.write('\n'.join(lines) + '\n')
     print(f'\nSummary -> {out}')
 

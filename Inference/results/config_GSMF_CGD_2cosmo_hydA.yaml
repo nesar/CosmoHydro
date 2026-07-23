@@ -1,0 +1,28 @@
+# Trial: GSMF + CGD, 2 cosmology params free, hydro FIXED at scan point A.
+# Part of the fixed-hydro scan (diagnostics/select_fixed_hydro_points.py):
+#   point A, Mahalanobis radius 0.00 sigma from the GSMF_CGD_7p_pk subgrid posterior
+# Planck-width Gaussian cosmology prior, no hard truncation (design box only).
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_CGD_2cosmo_hydA
+
+observables:
+  - GSMF
+  - CGD
+
+param_mode: custom
+free_params:
+  - omega_m
+  - sigma_8
+
+# Fixed subgrid point A (scaled units), drawn from the GSMF_CGD_7p_pk posterior at
+# Mahalanobis radius 0.00 sigma.
+fixed_params:
+  kappa_w: 3.2909
+  e_w: 0.4769
+  M_seed: 1.1914
+  v_kin: 1.1395
+  eps_kin: 0.2325
+
+gaussian_priors:
+  omega_m: {mu: 0.14176, sigma: 0.0011}
+  sigma_8: {mu: 0.8102, sigma: 0.006}

@@ -1,0 +1,16 @@
+[
+  {
+    "z_index": 9,
+    "z": 0.0998,
+    "median_frac_err_logM>12.6": 0.04759308420092345,
+    "p95_frac_err": 0.5615226223323965,
+    "median_resid_over_poisson": 1.2367052628126736
+  },
+  {
+    "z_index": 10,
+    "z": 0.0,
+    "median_frac_err_logM>12.6": 0.03836369118452321,
+    "p95_frac_err": 0.6188329837244665,
+    "median_resid_over_poisson": 1.0718486183184215
+  }
+]

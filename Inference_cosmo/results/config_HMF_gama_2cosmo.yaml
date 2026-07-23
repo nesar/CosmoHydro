@@ -1,0 +1,18 @@
+# GAMA DR4 empirical HMF (Driver et al. 2022) alone, cosmology free, subgrid
+# fixed at the project fiducial. Uses the PRE-EXISTING HMF_multiz emulator at
+# snapshot 567 (z=0.0998, matching GAMA z_eff ~ 0.1).
+#
+# logM_max=14.9 keeps data inside the emulator mass grid (top bin 10^14.94
+# Msun/h). mass_shift marginalizes the dynamical-mass calibration systematic
+# (Driver et al. adopt A=13.9 but their Coma cross-check gives A~6+-3, i.e.
+# the whole mass axis can slide); range +-0.3 dex.
+
+trial_name: HMF_gama_2cosmo
+
+targets:
+  - kind: gama_hmf
+    logM_max: 14.9
+    include_cosvar: true
+    mass_shift: {initial: 0.0, min: -0.3, max: 0.3}
+
+param_mode: cosmo
