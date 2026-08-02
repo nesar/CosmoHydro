@@ -1,10 +1,10 @@
 Fixed-hydro scan (WIDE flat prior over the design box)
 suite: GSMF_CGD; 7p reference uses its original prior
 
-chain                                                omega_m             sigma_8   d(sigma_8) vs marg
-GSMF_CGD_7p_pk                            0.14239+/-0.00112  0.81154+/-0.00593             +0.00000
-GSMF_CGD_2cosmo_wide                      0.15465+/-0.00046  0.72580+/-0.00593             -0.08575
-GSMF_CGD_2cosmo_hydA_wide                 0.14386+/-0.00276  0.80450+/-0.01667             -0.00704
-GSMF_CGD_2cosmo_hydB_wide                 0.14395+/-0.00323  0.80456+/-0.01895             -0.00698
-GSMF_CGD_2cosmo_hydC_wide                 0.14496+/-0.00277  0.79804+/-0.01702             -0.01351
-GSMF_CGD_2cosmo_hydD_wide                 0.14425+/-0.00253  0.78558+/-0.01557             -0.02596
+chain                                                omega_m             sigma_8
+GSMF_CGD_7p_wide                          0.15459+/-0.00326  0.85398+/-0.02580
+GSMF_CGD_2cosmo_wide                      0.15465+/-0.00046  0.72580+/-0.00593
+GSMF_CGD_2cosmo_hydA_wide                 0.14386+/-0.00276  0.80450+/-0.01667
+GSMF_CGD_2cosmo_hydB_wide                 0.14395+/-0.00323  0.80456+/-0.01895
+GSMF_CGD_2cosmo_hydC_wide                 0.14496+/-0.00277  0.79804+/-0.01702
+GSMF_CGD_2cosmo_hydD_wide                 0.14425+/-0.00253  0.78558+/-0.01557
