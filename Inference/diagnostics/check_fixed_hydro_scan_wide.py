@@ -34,10 +34,13 @@ NAMES, LABELS, FID = base.NAMES, base.LABELS, base.FID
 AXIS = {'omega_m': (0.120, 0.155), 'sigma_8': (0.70, 0.90)}
 DESIGN_BOX = {'omega_m': (0.12, 0.155), 'sigma_8': (0.70, 0.90)}
 
-# (trial suffix, cols, label, color, linewidth) — 7p reference is the ORIGINAL
-# run; every fixed-hydro chain is the _wide (flat-prior) version.
+# (trial suffix, cols, label, color, linewidth). The marginalized reference is
+# resolved in main(): prefer _7p_wide (FLAT cosmo prior, matches the fixed runs);
+# fall back to _7p_pk (Planck prior) with a warning label until _7p_wide finishes.
+MARG_WIDE = ('_7p_wide', (5, 6), 'hydro marginalized (7p, flat prior)', 'tab:red', 2.2)
+MARG_PK   = ('_7p_pk',   (5, 6), 'hydro marginalized (7p, PLANCK prior!)', 'tab:red', 2.2)
 SPECS = [
-    ('_7p_pk',             (5, 6), 'hydro marginalized (7p, original prior)', 'tab:red',    2.2),
+    MARG_WIDE,   # replaced with MARG_PK in main() if _7p_wide isn't on disk yet
     ('_2cosmo_wide',       (0, 1), 'fixed @ Frontier-E fiducial (~22$\\sigma$)', 'k',      2.2),
     ('_2cosmo_hydA_wide',  (0, 1), 'fixed @ A (7p peak, 0$\\sigma$)',    'tab:blue',   1.6),
     ('_2cosmo_hydB_wide',  (0, 1), 'fixed @ B (1$\\sigma$)',             'tab:green',  1.6),
@@ -48,8 +51,14 @@ SPECS = [
 
 def main():
     print('=== fixed-hydro scan (WIDE flat prior over design box) ===')
+    # Consistent reference: use the flat-prior 7p run if it exists, else fall back
+    # to the Planck-prior 7p (flagged) so the plot still renders while 7p_wide runs.
+    specs = list(SPECS)
+    if not os.path.exists(os.path.join(base.RES, f'samples_{SUITE}_7p_wide.npy')):
+        print('  (7p_wide not on disk yet -> using 7p_pk Planck reference for now)')
+        specs[0] = MARG_PK
     loaded = []
-    for suf, cols, label, color, lw in SPECS:
+    for suf, cols, label, color, lw in specs:
         trial = f'{SUITE}{suf}'
         r = base._load(trial, cols)
         if r is None:
@@ -78,11 +87,16 @@ def main():
                     param_limits=AXIS, legend_loc='upper right')
 
     ax_om, ax_s8, ax_2d = g.subplots[0, 0], g.subplots[1, 1], g.subplots[1, 0]
-    # flat prior: mark the design-box edges instead of a Gaussian curve
+    # flat prior: a horizontal dashed line across the design box (constant density)
+    # plus the box edges marking its support.
     for ax, key in ((ax_om, 'omega_m'), (ax_s8, 'sigma_8')):
         ax.axvline(FID[key], color='0.4', ls=':', lw=1.0)
-        for edge in DESIGN_BOX[key]:
-            ax.axvline(edge, color='k', ls='--', lw=1.2, alpha=0.6)
+        lo, hi = DESIGN_BOX[key]
+        top = ax.get_ylim()[1]
+        ax.plot([lo, hi], [0.5 * top, 0.5 * top], color='k', ls='--', lw=1.3,
+                alpha=0.7)                       # flat prior (uniform) density
+        for edge in (lo, hi):
+            ax.axvline(edge, color='k', ls='--', lw=1.0, alpha=0.4)
     ax_2d.axvline(FID['omega_m'], color='0.4', ls=':', lw=1.0)
     ax_2d.axhline(FID['sigma_8'], color='0.4', ls=':', lw=1.0)
     ax_2d.plot([FID['omega_m']], [FID['sigma_8']], marker='*', ms=13, mfc='gold',

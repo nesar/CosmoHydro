@@ -1,0 +1,18 @@
+# Trial: GSMF + CGD, all 7 params free, but FLAT cosmology prior over the design
+# box (omega_m, sigma_8) — the hydro-marginalized reference for the WIDE
+# fixed-hydro scan (diagnostics/check_fixed_hydro_scan_wide.py). Matches the flat
+# cosmology prior of the *_wide fixed runs, so the marginalized-vs-fixed
+# comparison uses a consistent prior throughout.
+#
+# flat_prior_indices [4,5,6] = eps_kin, omega_m, sigma_8 all flat (flat wins over
+# the inherited Gaussian in ln_prior). Subgrid 0-3 keep the broad default prior.
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_CGD_7p_wide
+
+observables:
+  - GSMF
+  - CGD
+
+param_mode: subgrid+cosmo
+
+flat_prior_indices: [4, 5, 6]
