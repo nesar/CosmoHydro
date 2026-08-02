@@ -1,0 +1,29 @@
+finished trials found: ['HMF_gama_2cosmo', 'Pk_kids_2cosmo', 'Pk_kids_7p', 'Pk_kids_hmf_7p']
+loading emulators + targets (few minutes)...
+
+=== summary figure: plot_summary_hmf_vs_kids_cosmo.png ===
+mcmc results (modes): 0.1219 0.8943 -0.0649
+  HMF_gama_2cosmo: mode theta7 = (3.0, 0.5, 0.8, 0.51, 0.13, 0.1219, 0.8943)  extras={'$\\Delta\\log M$ GAMA': -0.065}
+mcmc results (modes): 0.1316 0.8070
+  Pk_kids_2cosmo: mode theta7 = (3.0, 0.5, 0.8, 0.51, 0.13, 0.1316, 0.807)
+Removed no burn in
+Removed no burn in
+  saved: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/plot_summary_hmf_vs_kids_cosmo.png
+
+=== summary figure: plot_summary_cosmo_marg_vs_fixed.png ===
+mcmc results (modes): 2.4588 0.5675 1.1296 0.7959 0.5714 0.1324 0.8117
+  Pk_kids_7p: mode theta7 = (2.4588, 0.5675, 1.1296, 0.7959, 0.5714, 0.1324, 0.8117)
+mcmc results (modes): 0.1316 0.8070
+  Pk_kids_2cosmo: mode theta7 = (3.0, 0.5, 0.8, 0.51, 0.13, 0.1316, 0.807)
+Removed no burn in
+Removed no burn in
+  saved: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/plot_summary_cosmo_marg_vs_fixed.png
+
+=== summary figure (union params): plot_summary_7p_kids_vs_kids_hmf.png ===
+mcmc results (modes): 2.0495 0.6067 1.7142 0.6659 0.0560 0.1213 0.8144 -0.0697
+  Pk_kids_hmf_7p: mode theta7 = (2.0495, 0.6067, 1.7142, 0.6659, 0.056, 0.1213, 0.8144)  extras={'$\\Delta\\log M$ GAMA': -0.07}
+mcmc results (modes): 2.4588 0.5675 1.1296 0.7959 0.5714 0.1324 0.8117
+  Pk_kids_7p: mode theta7 = (2.4588, 0.5675, 1.1296, 0.7959, 0.5714, 0.1324, 0.8117)
+Removed no burn in
+Removed no burn in
+  saved: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/plot_summary_7p_kids_vs_kids_hmf.png

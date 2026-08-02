@@ -1,0 +1,31 @@
+# Trial: GSMF + CGD, 2 cosmology params free, hydro FIXED at scan point A.
+# Part of the fixed-hydro scan (diagnostics/select_fixed_hydro_points.py):
+#   point A, Mahalanobis radius 0.00 sigma from the GSMF_CGD_7p_pk subgrid posterior
+# WIDE variant: flat cosmology prior over the full design box.
+# Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
+trial_name: GSMF_CGD_2cosmo_hydA_wide
+
+observables:
+  - GSMF
+  - CGD
+
+param_mode: custom
+free_params:
+  - omega_m
+  - sigma_8
+
+# Fixed subgrid point A (scaled units), drawn from the GSMF_CGD_7p_pk posterior at
+# Mahalanobis radius 0.00 sigma.
+fixed_params:
+  kappa_w: 3.2909
+  e_w: 0.4769
+  M_seed: 1.1914
+  v_kin: 1.1395
+  eps_kin: 0.2325
+
+# WIDE-PRIOR variant: FLAT prior over the FULL experimental design box
+# (omega_m in [0.12, 0.155], sigma_8 in [0.70, 0.90]).
+# flat_prior_indices bypasses the moderate gaussian_priors inherited
+# from _defaults.yaml (ln_prior checks flat indices first), so the only
+# constraint on cosmology is the design-box boundary.
+flat_prior_indices: [0, 1]

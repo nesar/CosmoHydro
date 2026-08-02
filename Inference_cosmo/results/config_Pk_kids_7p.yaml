@@ -14,8 +14,3 @@ targets:
     z_bins: [0.15, 0.45]   # z_fid=1.3 bin excluded (see Pk_kids_2cosmo.yaml)
 
 param_mode: subgrid+cosmo
-
-mcmc:
-  nwalkers: 32
-  nburn: 800
-  nrun: 3000

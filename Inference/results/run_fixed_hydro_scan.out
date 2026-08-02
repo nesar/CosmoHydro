@@ -102,3 +102,131 @@ ln_prior = 1.1466
   LL(CGD, z=0.0) = -39.8120
 
 MCMC: ndim=2, nwalkers=400, nburn=100, nrun=4000
+time (minutes): 2.602135201295217
+Burn-in phase
+time (minutes): 100.84106967449188
+Sampling phase
+
+=== Results saved ===
+  Samples:     /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/samples_GSMF_CGD_2cosmo_hydB.npy
+  Params list: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/params_list_GSMF_CGD_2cosmo_hydB.npy
+  Config copy: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/config_GSMF_CGD_2cosmo_hydB.yaml
+mcmc results: 0.14225738923359532 0.8120652039301297
+
+MCMC median results:
+  $\Omega_\text{m}$               = 0.1423
+  $\sigma_8$                      = 0.8121
+ DONE  GSMF_CGD_2cosmo_hydB   (19:24:37)
+
+==============================================================
+ RUN   GSMF_CGD_2cosmo_hydC   (19:24:37)
+==============================================================
+=== Trial: GSMF_CGD_2cosmo_hydC ===
+  GSMF  z=0.0
+  CGD  z=0.0
+Design matrix: 109 simulations, 7 parameters
+  [gaussian_priors] omega_m (idx 0): N(mu=0.14176, sigma=0.0011) truncated to design range
+  [gaussian_priors] sigma_8 (idx 1): N(mu=0.8102, sigma=0.006) truncated to design range
+Free parameters (2):
+  $\Omega_\text{m}$               init=0.1375  range=[0.1200, 0.1550]
+  $\sigma_8$                      init=0.8000  range=[0.7000, 0.9000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 3.1672, '$e_\\text{w}$': 0.4915, '$M_\\text{seed}/10^{6}$': 1.2084, '$v_\\text{kin}/10^{4}$': 1.1759, '$\\epsilon_\\text{kin}/10^{1}$': 0.2633}
+
+Loading GSMF (z=0.0)...
+  y_vals shape: (109, 16), y_ind shape: (16,)
+  Obs data: 7 points
+
+Loading CGD (z=0.0)...
+  y_vals shape: (109, 19), y_ind shape: (19,)
+  Obs data: 8 points
+
+Test theta: [0.1375 0.8   ]
+ln_prior = 1.1466
+  LL(GSMF, z=0.0) = -34.5149
+  LL(CGD, z=0.0) = -48.7557
+
+MCMC: ndim=2, nwalkers=400, nburn=100, nrun=4000
+time (minutes): 2.5432637413342793
+Burn-in phase
+time (minutes): 92.30277995268504
+Sampling phase
+
+=== Results saved ===
+  Samples:     /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/samples_GSMF_CGD_2cosmo_hydC.npy
+  Params list: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/params_list_GSMF_CGD_2cosmo_hydC.npy
+  Config copy: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/config_GSMF_CGD_2cosmo_hydC.yaml
+mcmc results: 0.14238552869059118 0.8114165235953157
+
+MCMC median results:
+  $\Omega_\text{m}$               = 0.1424
+  $\sigma_8$                      = 0.8114
+ DONE  GSMF_CGD_2cosmo_hydC   (20:59:31)
+
+==============================================================
+ RUN   GSMF_CGD_2cosmo_hydD   (20:59:31)
+==============================================================
+=== Trial: GSMF_CGD_2cosmo_hydD ===
+  GSMF  z=0.0
+  CGD  z=0.0
+Design matrix: 109 simulations, 7 parameters
+  [gaussian_priors] omega_m (idx 0): N(mu=0.14176, sigma=0.0011) truncated to design range
+  [gaussian_priors] sigma_8 (idx 1): N(mu=0.8102, sigma=0.006) truncated to design range
+Free parameters (2):
+  $\Omega_\text{m}$               init=0.1375  range=[0.1200, 0.1550]
+  $\sigma_8$                      init=0.8000  range=[0.7000, 0.9000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 3.3468, '$e_\\text{w}$': 0.4548, '$M_\\text{seed}/10^{6}$': 1.1728, '$v_\\text{kin}/10^{4}$': 1.197, '$\\epsilon_\\text{kin}/10^{1}$': 0.2177}
+
+Loading GSMF (z=0.0)...
+  y_vals shape: (109, 16), y_ind shape: (16,)
+  Obs data: 7 points
+
+Loading CGD (z=0.0)...
+  y_vals shape: (109, 19), y_ind shape: (19,)
+  Obs data: 8 points
+
+Test theta: [0.1375 0.8   ]
+ln_prior = 1.1466
+  LL(GSMF, z=0.0) = -24.4365
+  LL(CGD, z=0.0) = -41.0189
+
+MCMC: ndim=2, nwalkers=400, nburn=100, nrun=4000
+time (minutes): 2.4877688686052957
+Burn-in phase
+time (minutes): 92.01092378695806
+Sampling phase
+
+=== Results saved ===
+  Samples:     /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/samples_GSMF_CGD_2cosmo_hydD.npy
+  Params list: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/params_list_GSMF_CGD_2cosmo_hydD.npy
+  Config copy: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/config_GSMF_CGD_2cosmo_hydD.yaml
+mcmc results: 0.1414071186650987 0.8059117934937101
+
+MCMC median results:
+  $\Omega_\text{m}$               = 0.1414
+  $\sigma_8$                      = 0.8059
+ DONE  GSMF_CGD_2cosmo_hydD   (22:34:03)
+
+==============================================================
+ Plotting the scan   (22:34:03)
+==============================================================
+=== fixed-hydro scan ===
+  LOADED   GSMF_CGD_7p_pk               median=(0.1424, 0.8115)
+Removed no burn in
+  LOADED   GSMF_CGD_2cosmo_pk           median=(0.1430, 0.7844)
+Removed no burn in
+  LOADED   GSMF_CGD_2cosmo_hydA         median=(0.1423, 0.8118)
+Removed no burn in
+  LOADED   GSMF_CGD_2cosmo_hydB         median=(0.1423, 0.8121)
+Removed no burn in
+  LOADED   GSMF_CGD_2cosmo_hydC         median=(0.1424, 0.8114)
+Removed no burn in
+  LOADED   GSMF_CGD_2cosmo_hydD         median=(0.1414, 0.8059)
+Removed no burn in
+  wrote /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/diagnostics/fixed_hydro_scan.png
+  wrote /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/diagnostics/fixed_hydro_scan_summary.txt
+
+==============================================================
+ All done — Thu Jul 23 22:34:21 CDT 2026
+   plot:    diagnostics/fixed_hydro_scan.png
+   summary: diagnostics/fixed_hydro_scan_summary.txt
+==============================================================

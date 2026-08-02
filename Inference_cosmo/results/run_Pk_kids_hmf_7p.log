@@ -15,23 +15,23 @@ Fixed parameters: {}
 
 ln_prob at init point: -164.2545
 
-MCMC: ndim=8, nwalkers=32, nburn=800, nrun=3000
-time (minutes): 3.0242177764574687
+MCMC: ndim=8, nwalkers=400, nburn=500, nrun=4000
+time (minutes): 21.247877784570058
 Burn-in phase
-time (minutes): 11.097996457417805
+time (minutes): 168.0262676715851
 Sampling phase
 
 === Results saved ===
   /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_Pk_kids_hmf_7p.npy
-  mean acceptance fraction: 0.293
-mcmc results: 2.3019220535490805 0.6499589973192134 1.656350434688572 0.6990018333387468 0.2535090869470047 0.12722932822806726 0.815397326299548 -0.07870105929674291
+  mean acceptance fraction: 0.292
+mcmc results: 2.2756752439269956 0.6371843908272697 1.6488835305063911 0.7278760422661874 0.2579760783502745 0.1266591747166517 0.8157812222731142 -0.08244736951594793
 
 MCMC medians:
-  $\kappa_\text{w}$              = 2.3019
-  $e_\text{w}$                   = 0.6500
-  $M_\text{seed}/10^{6}$         = 1.6564
-  $v_\text{kin}/10^{4}$          = 0.6990
-  $\epsilon_\text{kin}/10^{1}$   = 0.2535
-  $\Omega_\text{m}$              = 0.1272
-  $\sigma_8$                     = 0.8154
-  $\Delta\log M$ GAMA            = -0.0787
+  $\kappa_\text{w}$              = 2.2757
+  $e_\text{w}$                   = 0.6372
+  $M_\text{seed}/10^{6}$         = 1.6489
+  $v_\text{kin}/10^{4}$          = 0.7279
+  $\epsilon_\text{kin}/10^{1}$   = 0.2580
+  $\Omega_\text{m}$              = 0.1267
+  $\sigma_8$                     = 0.8158
+  $\Delta\log M$ GAMA            = -0.0824

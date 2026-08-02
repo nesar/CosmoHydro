@@ -1,9 +1,9 @@
-=== Trial: GSMF_CGD_2cosmo_hydB ===
+=== Trial: GSMF_CGD_2cosmo_hydB_wide ===
   GSMF  z=0.0
   CGD  z=0.0
 Design matrix: 109 simulations, 7 parameters
-  [gaussian_priors] omega_m (idx 0): N(mu=0.14176, sigma=0.0011) truncated to design range
-  [gaussian_priors] sigma_8 (idx 1): N(mu=0.8102, sigma=0.006) truncated to design range
+  [gaussian_priors] omega_m (idx 0): N(mu=0.14176, sigma=0.005) truncated to design range
+  [gaussian_priors] sigma_8 (idx 1): N(mu=0.8102, sigma=0.03) truncated to design range
 Free parameters (2):
   $\Omega_\text{m}$               init=0.1375  range=[0.1200, 0.1550]
   $\sigma_8$                      init=0.8000  range=[0.7000, 0.9000]
@@ -18,22 +18,22 @@ Loading CGD (z=0.0)...
   Obs data: 8 points
 
 Test theta: [0.1375 0.8   ]
-ln_prior = 1.1466
+ln_prior = 0.0000
   LL(GSMF, z=0.0) = -39.4117
   LL(CGD, z=0.0) = -39.8120
 
 MCMC: ndim=2, nwalkers=400, nburn=100, nrun=4000
-time (minutes): 2.602135201295217
+time (minutes): 2.529367236296336
 Burn-in phase
-time (minutes): 100.84106967449188
+time (minutes): 92.2049190680186
 Sampling phase
 
 === Results saved ===
-  Samples:     /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/samples_GSMF_CGD_2cosmo_hydB.npy
-  Params list: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/params_list_GSMF_CGD_2cosmo_hydB.npy
-  Config copy: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/config_GSMF_CGD_2cosmo_hydB.yaml
-mcmc results: 0.14225738923359532 0.8120652039301297
+  Samples:     /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/samples_GSMF_CGD_2cosmo_hydB_wide.npy
+  Params list: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/params_list_GSMF_CGD_2cosmo_hydB_wide.npy
+  Config copy: /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results/config_GSMF_CGD_2cosmo_hydB_wide.yaml
+mcmc results: 0.14394707940643484 0.8045635537349436
 
 MCMC median results:
-  $\Omega_\text{m}$               = 0.1423
-  $\sigma_8$                      = 0.8121
+  $\Omega_\text{m}$               = 0.1439
+  $\sigma_8$                      = 0.8046

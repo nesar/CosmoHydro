@@ -16,8 +16,3 @@ targets:
     mass_shift: {initial: 0.0, min: -0.3, max: 0.3}
 
 param_mode: subgrid+cosmo
-
-mcmc:
-  nwalkers: 32
-  nburn: 800
-  nrun: 3000

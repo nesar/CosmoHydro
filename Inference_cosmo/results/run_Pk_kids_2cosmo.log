@@ -1,0 +1,24 @@
+=== Trial: Pk_kids_2cosmo ===
+Building targets and likelihoods...
+  target[0]: KiDS-Legacy nz3 -> PmLikelihood
+Free parameters (2):
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 3.0, '$e_\\text{w}$': 0.5, '$M_\\text{seed}/10^{6}$': 0.8, '$v_\\text{kin}/10^{4}$': 0.51, '$\\epsilon_\\text{kin}/10^{1}$': 0.13}
+
+ln_prob at init point: -138.4224
+
+MCMC: ndim=2, nwalkers=400, nburn=500, nrun=4000
+time (minutes): 31.12318269411723
+Burn-in phase
+time (minutes): 249.91946038802465
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_Pk_kids_2cosmo.npy
+  mean acceptance fraction: 0.706
+mcmc results: 0.1335001653087777 0.8046867308490815
+
+MCMC medians:
+  $\Omega_\text{m}$              = 0.1335
+  $\sigma_8$                     = 0.8047

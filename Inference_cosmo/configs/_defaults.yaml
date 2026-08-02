@@ -6,10 +6,14 @@
 # eps_kin=1.3; cosmology: omega_m=0.14176, sigma_8=0.8102), applied inside
 # run_mcmc_cosmo.py — NOT design midpoints.
 
+# Project-standard sampler scale (matches Inference/_defaults.yaml walker
+# count). With the ~106 ms/call KiDS likelihood this is ~2 h per run on 24
+# cores. nburn=500 (not Inference's 100) because measured autocorrelation
+# times here are ~100-150 steps.
 mcmc:
-  nwalkers: 32
+  nwalkers: 400
   nburn: 500
-  nrun: 2000
+  nrun: 4000
   parallel: true
 
 output_dir: results/

@@ -87,15 +87,22 @@ def _chain(trial, label, color, shared_labels):
         else:
             full_theta.append(float(FIDUCIAL7[i]))
 
-    cols = [free_labels.index(l) for l in shared_labels]
+    extras = {l: float(mode[i]) for i, l in enumerate(free_labels)
+              if l not in list(PARAM_NAME)}
+
+    own = [l for l in shared_labels if l in free_labels]
+    cols = [free_labels.index(l) for l in own]
     ranges = {l: (float(pl[free_labels.index(l)][2]),
-                  float(pl[free_labels.index(l)][3])) for l in shared_labels}
-    shared_modes = [full_theta[list(PARAM_NAME).index(l)] for l in shared_labels]
-    print(f'  {trial}: mode theta7 = {tuple(round(v, 4) for v in full_theta)}')
+                  float(pl[free_labels.index(l)][3])) for l in own}
+    shared_modes = [full_theta[list(PARAM_NAME).index(l)]
+                    if l in list(PARAM_NAME) else extras[l] for l in own]
+    print(f'  {trial}: mode theta7 = {tuple(round(v, 4) for v in full_theta)}'
+          + (f'  extras={ {k: round(v, 3) for k, v in extras.items()} }'
+             if extras else ''))
     return dict(trial=trial, label=label, color=color,
-                full_theta=np.array(full_theta),
+                full_theta=np.array(full_theta), own_labels=own,
                 samples_shared=samples[:, cols], ranges=ranges,
-                shared_modes=shared_modes)
+                shared_modes=shared_modes, extras=extras)
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +139,8 @@ def panel_hmf(ax, chains, ctx):
                 fmt='o', ms=4, color='k', capsize=2,
                 label='GAMA DR4 (Driver+22)')
     for c in chains:
-        phi, _ = hmf_like.model_phi(c['full_theta'])
+        dlogM = c.get('extras', {}).get(r'$\Delta\log M$ GAMA', 0.0)
+        phi, _ = hmf_like.model_phi(c['full_theta'], dlogM)
         order = np.argsort(hmf_target['logM'])
         ls = '-' if c is chains[0] else '--'
         ax.plot(hmf_target['logM'][order], phi[order], ls, color=c['color'],
@@ -171,6 +179,123 @@ def make_figure(marg_trial, fixed_trial, marg_label, fixed_label,
 
     S._textboxes(ax_tri, chains, shared_labels)
     fig.suptitle(title, y=0.94, fontsize=15)
+    out = os.path.join(RESULTS, out_name)
+    plt.savefig(out, bbox_inches='tight')
+    plt.close(fig)
+    os.unlink(tri_png)
+    print(f'  saved: {out}')
+
+
+
+
+# ---------------------------------------------------------------------------
+# Union triangle: chains may have DIFFERENT free-parameter sets (e.g. the
+# GAMA mass-shift nuisance exists only in the HMF chain). getdist matches
+# parameters by name and simply omits a chain from panels it lacks.
+# ---------------------------------------------------------------------------
+import tempfile
+from getdist import plots as gd_plots, MCSamples
+
+DLOGM_LABEL = r'$\Delta\log M$ GAMA'
+UNION_LIMS = {**SUBGRID_LIMS, **{PARAM_NAME[5]: (0.120, 0.155),
+                                 PARAM_NAME[6]: (0.70, 0.90)},
+              DLOGM_LABEL: (-0.3, 0.3)}
+
+
+def _overlay_priors_union(g, labels):
+    """Dashed default-prior curves on the diagonals: N(midpoint, half-range)
+    for every free parameter (exactly run_mcmc_cosmo's ln_prior default)."""
+    canon = list(PARAM_NAME)
+    for i, lab in enumerate(labels):
+        ax = g.subplots[i, i]
+        if ax is None:
+            continue
+        if lab in canon and canon.index(lab) <= 4:
+            rlo, rhi = S.SG_PRIOR_RANGE[canon.index(lab)]
+        elif lab == PARAM_NAME[5]:
+            rlo, rhi = 0.12, 0.155
+        elif lab == PARAM_NAME[6]:
+            rlo, rhi = 0.70, 0.90
+        else:                                  # nuisance (dlogM)
+            rlo, rhi = -0.3, 0.3
+        mu, sig = 0.5 * (rlo + rhi), 0.5 * (rhi - rlo)
+        lo, hi = ax.get_xlim()
+        x = np.linspace(lo, hi, 400)
+        y = np.exp(-0.5 * ((x - mu) / sig) ** 2)
+        ax.plot(x, y / y.max(), color='k', ls='--', lw=1.2, alpha=0.75)
+        ax.set_ylim(0, 1.15)
+
+
+def _triangle_png_union(chains, all_labels, limits):
+    tagged = {l: f'p{i}' for i, l in enumerate(all_labels)}
+    mcs = []
+    pretty = {DLOGM_LABEL: r'\Delta\log M_{\rm GAMA}'}
+    for c in chains:
+        names = [tagged[l] for l in c['own_labels']]
+        labels = [pretty.get(l, l.strip('$')) for l in c['own_labels']]
+        mcs.append(MCSamples(samples=c['samples_shared'], names=names,
+                             labels=labels, label=None,
+                             ranges={tagged[l]: c['ranges'][l]
+                                     for l in c['own_labels']},
+                             settings=S.GD_SETTINGS))
+    g = gd_plots.get_subplot_plotter(subplot_size=1.7)
+    g.settings.axes_fontsize = 11
+    g.settings.axes_labelsize = 13
+    g.settings.alpha_filled_add = 0.7
+    g.settings.solid_contour_palefactor = 0.55
+    g.settings.num_plot_contours = 2
+    g.triangle_plot(mcs, [tagged[l] for l in all_labels], filled=True,
+                    contour_colors=[c['color'] for c in chains],
+                    param_limits={tagged[l]: limits[l] for l in all_labels
+                                  if l in limits})
+    _overlay_priors_union(g, all_labels)
+    for lg in list(g.fig.legends):
+        lg.remove()
+    for ax in g.fig.axes:
+        leg = ax.get_legend()
+        if leg is not None:
+            leg.remove()
+    tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+    g.export(tmp.name)
+    return tmp.name
+
+
+def _textboxes_union(ax, chains):
+    y0 = 0.97
+    for i, c in enumerate(chains):
+        props = dict(boxstyle='round4', facecolor='white', alpha=0.85,
+                     edgecolor=c['color'])
+        txt = f"{c['label']}:\n"
+        for lab, val in zip(c['own_labels'], c['shared_modes']):
+            txt += f"{lab}: {val:.4f}\n"
+        n_lines = len(c['own_labels']) + 1
+        ax.text(0.58, y0, txt.rstrip(), transform=ax.transAxes, fontsize=10,
+                verticalalignment='top', bbox=props, color=c['color'],
+                weight='bold')
+        y0 -= 0.032 * (n_lines + 1)
+
+
+def make_figure_union(marg_trial, fixed_trial, marg_label, fixed_label,
+                      all_labels, title, out_name, panels, ctx):
+    print(f'\n=== summary figure (union params): {out_name} ===')
+    chains = [
+        _chain(marg_trial, marg_label, S.MARG_COLOR, all_labels),
+        _chain(fixed_trial, fixed_label, S.FIXED_COLOR, all_labels),
+    ]
+    tri_png = _triangle_png_union(chains, all_labels, UNION_LIMS)
+    tri_img = Image.open(tri_png)
+
+    fig = plt.figure(figsize=(19, 5.2 * len(panels)))
+    gs = GridSpec(1, 2, figure=fig, width_ratios=[2.2, 1], wspace=0.06)
+    ax_tri = fig.add_subplot(gs[0, 0])
+    ax_tri.imshow(tri_img)
+    ax_tri.axis('off')
+    gs_r = gs[0, 1].subgridspec(len(panels), 1, hspace=0.45)
+    axs = [fig.add_subplot(gs_r[i]) for i in range(len(panels))]
+    for ax, kind in zip(axs, panels):
+        PANEL_FUNCS[kind](ax, chains, ctx)
+    _textboxes_union(ax_tri, chains)
+    fig.suptitle(title, y=0.95, fontsize=15)
     out = os.path.join(RESULTS, out_name)
     plt.savefig(out, bbox_inches='tight')
     plt.close(fig)
@@ -218,6 +343,17 @@ def main():
     else:
         print('Pk_kids_7p (amod-free joint) not run yet — '
               'plot_summary_cosmo_marg_vs_fixed.png will be produced then.')
+
+    if {'Pk_kids_7p', 'Pk_kids_hmf_7p'} <= have:
+        all_labels = list(PARAM_NAME) + [DLOGM_LABEL]
+        make_figure_union(
+            'Pk_kids_hmf_7p', 'Pk_kids_7p',
+            'KiDS+HMF (7p+$\\Delta\\log M$)', 'KiDS only (7p)',
+            all_labels,
+            'Full parameter space: KiDS+HMF (red) vs KiDS only (blue) '
+            '— with posterior-predictive summary',
+            'plot_summary_7p_kids_vs_kids_hmf.png',
+            ['kids', 'hmf'], ctx)
 
 
 if __name__ == '__main__':

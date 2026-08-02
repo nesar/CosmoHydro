@@ -9,18 +9,18 @@ Fixed parameters: {'$\\kappa_\\text{w}$': 3.0, '$e_\\text{w}$': 0.5, '$M_\\text{
 
 ln_prob at init point: -15.8217
 
-MCMC: ndim=3, nwalkers=32, nburn=500, nrun=2000
-time (minutes): 0.20005098581314087
+MCMC: ndim=3, nwalkers=400, nburn=500, nrun=4000
+time (minutes): 2.3107341249783833
 Burn-in phase
-time (minutes): 0.7878397981325785
+time (minutes): 18.478843732674918
 Sampling phase
 
 === Results saved ===
   /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_HMF_gama_2cosmo.npy
-  mean acceptance fraction: 0.570
-mcmc results: 0.12663055694354228 0.8547374558454515 -0.06699761656422298
+  mean acceptance fraction: 0.572
+mcmc results: 0.12662667196433178 0.8550633781804391 -0.06623854193328041
 
 MCMC medians:
   $\Omega_\text{m}$              = 0.1266
-  $\sigma_8$                     = 0.8547
-  $\Delta\log M$ GAMA            = -0.0670
+  $\sigma_8$                     = 0.8551
+  $\Delta\log M$ GAMA            = -0.0662
