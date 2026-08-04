@@ -1,4 +1,4 @@
-Fixed-hydro scan — 2p cosmology posterior vs fixed subgrid point
+Fixed-hydro scan (Planck prior) — 2p cosmology vs fixed subgrid point
 suite: GSMF_CGD
 
 chain                                          omega_m             sigma_8   d(sigma_8) vs marg

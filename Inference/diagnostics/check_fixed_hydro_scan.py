@@ -1,5 +1,6 @@
-"""Fixed-hydro scan: how much does the 2p cosmology posterior move when the
-hydro parameters are pinned at different (but all reasonable) points?
+"""Fixed-hydro scan (PLANCK cosmology prior): how much does the 2p cosmology
+posterior move when the hydro parameters are pinned at different (but all
+reasonable) points?
 
 Motivation
 ----------
@@ -13,15 +14,18 @@ measurement.
 
 This scan pins hydro at 4 points drawn from the 7p posterior itself (Mahalanobis
 radius ~0, 1, 2, 2 sigma) and overlays the resulting 2p cosmology posteriors on
-the marginalized 7p result and on the fiducial-fixed run.
+the marginalized 7p result and on the fiducial-fixed run. Every chain here uses
+the SAME Planck-width cosmology prior (drawn as a dotted curve).
 
 Chains (skipped if absent):
-  <suite>_7p_pk               hydro marginalized              (cosmo cols 5,6)
-  <suite>_2cosmo_pk           hydro fixed at project fiducial (cols 0,1)
-  <suite>_2cosmo_hyd{A..D}    hydro fixed at scan points      (cols 0,1)
+  GSMF_CGD_7p_pk             hydro marginalized              (cosmo cols 5,6)
+  GSMF_CGD_2cosmo_pk         hydro fixed at Frontier-E fid.  (cols 0,1)
+  GSMF_CGD_2cosmo_hyd{A..D}  hydro fixed at scan points      (cols 0,1)
 
 Outputs (this directory):
-  fixed_hydro_scan.png, fixed_hydro_scan_summary.txt
+  gsmf_cgd_fixed_hydro_scan_pk.png          (all chains)
+  gsmf_cgd_fixed_hydro_scan_pk_noFE.png     (without the Frontier-E outlier)
+  gsmf_cgd_fixed_hydro_scan_pk_summary.txt
 """
 import os
 import numpy as np
@@ -43,10 +47,13 @@ FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
 PK_SIGMA = {'omega_m': 0.0011, 'sigma_8': 0.006}
 AXIS = {'omega_m': (0.132, 0.152), 'sigma_8': (0.755, 0.845)}
 
+# The Frontier-E fixed run is the outlier that a "no-FE" version drops.
+FRONTIER_E = '_2cosmo_pk'
+
 # (trial suffix, cols, label, color, linewidth)
 SPECS = [
     ('_7p_pk',        (5, 6), 'hydro marginalized (7p)',                  'tab:red', 2.2),
-    ('_2cosmo_pk',    (0, 1), 'fixed @ Frontier-E fiducial (~22$\\sigma$)', 'k',     2.2),
+    (FRONTIER_E,      (0, 1), 'fixed @ Frontier-E fiducial (~22$\\sigma$)', 'k',     2.2),
     ('_2cosmo_hydA',  (0, 1), 'fixed @ A (7p peak, 0$\\sigma$)',     'tab:blue',   1.6),
     ('_2cosmo_hydB',  (0, 1), 'fixed @ B (1$\\sigma$)',              'tab:green',  1.6),
     ('_2cosmo_hydC',  (0, 1), 'fixed @ C (2$\\sigma$)',              'tab:purple', 1.6),
@@ -69,62 +76,57 @@ def _load(trial, cols):
     return sub, ranges
 
 
-def main():
-    print('=== fixed-hydro scan ===')
-    loaded = []
-    for suf, cols, label, color, lw in SPECS:
-        trial = f'{SUITE}{suf}'
-        r = _load(trial, cols)
-        if r is None:
-            print(f'  MISSING  {trial}')
-            continue
-        sub, ranges = r
-        print(f'  LOADED   {trial:28s} median=({np.median(sub[:,0]):.4f}, '
-              f'{np.median(sub[:,1]):.4f})')
-        loaded.append(dict(trial=trial, label=label, color=color, lw=lw,
-                           samples=sub,
-                           mc=MCSamples(samples=sub, names=NAMES, labels=LABELS,
-                                        label=label, ranges=ranges)))
-    if not loaded:
-        print('  no chains yet — nothing to plot')
-        return
+def _auto_axis(loaded, pad=0.3):
+    """Axis from the included chains (0.3-99.7 pct), fiducial always in view."""
+    ax = {}
+    for key, i in (('omega_m', 0), ('sigma_8', 1)):
+        vals = np.concatenate([c['samples'][:, i] for c in loaded])
+        lo, hi = np.percentile(vals, 0.3), np.percentile(vals, 99.7)
+        lo, hi = min(lo, FID[key]), max(hi, FID[key])
+        p = (hi - lo) * pad + 1e-6
+        ax[key] = (lo - p, hi + p)
+    return ax
 
+
+def _draw_prior(ax, key, axis):
+    """Dotted Planck-Gaussian prior on a 1D diagonal (peak-normalized)."""
+    lo, hi = axis[key]
+    x = np.linspace(lo, hi, 600)
+    y = np.exp(-0.5 * ((x - FID[key]) / PK_SIGMA[key]) ** 2)
+    ax.plot(x, y / y.max() * ax.get_ylim()[1], color='k', ls=':', lw=1.8,
+            alpha=0.85)
+
+
+def make_plot(loaded, out_png, title, axis, alpha_filled=0.35, filled=True):
     g = gd_plots.get_subplot_plotter(width_inch=8)
-    g.settings.alpha_filled_add = 0.35
-    g.settings.legend_fontsize = 10
+    g.settings.alpha_filled_add = alpha_filled
+    g.settings.legend_fontsize = 11
     g.settings.axes_fontsize = 11
     g.settings.lab_fontsize = 14
     g.settings.num_plot_contours = 2
-    g.triangle_plot([c['mc'] for c in loaded], NAMES, filled=True,
+    g.triangle_plot([c['mc'] for c in loaded], NAMES, filled=filled,
                     contour_colors=[c['color'] for c in loaded],
                     line_args=[{'color': c['color'], 'lw': c['lw']} for c in loaded],
-                    param_limits=AXIS, legend_loc='upper right')
+                    param_limits=axis, legend_loc='upper right')
 
     ax_om, ax_s8, ax_2d = g.subplots[0, 0], g.subplots[1, 1], g.subplots[1, 0]
     for ax, key in ((ax_om, 'omega_m'), (ax_s8, 'sigma_8')):
-        ax.axvline(FID[key], color='0.4', ls=':', lw=1.0)
-        lo, hi = AXIS[key]
-        x = np.linspace(lo, hi, 600)
-        y = np.exp(-0.5 * ((x - FID[key]) / PK_SIGMA[key]) ** 2)
-        ax.plot(x, y / y.max() * ax.get_ylim()[1], color='k', ls='--', lw=1.2,
-                alpha=0.6)
-    ax_2d.axvline(FID['omega_m'], color='0.4', ls=':', lw=1.0)
-    ax_2d.axhline(FID['sigma_8'], color='0.4', ls=':', lw=1.0)
+        ax.axvline(FID[key], color='0.5', ls=(0, (1, 3)), lw=1.0)   # fiducial (fine dots)
+        _draw_prior(ax, key, axis)                                   # prior (dotted)
+    ax_2d.axvline(FID['omega_m'], color='0.5', ls=(0, (1, 3)), lw=1.0)
+    ax_2d.axhline(FID['sigma_8'], color='0.5', ls=(0, (1, 3)), lw=1.0)
     ax_2d.plot([FID['omega_m']], [FID['sigma_8']], marker='*', ms=13, mfc='gold',
                mec='k', mew=0.8, ls='', zorder=20)
 
-    g.fig.suptitle(
-        'Fixed-hydro scan: 2p cosmology posterior vs. choice of fixed subgrid point\n'
-        '(scan points A-D drawn from the 7p posterior; dashed = cosmology prior, '
-        'star = fiducial cosmology)', y=1.06, fontsize=11)
-    png = os.path.join(OUT, 'fixed_hydro_scan.png')
-    g.export(png)
-    print(f'  wrote {png}')
+    g.fig.suptitle(title, y=1.06, fontsize=11)
+    g.export(out_png)
+    print(f'  wrote {out_png}')
 
-    txt = os.path.join(OUT, 'fixed_hydro_scan_summary.txt')
+
+def write_summary(loaded, out_txt):
     marg = next((c for c in loaded if c['trial'].endswith('_7p_pk')), None)
-    with open(txt, 'w') as f:
-        f.write('Fixed-hydro scan — 2p cosmology posterior vs fixed subgrid point\n')
+    with open(out_txt, 'w') as f:
+        f.write('Fixed-hydro scan (Planck prior) — 2p cosmology vs fixed subgrid point\n')
         f.write(f'suite: {SUITE}\n\n')
         f.write(f'{"chain":34s}  {"omega_m":>18s}  {"sigma_8":>18s}')
         if marg is not None:
@@ -138,7 +140,65 @@ def main():
                 d = np.median(s[:, 1]) - np.median(marg['samples'][:, 1])
                 row += f'  {d:+19.5f}'
             f.write(row + '\n')
-    print(f'  wrote {txt}')
+    print(f'  wrote {out_txt}')
+
+
+def main():
+    print('=== fixed-hydro scan (Planck prior) ===')
+    loaded = []
+    for suf, cols, label, color, lw in SPECS:
+        trial = f'{SUITE}{suf}'
+        r = _load(trial, cols)
+        if r is None:
+            print(f'  MISSING  {trial}')
+            continue
+        sub, ranges = r
+        print(f'  LOADED   {trial:28s} median=({np.median(sub[:,0]):.4f}, '
+              f'{np.median(sub[:,1]):.4f})')
+        loaded.append(dict(trial=trial, suf=suf, label=label, color=color, lw=lw,
+                           samples=sub,
+                           mc=MCSamples(samples=sub, names=NAMES, labels=LABELS,
+                                        label=label, ranges=ranges)))
+    if not loaded:
+        print('  no chains yet — nothing to plot')
+        return
+
+    base = 'gsmf_cgd_fixed_hydro_scan_pk'
+    title_full = ('GSMF+CGD fixed-hydro scan (Planck prior): 2p cosmology posterior '
+                  'vs. fixed subgrid point\n(scan points A-D drawn from the 7p '
+                  'posterior; dotted = cosmology prior, star = fiducial)')
+    make_plot(loaded, os.path.join(OUT, f'{base}.png'), title_full, AXIS)
+    write_summary(loaded, os.path.join(OUT, f'{base}_summary.txt'))
+
+    # version without the Frontier-E outlier — auto-zoomed to the remaining chains
+    no_fe = [c for c in loaded if c['suf'] != FRONTIER_E]
+    if len(no_fe) < len(loaded):
+        title_nofe = ('GSMF+CGD fixed-hydro scan (Planck prior), Frontier-E omitted: '
+                      'marginalized vs. reasonable fixed points A-D\n'
+                      '(dotted = cosmology prior, star = fiducial)')
+        make_plot(no_fe, os.path.join(OUT, f'{base}_noFE.png'), title_nofe,
+                  _auto_axis(no_fe))
+
+    # minimal "clean" version: only marginalized + A + D. The marginalized chain
+    # (broadest) is drawn UNFILLED (thick outline) so the filled A and D contours
+    # on top stay clearly visible; high-contrast red / blue / green.
+    CLEAN_KEEP = {'_7p_pk': ('#d62728', 2.8),        # marginalized -> red (outline)
+                  '_2cosmo_hydA': ('#1f77b4', 2.4),    # A (7p peak) -> blue (filled)
+                  '_2cosmo_hydD': ('#2ca02c', 2.4)}    # D (2 sigma) -> green (filled)
+    order = ['_7p_pk', '_2cosmo_hydA', '_2cosmo_hydD']   # marg first = bottom layer
+    by_suf = {c['suf']: c for c in loaded}
+    clean, filled_flags = [], []
+    for suf in order:
+        if suf in by_suf:
+            col, lw = CLEAN_KEEP[suf]
+            clean.append({**by_suf[suf], 'color': col, 'lw': lw})
+            filled_flags.append(suf != '_7p_pk')         # marginalized unfilled
+    if len(clean) >= 2:
+        title_clean = ('GSMF+CGD fixed-hydro scan (Planck prior): marginalized (outline) '
+                       'vs. fixed @ A (7p peak) and @ D (2$\\sigma$)\n'
+                       '(dotted = cosmology prior, star = fiducial)')
+        make_plot(clean, os.path.join(OUT, f'{base}_clean.png'), title_clean,
+                  _auto_axis(clean), alpha_filled=0.5, filled=filled_flags)
 
 
 if __name__ == '__main__':

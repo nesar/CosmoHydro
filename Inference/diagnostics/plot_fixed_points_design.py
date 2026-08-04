@@ -14,7 +14,7 @@ This makes visible the whole story: A-D sit inside the posterior in every
 dimension; Frontier-E is a gross outlier in M_seed and v_kin (and lands at
 anomalously low sigma_8).
 
-Output (this directory): fixed_points_design.png
+Output (this directory): gsmf_cgd_fixed_points_design.png
 """
 import os
 import sys
@@ -126,7 +126,7 @@ def main():
                    '(design = grey; posterior = red; cosmo coord = each run\'s '
                    'recovered median)', y=1.02, fontsize=13)
 
-    png = os.path.join(HERE, 'fixed_points_design.png')
+    png = os.path.join(HERE, 'gsmf_cgd_fixed_points_design.png')
     g.export(png)
     print(f'\nwrote {png}')
 
