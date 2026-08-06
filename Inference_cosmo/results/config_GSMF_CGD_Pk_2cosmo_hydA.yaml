@@ -1,0 +1,26 @@
+# Joint GSMF + CGD + KiDS power spectra (2 redshifts), 2 cosmology params free,
+# hydro FIXED at scan point A (the GSMF+CGD 7p posterior peak). The "pk" analogue
+# of Inference/ GSMF_CGD_2cosmo_hydA. Cosmology prior BROAD (default Gaussian).
+trial_name: GSMF_CGD_Pk_2cosmo_hydA
+
+targets:
+  - kind: kids
+    nz: nz3
+    k_min: 0.03
+    k_max: 7.0
+    z_bins: [0.15, 0.45]
+  - kind: gsmf
+  - kind: cgd
+
+param_mode: custom
+free_params:
+  - omega_m
+  - sigma_8
+
+# Hydro fixed at point A (scaled units) — the 7p posterior peak.
+fixed_params:
+  kappa_w: 3.2909
+  e_w: 0.4769
+  M_seed: 1.1914
+  v_kin: 1.1395
+  eps_kin: 0.2325

@@ -18,3 +18,21 @@ Fixed parameters: {}
 ln_prob at init point: -496.4156
 
 MCMC: ndim=7, nwalkers=400, nburn=500, nrun=4000
+time (minutes): 31.38867607116699
+Burn-in phase
+time (minutes): 257.4227353334427
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_GSMF_CGD_Pk_7p.npy
+  mean acceptance fraction: 0.415
+mcmc results: 3.2671212232597595 0.553377283913526 1.1856507223981647 0.7043591510178455 0.22386448139681714 0.15461536203855974 0.8188379036961058
+
+MCMC medians:
+  $\kappa_\text{w}$              = 3.2671
+  $e_\text{w}$                   = 0.5534
+  $M_\text{seed}/10^{6}$         = 1.1857
+  $v_\text{kin}/10^{4}$          = 0.7044
+  $\epsilon_\text{kin}/10^{1}$   = 0.2239
+  $\Omega_\text{m}$              = 0.1546
+  $\sigma_8$                     = 0.8188

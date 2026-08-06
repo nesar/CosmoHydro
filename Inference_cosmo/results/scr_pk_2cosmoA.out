@@ -14,3 +14,17 @@ Fixed parameters: {'$\\kappa_\\text{w}$': 3.2909, '$e_\\text{w}$': 0.4769, '$M_\
 ln_prob at init point: -216.0809
 
 MCMC: ndim=2, nwalkers=400, nburn=500, nrun=4000
+time (minutes): 36.34342058897018
+Burn-in phase
+time (minutes): 275.9995835820834
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_GSMF_CGD_Pk_2cosmo_hydA.npy
+  mean acceptance fraction: 0.715
+mcmc results: 0.1432159298624709 0.8081201912535392
+
+MCMC medians:
+  $\Omega_\text{m}$              = 0.1432
+  $\sigma_8$                     = 0.8081
+=== GSMF_CGD_Pk_2cosmo_hydA done Thu Aug  6 03:14:34 CDT 2026 ===
