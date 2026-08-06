@@ -1,0 +1,19 @@
+=== GSMF_CGD_Pk_5p_fid_cosmo started Wed Aug  5 22:02:00 CDT 2026 (NWORKERS=8) ===
+=== Trial: GSMF_CGD_Pk_5p_fid_cosmo ===
+Building targets and likelihoods...
+  target[0]: KiDS-Legacy nz3 -> PmLikelihood
+    [gsmf_cgd_target] GSMF: 7 obs points, model x_grid (16,)
+  target[1]: GSMF -> ObsLikelihood
+    [gsmf_cgd_target] CGD: 8 obs points, model x_grid (19,)
+  target[2]: CGD -> ObsLikelihood
+Free parameters (5):
+  $\kappa_\text{w}$              init=3.0000 range=[2.0000, 4.0000]
+  $e_\text{w}$                   init=0.6000 range=[0.2000, 1.0000]
+  $M_\text{seed}/10^{6}$         init=1.3000 range=[0.6000, 2.0000]
+  $v_\text{kin}/10^{4}$          init=0.6500 range=[0.1000, 1.2000]
+  $\epsilon_\text{kin}/10^{1}$   init=0.6100 range=[0.0200, 1.2000]
+Fixed parameters: {'$\\Omega_\\text{m}$': 0.14176, '$\\sigma_8$': 0.8102}
+
+ln_prob at init point: -408.2946
+
+MCMC: ndim=5, nwalkers=400, nburn=500, nrun=4000
