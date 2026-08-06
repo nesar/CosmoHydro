@@ -2,7 +2,7 @@
 # Gaussian cosmology prior (sigma 0.0011 / 0.006), NO hard truncation (design box
 # only) -> a complete cosmology posterior. Companion to GSMF_2cosmo_trunc.
 # Shared data/mcmc/obs_dirs/output_dir come from _defaults.yaml.
-trial_name: GSMF_2cosmo_pk
+trial_name: GSMF_2cosmo_planck
 
 observables:
   - GSMF

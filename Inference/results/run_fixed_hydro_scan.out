@@ -210,9 +210,9 @@ MCMC median results:
  Plotting the scan   (22:34:03)
 ==============================================================
 === fixed-hydro scan ===
-  LOADED   GSMF_CGD_7p_pk               median=(0.1424, 0.8115)
+  LOADED   GSMF_CGD_7p_planck               median=(0.1424, 0.8115)
 Removed no burn in
-  LOADED   GSMF_CGD_2cosmo_pk           median=(0.1430, 0.7844)
+  LOADED   GSMF_CGD_2cosmo_planck           median=(0.1430, 0.7844)
 Removed no burn in
   LOADED   GSMF_CGD_2cosmo_hydA         median=(0.1423, 0.8118)
 Removed no burn in

@@ -1,5 +1,5 @@
 """2D (omega_m, sigma_8) overlay: marginalized-hydro vs fixed-hydro, and the
-moderate-prior vs Planck-prior (*_pk) runs. Run for each observable suite
+moderate-prior vs Planck-prior (*_planck) runs. Run for each observable suite
 (GSMF and GSMF+CGD).
 
 What this answers
@@ -12,13 +12,13 @@ so getdist's KDE is boundary-corrected at the right place and nothing leaks.
 
 (The hard-truncated *_trunc runs were retired to old_results/retired_trunc/: the
 ±1σ wall amputated the real posterior — see diagnostics/2p_cosmology_issue.md.
-The *_pk runs keep the Planck-width Gaussian but no hard cut.)
+The *_planck runs keep the Planck-width Gaussian but no hard cut.)
 
 Chains per suite (skipped if absent):
   - <suite>_7p         moderate prior, hydro marginalized   (cols 5,6)
   - <suite>_2cosmo     moderate prior, hydro FIXED          (cols 0,1)
-  - <suite>_7p_pk      Planck prior,   hydro marginalized   (cols 5,6)
-  - <suite>_2cosmo_pk  Planck prior,   hydro FIXED          (cols 0,1)
+  - <suite>_7p_planck      Planck prior,   hydro marginalized   (cols 5,6)
+  - <suite>_2cosmo_planck  Planck prior,   hydro FIXED          (cols 0,1)
 
 Outputs, one per suite:
   cosmo_marg_vs_fixed.png / _GSMF_CGD.png  (+ matching *_medians.txt)
@@ -36,12 +36,12 @@ OUT = os.path.dirname(os.path.abspath(__file__))
 
 AXIS = {'omega_m': (0.12, 0.155), 'sigma_8': (0.70, 0.90)}
 FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
-# Planck +/-1 sigma reference band (drawn as a box for context; *_pk uses this
+# Planck +/-1 sigma reference band (drawn as a box for context; *_planck uses this
 # as the Gaussian width, NOT a hard wall).
 PLANCK_1SIG = {'omega_m': (0.14066, 0.14286), 'sigma_8': (0.8042, 0.8162)}
 # The two cosmology priors, overlaid as dashed curves on the 1D diagonals.
 MOD_SIGMA = {'omega_m': 0.005,  'sigma_8': 0.03}    # moderate (_defaults)
-PK_SIGMA  = {'omega_m': 0.0011, 'sigma_8': 0.006}   # Planck-width (_pk)
+PLANCK_SIGMA  = {'omega_m': 0.0011, 'sigma_8': 0.006}   # Planck-width (_planck)
 
 NAMES = ['omega_m', 'sigma_8']
 LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
@@ -50,8 +50,8 @@ LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
 SPECS = [
     ('7p marg, moderate prior', '_7p',        (5, 6), 'tab:red'),
     ('2p fixed, moderate prior', '_2cosmo',    (0, 1), 'tab:blue'),
-    ('7p marg, Planck prior',    '_7p_pk',     (5, 6), 'tab:purple'),
-    ('2p fixed, Planck prior',   '_2cosmo_pk', (0, 1), 'tab:green'),
+    ('7p marg, Planck prior',    '_7p_planck',     (5, 6), 'tab:purple'),
+    ('2p fixed, Planck prior',   '_2cosmo_planck', (0, 1), 'tab:green'),
 ]
 SUITES = [('GSMF', 'GSMF', ''), ('GSMF+CGD', 'GSMF_CGD', '_GSMF_CGD')]
 
@@ -119,7 +119,7 @@ def make_check(obs_label, prefix, suffix):
         x = np.linspace(lo, hi, 600)
         top = ax.get_ylim()[1]
         for sig, style in ((MOD_SIGMA[key], dict(color='0.45', ls='--', lw=1.2)),
-                           (PK_SIGMA[key],  dict(color='k',    ls=':',  lw=1.5))):
+                           (PLANCK_SIGMA[key],  dict(color='k',    ls=':',  lw=1.5))):
             y = np.exp(-0.5 * ((x - FID[key]) / sig) ** 2)
             ax.plot(x, y / y.max() * top, **style)
 

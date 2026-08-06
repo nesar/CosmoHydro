@@ -5,8 +5,8 @@
 # *_wide.yaml configs). Separate outputs; does NOT touch the original scan.
 #
 # The plot also includes two chains that already exist and are NOT re-run here:
-#   GSMF_CGD_7p_pk      hydro marginalized       (red)
-#   GSMF_CGD_2cosmo_pk  Frontier-E fiducial fix  (black, ~22 sigma from the 7p peak)
+#   GSMF_CGD_7p_planck      hydro marginalized       (red)
+#   GSMF_CGD_2cosmo_planck  Frontier-E fiducial fix  (black, ~22 sigma from the 7p peak)
 #
 # Usage (inside screen):
 #     screen -S hydscan_wide

@@ -18,14 +18,14 @@ the marginalized 7p result and on the fiducial-fixed run. Every chain here uses
 the SAME Planck-width cosmology prior (drawn as a dotted curve).
 
 Chains (skipped if absent):
-  GSMF_CGD_7p_pk             hydro marginalized              (cosmo cols 5,6)
-  GSMF_CGD_2cosmo_pk         hydro fixed at Frontier-E fid.  (cols 0,1)
+  GSMF_CGD_7p_planck             hydro marginalized              (cosmo cols 5,6)
+  GSMF_CGD_2cosmo_planck         hydro fixed at Frontier-E fid.  (cols 0,1)
   GSMF_CGD_2cosmo_hyd{A..D}  hydro fixed at scan points      (cols 0,1)
 
 Outputs (this directory):
-  gsmf_cgd_fixed_hydro_scan_pk.png          (all chains)
-  gsmf_cgd_fixed_hydro_scan_pk_noFE.png     (without the Frontier-E outlier)
-  gsmf_cgd_fixed_hydro_scan_pk_summary.txt
+  gsmf_cgd_fixed_hydro_scan_planck.png          (all chains)
+  gsmf_cgd_fixed_hydro_scan_planck_noFE.png     (without the Frontier-E outlier)
+  gsmf_cgd_fixed_hydro_scan_planck_summary.txt
 """
 import os
 import numpy as np
@@ -44,15 +44,15 @@ SUITE = 'GSMF_CGD'
 NAMES = ['omega_m', 'sigma_8']
 LABELS = [r'\omega_m \equiv \Omega_m h^2', r'\sigma_8']
 FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
-PK_SIGMA = {'omega_m': 0.0011, 'sigma_8': 0.006}
+PLANCK_SIGMA = {'omega_m': 0.0011, 'sigma_8': 0.006}
 AXIS = {'omega_m': (0.132, 0.152), 'sigma_8': (0.755, 0.845)}
 
 # The Frontier-E fixed run is the outlier that a "no-FE" version drops.
-FRONTIER_E = '_2cosmo_pk'
+FRONTIER_E = '_2cosmo_planck'
 
 # (trial suffix, cols, label, color, linewidth)
 SPECS = [
-    ('_7p_pk',        (5, 6), 'hydro marginalized (7p)',                  'tab:red', 2.2),
+    ('_7p_planck',        (5, 6), 'hydro marginalized (7p)',                  'tab:red', 2.2),
     (FRONTIER_E,      (0, 1), 'fixed @ Frontier-E fiducial (~22$\\sigma$)', 'k',     2.2),
     ('_2cosmo_hydA',  (0, 1), 'fixed @ A (7p peak, 0$\\sigma$)',     'tab:blue',   1.6),
     ('_2cosmo_hydB',  (0, 1), 'fixed @ B (1$\\sigma$)',              'tab:green',  1.6),
@@ -92,7 +92,7 @@ def _draw_prior(ax, key, axis):
     """Dotted Planck-Gaussian prior on a 1D diagonal (peak-normalized)."""
     lo, hi = axis[key]
     x = np.linspace(lo, hi, 600)
-    y = np.exp(-0.5 * ((x - FID[key]) / PK_SIGMA[key]) ** 2)
+    y = np.exp(-0.5 * ((x - FID[key]) / PLANCK_SIGMA[key]) ** 2)
     ax.plot(x, y / y.max() * ax.get_ylim()[1], color='k', ls=':', lw=1.8,
             alpha=0.85)
 
@@ -124,7 +124,7 @@ def make_plot(loaded, out_png, title, axis, alpha_filled=0.35, filled=True):
 
 
 def write_summary(loaded, out_txt):
-    marg = next((c for c in loaded if c['trial'].endswith('_7p_pk')), None)
+    marg = next((c for c in loaded if c['trial'].endswith('_7p_planck')), None)
     with open(out_txt, 'w') as f:
         f.write('Fixed-hydro scan (Planck prior) — 2p cosmology vs fixed subgrid point\n')
         f.write(f'suite: {SUITE}\n\n')
@@ -163,7 +163,7 @@ def main():
         print('  no chains yet — nothing to plot')
         return
 
-    base = 'gsmf_cgd_fixed_hydro_scan_pk'
+    base = 'gsmf_cgd_fixed_hydro_scan_planck'
     title_full = ('GSMF+CGD fixed-hydro scan (Planck prior): 2p cosmology posterior '
                   'vs. fixed subgrid point\n(scan points A-D drawn from the 7p '
                   'posterior; dotted = cosmology prior, star = fiducial)')
@@ -182,17 +182,17 @@ def main():
     # minimal "clean" version: only marginalized + A + D. The marginalized chain
     # (broadest) is drawn UNFILLED (thick outline) so the filled A and D contours
     # on top stay clearly visible; high-contrast red / blue / green.
-    CLEAN_KEEP = {'_7p_pk': ('#d62728', 2.8),        # marginalized -> red (outline)
+    CLEAN_KEEP = {'_7p_planck': ('#d62728', 2.8),        # marginalized -> red (outline)
                   '_2cosmo_hydA': ('#1f77b4', 2.4),    # A (7p peak) -> blue (filled)
                   '_2cosmo_hydD': ('#2ca02c', 2.4)}    # D (2 sigma) -> green (filled)
-    order = ['_7p_pk', '_2cosmo_hydA', '_2cosmo_hydD']   # marg first = bottom layer
+    order = ['_7p_planck', '_2cosmo_hydA', '_2cosmo_hydD']   # marg first = bottom layer
     by_suf = {c['suf']: c for c in loaded}
     clean, filled_flags = [], []
     for suf in order:
         if suf in by_suf:
             col, lw = CLEAN_KEEP[suf]
             clean.append({**by_suf[suf], 'color': col, 'lw': lw})
-            filled_flags.append(suf != '_7p_pk')         # marginalized unfilled
+            filled_flags.append(suf != '_7p_planck')         # marginalized unfilled
     if len(clean) >= 2:
         title_clean = ('GSMF+CGD fixed-hydro scan (Planck prior): marginalized (outline) '
                        'vs. fixed @ A (7p peak) and @ D (2$\\sigma$)\n'

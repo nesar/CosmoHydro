@@ -1,4 +1,4 @@
-"""Planck-prior (*_pk) ONLY: marginalized vs fixed, side by side.
+"""Planck-prior (*_planck) ONLY: marginalized vs fixed, side by side.
 
 This is the clean, uncluttered version of the marg-vs-fixed story using just the
 Planck-width-prior chains (the moderate-prior chains are dropped here — see
@@ -7,12 +7,12 @@ overlays). The point is to see the effect of marginalization alone, at fixed
 (Planck) prior:
 
   COSMOLOGY (omega_m, sigma_8):
-    - <suite>_7p_pk       hydro MARGINALIZED   (filled red)
-    - <suite>_2cosmo_pk   hydro FIXED at fid   (filled blue)
+    - <suite>_7p_planck       hydro MARGINALIZED   (filled red)
+    - <suite>_2cosmo_planck   hydro FIXED at fid   (filled blue)
     => how much fixing hydro biases/shrinks the cosmology posterior.
 
   SUBGRID (5 hydro params):
-    - <suite>_7p_pk       cosmology MARGINALIZED (Planck prior)  (filled red)
+    - <suite>_7p_planck       cosmology MARGINALIZED (Planck prior)  (filled red)
     - <suite>_5p_fid_cosmo cosmology FIXED at fid                (filled blue)
     => how much fixing cosmology biases/shrinks the subgrid posterior.
     (The 5p chain is prior-independent: cosmology is pinned, so no cosmo prior
@@ -22,8 +22,8 @@ Each chain gets ITS OWN saved range so getdist's KDE is boundary-corrected in th
 right place. Run for both observable suites (GSMF, GSMF+CGD).
 
 Outputs (this directory):
-  pk_cosmo_marg_vs_fixed{,_GSMF_CGD}.png     (+ _medians.txt)
-  pk_subgrid_marg_vs_fixed{,_GSMF_CGD}.png   (+ _medians.txt)
+  planck_cosmo_marg_vs_fixed{,_GSMF_CGD}.png     (+ _medians.txt)
+  planck_subgrid_marg_vs_fixed{,_GSMF_CGD}.png   (+ _medians.txt)
 """
 import os
 import numpy as np
@@ -39,8 +39,8 @@ RES = '/home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference/results'
 OUT = RES
 
 FID = {'omega_m': 0.14176, 'sigma_8': 0.8102}
-# Planck-width Gaussian used by the *_pk configs (dashed prior overlay).
-PK_SIGMA = {'omega_m': 0.0011, 'sigma_8': 0.006}
+# Planck-width Gaussian used by the *_planck configs (dashed prior overlay).
+PLANCK_SIGMA = {'omega_m': 0.0011, 'sigma_8': 0.006}
 COSMO_AXIS = {'omega_m': (0.128, 0.152), 'sigma_8': (0.75, 0.86)}
 
 CNAMES = ['omega_m', 'sigma_8']
@@ -81,8 +81,8 @@ def _mc(sub, ranges, names, labels, label):
 # --------------------------------------------------------------------------- #
 def cosmo_check(obs_label, prefix, suffix):
     print(f'\n=== PK cosmo marg-vs-fixed: {obs_label} ===')
-    specs = [(f'{prefix}_7p_pk',     (5, 6), 'hydro marginalized (7p, Planck)', MARG),
-             (f'{prefix}_2cosmo_pk', (0, 1), 'hydro fixed at fiducial (2p, Planck)', FIXED)]
+    specs = [(f'{prefix}_7p_planck',     (5, 6), 'hydro marginalized (7p, Planck)', MARG),
+             (f'{prefix}_2cosmo_planck', (0, 1), 'hydro fixed at fiducial (2p, Planck)', FIXED)]
     loaded = []
     for trial, cols, label, color in specs:
         r = _load(trial, cols, CNAMES)
@@ -115,23 +115,23 @@ def cosmo_check(obs_label, prefix, suffix):
     for ax, key in ((ax_om, 'omega_m'), (ax_s8, 'sigma_8')):
         lo, hi = COSMO_AXIS[key]
         x = np.linspace(lo, hi, 600)
-        y = np.exp(-0.5 * ((x - FID[key]) / PK_SIGMA[key]) ** 2)
+        y = np.exp(-0.5 * ((x - FID[key]) / PLANCK_SIGMA[key]) ** 2)
         ax.plot(x, y / y.max() * ax.get_ylim()[1], color='k', ls='--', lw=1.3)
 
     g.fig.suptitle(f'{obs_label} cosmology, Planck prior: hydro marginalized (red) '
                    'vs fixed (blue)\n(dashed = Planck prior, star/dotted = fiducial)',
                    y=1.04, fontsize=11)
-    png = os.path.join(OUT, f'pk_cosmo_marg_vs_fixed{suffix}.png')
+    png = os.path.join(OUT, f'planck_cosmo_marg_vs_fixed{suffix}.png')
     g.export(png)
     print(f'  wrote {png}')
-    _write_medians(os.path.join(OUT, f'pk_cosmo_marg_vs_fixed{suffix}_medians.txt'),
+    _write_medians(os.path.join(OUT, f'planck_cosmo_marg_vs_fixed{suffix}_medians.txt'),
                    obs_label, loaded, CNAMES, 'cosmology (omega_m, sigma_8)')
 
 
 def subgrid_check(obs_label, prefix, suffix):
     print(f'\n=== PK subgrid marg-vs-fixed: {obs_label} ===')
     cols = (0, 1, 2, 3, 4)
-    specs = [(f'{prefix}_7p_pk',        'cosmology marginalized (7p, Planck)', MARG),
+    specs = [(f'{prefix}_7p_planck',        'cosmology marginalized (7p, Planck)', MARG),
              (f'{prefix}_5p_fid_cosmo', 'cosmology fixed at fiducial (5p)',    FIXED)]
     loaded = []
     for trial, label, color in specs:
@@ -172,10 +172,10 @@ def subgrid_check(obs_label, prefix, suffix):
 
     g.fig.suptitle(f'{obs_label} subgrid, Planck prior: cosmology marginalized (red) '
                    'vs fixed (blue) — dashed = prior', y=1.02, fontsize=13)
-    png = os.path.join(OUT, f'pk_subgrid_marg_vs_fixed{suffix}.png')
+    png = os.path.join(OUT, f'planck_subgrid_marg_vs_fixed{suffix}.png')
     g.export(png)
     print(f'  wrote {png}')
-    _write_medians(os.path.join(OUT, f'pk_subgrid_marg_vs_fixed{suffix}_medians.txt'),
+    _write_medians(os.path.join(OUT, f'planck_subgrid_marg_vs_fixed{suffix}_medians.txt'),
                    obs_label, loaded, SNAMES, 'subgrid (scaled units)')
 
 

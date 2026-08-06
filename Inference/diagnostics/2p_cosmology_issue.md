@@ -114,7 +114,7 @@ This is **not a bug** — it is the expected behaviour of a degeneracy-broken fi
 
 ---
 
-## Update: hard-truncated (`*_trunc`) priors retired in favour of `*_pk`
+## Update: hard-truncated (`*_trunc`) priors retired in favour of `*_planck`
 
 We tried a **hard ±1σ truncation** of the Planck Gaussian (`*_trunc` configs:
 σ=0.0011/0.006, with `param_ranges` forcing `ln_prior → -inf` outside the
@@ -126,7 +126,7 @@ the lower wall. A hard ±1σ wall is an arbitrary fence — not a physical bound
 it has no place in inference.
 
 **Resolution:** retired all `*_trunc` configs/chains to
-`old_results/retired_trunc/`. Use **`*_pk`** instead — same Planck-width Gaussian
+`old_results/retired_trunc/`. Use **`*_planck`** instead — same Planck-width Gaussian
 (σ=0.0011/0.006) but **no hard cut** (only the design box bounds it), giving a
 complete (closed) posterior at (Ωₘ≈0.1415, σ₈≈0.786). The deeper signal is a
 **σ₈ tension**: the data (GSMF+CGD, hydro fixed) prefer σ₈≈0.77 vs Planck 0.81,
@@ -148,8 +148,8 @@ python plot_7p_vs_2cosmo_5subgrid.py
 Relevant configs:
 - moderate prior (from `_defaults.yaml`): `GSMF_7p`, `GSMF_2cosmo`,
   `GSMF_5p_fid_cosmo`, `GSMF_CGD_7p`, `GSMF_CGD_2cosmo`, `GSMF_CGD_5p_fid_cosmo`.
-- Planck prior (Planck-width Gaussian, no hard cut): `GSMF_7p_pk`,
-  `GSMF_2cosmo_pk`, `GSMF_CGD_7p_pk`, `GSMF_CGD_2cosmo_pk`.
+- Planck prior (Planck-width Gaussian, no hard cut): `GSMF_7p_planck`,
+  `GSMF_2cosmo_planck`, `GSMF_CGD_7p_planck`, `GSMF_CGD_2cosmo_planck`.
 - retired hard-cut (`*_trunc`) and `GSMF_CGD_fGas_*` live under `old_results/`.
 
 The `*_2cosmo*` runs fix hydro at the **fiducial** values (3, 0.5, 0.8, 0.51, 0.13).

@@ -1,0 +1,18 @@
+# Joint GSMF + CGD + KiDS power spectra (2 redshifts), 5 subgrid params free,
+# cosmology FIXED at the project fiducial (omega_m=0.14176, sigma_8=0.8102).
+# The "pk" analogue of Inference/ GSMF_CGD_5p_fid_cosmo. Subgrid priors same as
+# the GSMF+CGD runs (broad default Gaussian; eps_kin flat).
+trial_name: GSMF_CGD_Pk_5p_fid_cosmo
+
+targets:
+  - kind: kids
+    nz: nz3
+    k_min: 0.03
+    k_max: 7.0
+    z_bins: [0.15, 0.45]
+  - kind: gsmf
+  - kind: cgd
+
+param_mode: subgrid
+
+flat_prior_indices: [4]   # eps_kin flat (cosmology fixed at fiducial)

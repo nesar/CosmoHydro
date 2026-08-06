@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
 # Fixed-hydro scan: run the four 2p-cosmology MCMCs (hydro pinned at scan points
-# A-D drawn from the GSMF_CGD_7p_pk posterior), then make the overlay plot.
+# A-D drawn from the GSMF_CGD_7p_planck posterior), then make the overlay plot.
 #
 # The plot also includes two chains that already exist and are NOT re-run here:
-#   GSMF_CGD_7p_pk      hydro marginalized       (red)
-#   GSMF_CGD_2cosmo_pk  Frontier-E fiducial fix  (black, ~22 sigma from the 7p peak)
+#   GSMF_CGD_7p_planck      hydro marginalized       (red)
+#   GSMF_CGD_2cosmo_planck  Frontier-E fiducial fix  (black, ~22 sigma from the 7p peak)
 #
 # Usage (inside screen):
 #     screen -S hydscan

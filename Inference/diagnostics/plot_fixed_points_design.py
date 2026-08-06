@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.join(INFER, '..', 'codes'))
 from cosmo_hydro_emu.load_hacc import PARAM_NAME     # 7 canonical latex labels
 
 SUITE = 'GSMF_CGD'
-POST = f'{SUITE}_7p_pk'                               # the posterior A-D came from
+POST = f'{SUITE}_7p_planck'                               # the posterior A-D came from
 NAMES = ['kappa_w', 'e_w', 'M_seed', 'v_kin', 'eps_kin', 'omega_m', 'sigma_8']
 # scale factors to convert raw design columns -> scaled params (M/1e6, v/1e4, eps/1e1)
 DESIGN_SCALE = np.array([1, 1, 1e-6, 1e-4, 1e-1, 1, 1])
@@ -42,7 +42,7 @@ DESIGN_SCALE = np.array([1, 1, 1e-6, 1e-4, 1e-1, 1, 1])
 # fixed points: (letter, config trial for subgrid, 2cosmo trial for cosmo median,
 #                color, marker)
 POINTS = [
-    ('Frontier-E', f'{SUITE}_2cosmo_pk',   f'{SUITE}_2cosmo_pk',   'k',          '*'),
+    ('Frontier-E', f'{SUITE}_2cosmo_planck',   f'{SUITE}_2cosmo_planck',   'k',          '*'),
     ('A', f'{SUITE}_2cosmo_hydA', f'{SUITE}_2cosmo_hydA', 'tab:blue',   'o'),
     ('B', f'{SUITE}_2cosmo_hydB', f'{SUITE}_2cosmo_hydB', 'tab:green',  's'),
     ('C', f'{SUITE}_2cosmo_hydC', f'{SUITE}_2cosmo_hydC', 'tab:purple', 'D'),

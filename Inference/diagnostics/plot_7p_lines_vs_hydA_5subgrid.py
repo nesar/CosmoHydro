@@ -1,4 +1,4 @@
-"""Variant of plot_7p_vs_2cosmo_5subgrid_GSMF_CGD_pk.png with two changes:
+"""Variant of plot_7p_vs_2cosmo_5subgrid_GSMF_CGD_planck.png with two changes:
 
   1. the 2-cosmology overlay (originally hydro fixed at the Frontier-E fiducial)
      is REPLACED by the fixed-@-A run -- hydro pinned at the 7p posterior peak
@@ -9,7 +9,7 @@
 
 Reuses the helpers in Inference/plot_7p_vs_2cosmo_5subgrid.py.
 
-Output: diagnostics/gsmf_cgd_7p_vs_2cosmoA_5subgrid_pk.png
+Output: diagnostics/gsmf_cgd_7p_vs_2cosmoA_5subgrid_planck.png
 """
 import os
 import sys
@@ -26,7 +26,7 @@ import plot_7p_vs_2cosmo_5subgrid as P          # reuse loaders + prior/crosshai
 def main():
     # (trial, color, filled, linewidth, label)
     specs = [
-        ('GSMF_CGD_7p_pk',        '#d62728', False, 2.6,
+        ('GSMF_CGD_7p_planck',        '#d62728', False, 2.6,
          '7 params (GSMF+CGD, Planck prior, cosmo + hydro free)'),
         ('GSMF_CGD_5p_fid_cosmo', '#2ca02c', True, 1.5,
          '5 subgrid only (GSMF+CGD, cosmology fixed at fiducial)'),
@@ -64,7 +64,7 @@ def main():
     plt.suptitle('GSMF+CGD, Planck prior — 7p (outline) vs 2-cosmology @ A vs '
                  '5-subgrid MCMC (dashed = prior)', y=1.005, fontsize=14)
 
-    out = os.path.join(HERE, 'gsmf_cgd_7p_vs_2cosmoA_5subgrid_pk.png')
+    out = os.path.join(HERE, 'gsmf_cgd_7p_vs_2cosmoA_5subgrid_planck.png')
     plt.savefig(out, bbox_inches='tight', dpi=150)
     plt.close()
     print(f'  wrote {out}')

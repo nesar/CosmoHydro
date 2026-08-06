@@ -79,6 +79,12 @@ from pk_likelihood import (                                    # noqa: E402
 # in amod_exploratory/run_mcmc_amod.py). builder(spec, get_emu) -> (name, like)
 EXTRA_TARGET_KINDS = {}
 
+# Register GSMF / CGD / fGas (galaxy + cluster-gas) likelihoods from the
+# Inference/ pipeline, so power spectra can be fit JOINTLY with them in one
+# 7-parameter MCMC (targets: [kids, gsmf, cgd]).
+from gsmf_cgd_target import register as _register_gsmf_cgd   # noqa: E402
+_register_gsmf_cgd(EXTRA_TARGET_KINDS)
+
 # Fiducial subgrid parameters in scaled design units
 # (kappa_w, e_w, M_seed/1e6, v_kin/1e4, eps_kin/1e1) — the project fiducial
 # hydro model, NOT design midpoints.

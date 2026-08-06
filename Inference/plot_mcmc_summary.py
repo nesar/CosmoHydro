@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Combined triangle + posterior-predictive summary panels for the headline
-Planck-prior (*_pk) fits, in the style of the Flamingo reference plot
+Planck-prior (*_planck) fits, in the style of the Flamingo reference plot
 (combined_mcmc_getdist_*): a getdist triangle on the left with per-chain
 best-fit parameter textboxes, and best-fit emulator predictions overlaid on the
 observations (GSMF, CGD) on the right.
@@ -8,7 +8,7 @@ observations (GSMF, CGD) on the right.
 Reuses the machinery already in plot_mcmc.py; the only reason this exists is to
 (a) restrict the right-hand panels to the observables v2 actually has data for
 (GSMF + CGD — there is no fGas observation in the HAvoCC set), and (b) drive the
-specific *_pk headline figures with clean labels/output names.
+specific *_planck headline figures with clean labels/output names.
 
     python plot_mcmc_summary.py            # all headline figures
     python plot_mcmc_summary.py joint      # just the GSMF+CGD joint fit
@@ -82,16 +82,16 @@ def make(trials, labels, out_name, data_cache=None):
                         g, names, cfg_ref, flat_idx))
 
 
-# Headline figures. All 7p_pk chains share the same 7-param space, so they can be
+# Headline figures. All 7p_planck chains share the same 7-param space, so they can be
 # overlaid directly; the 2-chain comparison mirrors the Flamingo reference.
 FIGURES = {
-    'gsmf':  (['GSMF_7p_pk'], [r'$\mathcal{L}_\mathrm{GSMF}$ (7p)'],
-              'plot_summary_GSMF_7p_pk.png'),
-    'joint': (['GSMF_CGD_7p_pk'], [r'$\mathcal{L}_\mathrm{GSMF}+\mathcal{L}_\mathrm{CGD}$ (7p)'],
-              'plot_summary_GSMF_CGD_7p_pk.png'),
-    'compare': (['GSMF_7p_pk', 'GSMF_CGD_7p_pk'],
+    'gsmf':  (['GSMF_7p_planck'], [r'$\mathcal{L}_\mathrm{GSMF}$ (7p)'],
+              'plot_summary_GSMF_7p_planck.png'),
+    'joint': (['GSMF_CGD_7p_planck'], [r'$\mathcal{L}_\mathrm{GSMF}+\mathcal{L}_\mathrm{CGD}$ (7p)'],
+              'plot_summary_GSMF_CGD_7p_planck.png'),
+    'compare': (['GSMF_7p_planck', 'GSMF_CGD_7p_planck'],
                 [r'$\mathcal{L}_\mathrm{GSMF}$', r'$\mathcal{L}_\mathrm{GSMF}+\mathcal{L}_\mathrm{CGD}$'],
-                'plot_summary_7p_GSMF_vs_GSMF_CGD_pk.png'),
+                'plot_summary_7p_GSMF_vs_GSMF_CGD_planck.png'),
 }
 
 
@@ -283,24 +283,24 @@ CL = r'cosmo marginalized (7p)'
 FL_C = r'cosmo fixed (5p)'
 
 MARGFIX = {
-    'cosmo_gsmf': dict(marg_trial='GSMF_7p_pk', fixed_trial='GSMF_2cosmo_pk',
+    'cosmo_gsmf': dict(marg_trial='GSMF_7p_planck', fixed_trial='GSMF_2cosmo_planck',
         marg_label=ML, fixed_label=FL_H, shared_labels=COSMO_SHARED,
-        limits=COSMO_LIMS, out_name='plot_summary_pk_cosmo_marg_vs_fixed.png',
+        limits=COSMO_LIMS, out_name='plot_summary_planck_cosmo_marg_vs_fixed.png',
         title='GSMF cosmology: hydro marginalized (red) vs fixed (blue) '
               '— with posterior-predictive summary'),
-    'cosmo_cgd': dict(marg_trial='GSMF_CGD_7p_pk', fixed_trial='GSMF_CGD_2cosmo_pk',
+    'cosmo_cgd': dict(marg_trial='GSMF_CGD_7p_planck', fixed_trial='GSMF_CGD_2cosmo_planck',
         marg_label=ML, fixed_label=FL_H, shared_labels=COSMO_SHARED,
-        limits=COSMO_LIMS, out_name='plot_summary_pk_cosmo_marg_vs_fixed_GSMF_CGD.png',
+        limits=COSMO_LIMS, out_name='plot_summary_planck_cosmo_marg_vs_fixed_GSMF_CGD.png',
         title='GSMF+CGD cosmology: hydro marginalized (red) vs fixed (blue) '
               '— with posterior-predictive summary'),
-    'subgrid_gsmf': dict(marg_trial='GSMF_7p_pk', fixed_trial='GSMF_5p_fid_cosmo',
+    'subgrid_gsmf': dict(marg_trial='GSMF_7p_planck', fixed_trial='GSMF_5p_fid_cosmo',
         marg_label=CL, fixed_label=FL_C, shared_labels=SUBGRID_SHARED,
-        limits=SUBGRID_LIMS, out_name='plot_summary_pk_subgrid_marg_vs_fixed.png',
+        limits=SUBGRID_LIMS, out_name='plot_summary_planck_subgrid_marg_vs_fixed.png',
         title='GSMF subgrid: cosmology marginalized (red) vs fixed (blue) '
               '— with posterior-predictive summary'),
-    'subgrid_cgd': dict(marg_trial='GSMF_CGD_7p_pk', fixed_trial='GSMF_CGD_5p_fid_cosmo',
+    'subgrid_cgd': dict(marg_trial='GSMF_CGD_7p_planck', fixed_trial='GSMF_CGD_5p_fid_cosmo',
         marg_label=CL, fixed_label=FL_C, shared_labels=SUBGRID_SHARED,
-        limits=SUBGRID_LIMS, out_name='plot_summary_pk_subgrid_marg_vs_fixed_GSMF_CGD.png',
+        limits=SUBGRID_LIMS, out_name='plot_summary_planck_subgrid_marg_vs_fixed_GSMF_CGD.png',
         title='GSMF+CGD subgrid: cosmology marginalized (red) vs fixed (blue) '
               '— with posterior-predictive summary'),
 }

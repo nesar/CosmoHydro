@@ -31,7 +31,7 @@ RES = os.path.join(INFER, 'results')
 CONFIGS = os.path.join(INFER, 'configs')
 
 SUITE = 'GSMF_CGD'                 # the suite showing the strong fixed-hydro bias
-MARG_TRIAL = f'{SUITE}_7p_pk'
+MARG_TRIAL = f'{SUITE}_7p_planck'
 OBSERVABLES = ['GSMF', 'CGD']
 
 SG_NAMES = ['kappa_w', 'e_w', 'M_seed', 'v_kin', 'eps_kin']

@@ -11,7 +11,7 @@ chains in a suite is whether cosmology is free (7p) or pinned at fiducial (5p).
 
 Chains per suite (skipped if absent), all on the 5 subgrid params (cols 0..4):
   - <suite>_7p            cosmo marginalized, moderate cosmo prior
-  - <suite>_7p_pk         cosmo marginalized, Planck-width cosmo prior
+  - <suite>_7p_planck         cosmo marginalized, Planck-width cosmo prior
   - <suite>_5p_fid_cosmo  cosmo FIXED at fiducial
 
 The dashed line on each diagonal is the subgrid prior (broad default Gaussian;
@@ -85,7 +85,7 @@ def make_check(obs_label, prefix, suffix):
     print(f'\n=== subgrid marg-vs-fixed: {obs_label} ===')
     specs = [
         (f'{prefix}_7p',           f'7p, cosmo marg (moderate) ({obs_label})', 'tab:red'),
-        (f'{prefix}_7p_pk',        f'7p, cosmo marg (Planck) ({obs_label})',   'tab:purple'),
+        (f'{prefix}_7p_planck',        f'7p, cosmo marg (Planck) ({obs_label})',   'tab:purple'),
         (f'{prefix}_5p_fid_cosmo', f'5p, cosmo FIXED ({obs_label})',           'tab:blue'),
     ]
     loaded, colors = [], []

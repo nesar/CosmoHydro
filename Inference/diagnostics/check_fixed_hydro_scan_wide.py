@@ -40,9 +40,9 @@ DESIGN_BOX = {'omega_m': (0.12, 0.155), 'sigma_8': (0.70, 0.90)}
 
 # (trial suffix, cols, label, color, linewidth). The marginalized reference is
 # resolved in main(): prefer _7p_wide (FLAT cosmo prior, matches the fixed runs);
-# fall back to _7p_pk (Planck prior) with a warning label until _7p_wide finishes.
+# fall back to _7p_planck (Planck prior) with a warning label until _7p_wide finishes.
 MARG_WIDE = ('_7p_wide', (5, 6), 'hydro marginalized (7p, flat prior)', 'tab:red', 2.2)
-MARG_PK   = ('_7p_pk',   (5, 6), 'hydro marginalized (7p, PLANCK prior!)', 'tab:red', 2.2)
+MARG_PK   = ('_7p_planck',   (5, 6), 'hydro marginalized (7p, PLANCK prior!)', 'tab:red', 2.2)
 FRONTIER_E = '_2cosmo_wide'                     # the outlier a "no-FE" version drops
 SPECS = [
     MARG_WIDE,   # replaced with MARG_PK in main() if _7p_wide isn't on disk yet
@@ -115,7 +115,7 @@ def main():
     # to the Planck-prior 7p (flagged) so the plot still renders while 7p_wide runs.
     specs = list(SPECS)
     if not os.path.exists(os.path.join(base.RES, f'samples_{SUITE}_7p_wide.npy')):
-        print('  (7p_wide not on disk yet -> using 7p_pk Planck reference for now)')
+        print('  (7p_wide not on disk yet -> using 7p_planck Planck reference for now)')
         specs[0] = MARG_PK
     loaded = []
     for suf, cols, label, color, lw in specs:

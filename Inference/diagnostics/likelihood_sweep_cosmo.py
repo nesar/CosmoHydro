@@ -30,7 +30,7 @@ import run_mcmc as R           # reuse the exact loaders + log_likelihood
 from cosmo_hydro_emu.snapshot_utils import SNAPSHOT_IDS
 
 OUT = HERE
-CONFIG = os.path.join(INFER, 'configs', 'GSMF_CGD_2cosmo_pk.yaml')  # only for data/emulator paths; priors are built internally below
+CONFIG = os.path.join(INFER, 'configs', 'GSMF_CGD_2cosmo_planck.yaml')  # only for data/emulator paths; priors are built internally below
 
 # Fiducial point (hydro + cosmology), scaled units in PARAM_NAME order.
 FID_HYDRO = [3.0, 0.5, 0.8, 0.51, 0.13]      # kappa_w, e_w, M_seed/1e6, v_kin/1e4, eps_kin/1e1
@@ -40,14 +40,14 @@ S8_RANGE = (0.70, 0.90)
 OBS_LIST = ['GSMF', 'CGD']
 
 # Two live cosmology priors (both fiducial-centered Gaussians, mu == fiducial):
-#   moderate = configs/_defaults.yaml ;  Planck = the *_pk configs.
+#   moderate = configs/_defaults.yaml ;  Planck = the *_planck configs.
 PRIOR_SIGMA = {'omega_m': 0.005, 'sigma_8': 0.03}     # moderate
-PK_SIGMA    = {'omega_m': 0.0011, 'sigma_8': 0.006}   # Planck-width (*_pk)
+PLANCK_SIGMA    = {'omega_m': 0.0011, 'sigma_8': 0.006}   # Planck-width (*_planck)
 # params_list rows for R.ln_prior: [name, init, lower, upper]
 _PRIOR_PLIST = [['omega_m', FID_OM, OM_RANGE[0], OM_RANGE[1]],
                 ['sigma_8', FID_S8, S8_RANGE[0], S8_RANGE[1]]]
 _MOD_GP = {0: (FID_OM, PRIOR_SIGMA['omega_m']), 1: (FID_S8, PRIOR_SIGMA['sigma_8'])}
-_PK_GP  = {0: (FID_OM, PK_SIGMA['omega_m']),    1: (FID_S8, PK_SIGMA['sigma_8'])}
+_PLANCK_GP  = {0: (FID_OM, PLANCK_SIGMA['omega_m']),    1: (FID_S8, PLANCK_SIGMA['sigma_8'])}
 COLORS = {'GSMF': 'tab:blue', 'CGD': 'tab:green'}
 
 
@@ -184,7 +184,7 @@ def sweep_2d(packs, om_grid, s8_grid):
 
 def ln_prior_grid(om_grid, s8_grid, gp=_MOD_GP):
     """2D log-prior over (omega_m, sigma_8) using the exact MCMC ln_prior.
-    gp selects the prior: _MOD_GP (moderate) or _PK_GP (Planck-width).
+    gp selects the prior: _MOD_GP (moderate) or _PLANCK_GP (Planck-width).
     Shape (len(s8), len(om))."""
     lp = np.zeros((s8_grid.size, om_grid.size))
     for j, s8 in enumerate(s8_grid):
@@ -215,7 +215,7 @@ def plot_2d(packs, om_grid, s8_grid, cases, fname):
     """Three rows (hydro fixed at fiducial):
       row 0: likelihood                        (full design box)
       row 1: posterior x moderate prior        (full design box)
-      row 2: posterior x Planck prior (*_pk)   (ZOOMED near fiducial so the
+      row 2: posterior x Planck prior (*_planck)   (ZOOMED near fiducial so the
              tight Planck posterior is actually visible)."""
     order = [c for c in ('GSMF', 'CGD', 'GSMF+CGD') if c in cases]
     OM, S8 = np.meshgrid(om_grid, s8_grid)
@@ -224,10 +224,10 @@ def plot_2d(packs, om_grid, s8_grid, cases, fname):
     # Zoomed grid for the Planck row: fiducial +/- 6 Planck sigma (clamped to box).
     def _zoom(mu, sig, lo, hi):
         return (max(lo, mu - 6 * sig), min(hi, mu + 6 * sig))
-    omz = np.linspace(*_zoom(FID_OM, PK_SIGMA['omega_m'], *OM_RANGE), om_grid.size)
-    s8z = np.linspace(*_zoom(FID_S8, PK_SIGMA['sigma_8'], *S8_RANGE), s8_grid.size)
+    omz = np.linspace(*_zoom(FID_OM, PLANCK_SIGMA['omega_m'], *OM_RANGE), om_grid.size)
+    s8z = np.linspace(*_zoom(FID_S8, PLANCK_SIGMA['sigma_8'], *S8_RANGE), s8_grid.size)
     cases_z = sweep_2d(packs, omz, s8z)
-    lp_pk = ln_prior_grid(omz, s8z, _PK_GP)
+    lp_planck = ln_prior_grid(omz, s8z, _PLANCK_GP)
     OMZ, S8Z = np.meshgrid(omz, s8z)
 
     fig, axes = plt.subplots(3, len(order), figsize=(5.2 * len(order), 13.5),
@@ -239,16 +239,16 @@ def plot_2d(packs, om_grid, s8_grid, cases, fname):
         post_mod = cases[case] + lp_mod
         _panel(axes[1, col], fig, OM, S8, post_mod, om_grid, s8_grid,
                f'{case} — posterior x moderate prior', r'$\Delta\ln\mathcal{P}$')
-        post_pk = cases_z[case] + lp_pk
-        _panel(axes[2, col], fig, OMZ, S8Z, post_pk, omz, s8z,
+        post_planck = cases_z[case] + lp_planck
+        _panel(axes[2, col], fig, OMZ, S8Z, post_planck, omz, s8z,
                f'{case} — posterior x Planck prior (zoom)', r'$\Delta\ln\mathcal{P}$')
         jm, im = np.unravel_index(np.nanargmax(post_mod), post_mod.shape)
-        jp, ip = np.unravel_index(np.nanargmax(post_pk), post_pk.shape)
+        jp, ip = np.unravel_index(np.nanargmax(post_planck), post_planck.shape)
         print(f'  {case:10s}: moderate=({om_grid[im]:.4f}, {s8_grid[jm]:.3f})  '
               f'Planck=({omz[ip]:.4f}, {s8z[jp]:.4f})')
     fig.suptitle('Hydro fixed at fiducial. Rows: likelihood / x moderate prior '
                  f'(σ={PRIOR_SIGMA["omega_m"]}, {PRIOR_SIGMA["sigma_8"]}) / x Planck prior '
-                 f'(σ={PK_SIGMA["omega_m"]}, {PK_SIGMA["sigma_8"]}, zoomed). '
+                 f'(σ={PLANCK_SIGMA["omega_m"]}, {PLANCK_SIGMA["sigma_8"]}, zoomed). '
                  'Red lines = fiducial.', fontsize=12)
     p = os.path.join(OUT, fname)
     fig.savefig(p, dpi=150, bbox_inches='tight'); plt.close(fig)

@@ -8,7 +8,7 @@ For each observable suite (GSMF, GSMF+CGD) it builds a triangle in the
   - the 5-subgrid-parameter (cosmology fixed) posterior on the subgrid panels.
 
 It also makes a 7-parameter comparison of GSMF vs GSMF+CGD. All plots use the
-Planck-prior (`*_pk`) runs — the moderate-prior versions were retired to
+Planck-prior (`*_planck`) runs — the moderate-prior versions were retired to
 old_results/retired_moderate_prior/.
 
 The 1D diagonal panels show the prior as a dashed line (peak-normalized):
@@ -35,7 +35,7 @@ FID_OM, FID_S8 = 0.14176, 0.8102
 MODERATE_PRIOR = {'omega_m': (FID_OM, 0.005, 0.12, 0.155),
                   'sigma_8': (FID_S8, 0.03,  0.70, 0.90)}
 # PK = Planck-width Gaussian (no hard cut; bounded only by the design box).
-# Matches the *_pk configs. (The hard-truncated *_trunc runs were retired to
+# Matches the *_planck configs. (The hard-truncated *_trunc runs were retired to
 # old_results/retired_trunc/ — the wall amputated the real posterior.)
 PK_PRIOR = {'omega_m': (FID_OM, 0.0011, 0.12, 0.155),
             'sigma_8': (FID_S8, 0.006,  0.70, 0.90)}
@@ -108,7 +108,7 @@ def overlay_priors(g, names, ranges, cosmo_prior):
 
     cosmo_prior : dict {'omega_m': (mu, sigma, lo, hi), 'sigma_8': (...)} giving
     the cosmology Gaussian and its truncation window (MODERATE_PRIOR for the
-    moderate runs, PK_PRIOR for the *_pk Planck-prior runs).
+    moderate runs, PK_PRIOR for the *_planck Planck-prior runs).
     """
     for i, name in enumerate(names):
         ax = g.subplots[i, i]
@@ -141,7 +141,7 @@ def axis_limits(loaded, names):
     params are auto-zoomed to where the posteriors actually live (data 0.3-99.7
     percentile across all chains, fiducial always included, padded), clamped to
     the design box. This shows the railing moderate runs over the full box AND
-    the tight Planck (_pk) runs zoomed near fiducial, without manual tuning."""
+    the tight Planck (_planck) runs zoomed near fiducial, without manual tuning."""
     anchor = max(loaded, key=lambda l: len(l[1]))
     ranges = anchor[2]
     lim = {}
@@ -241,26 +241,26 @@ def make_7p_comparison(suites, output, cosmo_prior=MODERATE_PRIOR):
 
 
 def main():
-    # Planck-prior (*_pk) runs only. The moderate-prior comparison plots and
-    # their chains were retired to old_results/retired_moderate_prior/ — the *_pk
+    # Planck-prior (*_planck) runs only. The moderate-prior comparison plots and
+    # their chains were retired to old_results/retired_moderate_prior/ — the *_planck
     # runs are the canonical, most intuitive result (complete, closed posteriors;
     # see diagnostics/2p_cosmology_issue.md).
     #
     # The 5p (cosmology-fixed) chains are prior-independent — the cosmology prior
     # never acts because cosmology is pinned at fiducial — so the same 5p run is
     # the correct subgrid overlay here as in the moderate-prior plots above.
-    make_triangle('GSMF, Planck prior', 'GSMF_7p_pk', 'GSMF_2cosmo_pk',
+    make_triangle('GSMF, Planck prior', 'GSMF_7p_planck', 'GSMF_2cosmo_planck',
                   'GSMF_5p_fid_cosmo',
-                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_pk.png'),
+                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_planck.png'),
                   cosmo_prior=PK_PRIOR)
-    make_triangle('GSMF+CGD, Planck prior', 'GSMF_CGD_7p_pk', 'GSMF_CGD_2cosmo_pk',
+    make_triangle('GSMF+CGD, Planck prior', 'GSMF_CGD_7p_planck', 'GSMF_CGD_2cosmo_planck',
                   'GSMF_CGD_5p_fid_cosmo',
-                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_GSMF_CGD_pk.png'),
+                  os.path.join(RESULTS, 'plot_7p_vs_2cosmo_5subgrid_GSMF_CGD_planck.png'),
                   cosmo_prior=PK_PRIOR)
     make_7p_comparison(
-        [('GSMF_7p_pk', 'GSMF (7p, Planck)', '#1f77b4'),
-         ('GSMF_CGD_7p_pk', 'GSMF+CGD (7p, Planck)', '#ff7f0e')],
-        os.path.join(RESULTS, 'plot_7p_GSMF_vs_GSMF_CGD_pk.png'),
+        [('GSMF_7p_planck', 'GSMF (7p, Planck)', '#1f77b4'),
+         ('GSMF_CGD_7p_planck', 'GSMF+CGD (7p, Planck)', '#ff7f0e')],
+        os.path.join(RESULTS, 'plot_7p_GSMF_vs_GSMF_CGD_planck.png'),
         cosmo_prior=PK_PRIOR)
 
 

@@ -1,6 +1,6 @@
 Fixed-hydro scan: point selection
 ========================================================================
-marginalized reference: GSMF_CGD_7p_pk  (1,600,000 samples)
+marginalized reference: GSMF_CGD_7p_planck  (1,600,000 samples)
 
 1) Is the CURRENT fixed point (project fiducial) the 7p peak?
 

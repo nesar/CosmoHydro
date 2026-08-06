@@ -42,17 +42,17 @@ params otherwise use the broad default Gaussian (midpoint, σ=half-range).
 
 ## Trial catalogue
 
-> **Canonical cosmology fits use the Planck-prior (`*_pk`) configs** listed under
+> **Canonical cosmology fits use the Planck-prior (`*_planck`) configs** listed under
 > "Planck-prior variants" below. The moderate-prior counterparts (`GSMF_7p`,
 > `GSMF_2cosmo`, `GSMF_CGD_7p`, `GSMF_CGD_2cosmo`) and their chains were retired to
-> `old_results/retired_moderate_prior/` — the `*_pk` runs give complete, closed
+> `old_results/retired_moderate_prior/` — the `*_planck` runs give complete, closed
 > posteriors and are the most intuitive to read.
 
 ### 7-parameter (subgrid + cosmo) fits
 | Config | Observables | Notes |
 |---|---|---|
-| `GSMF_7p_pk.yaml` | GSMF | 7p, Planck prior; `eps_kin` flat. Main / subgrid-marg partner. |
-| `GSMF_CGD_7p_pk.yaml` | GSMF + CGD | 7p, Planck prior; `eps_kin` flat. Marginalized partner for the cosmo marg-vs-fixed check. |
+| `GSMF_7p_planck.yaml` | GSMF | 7p, Planck prior; `eps_kin` flat. Main / subgrid-marg partner. |
+| `GSMF_CGD_7p_planck.yaml` | GSMF + CGD | 7p, Planck prior; `eps_kin` flat. Marginalized partner for the cosmo marg-vs-fixed check. |
 | `GSMF_fGas_7p.yaml` | GSMF + fGas | 7p, moderate prior; `eps_kin` flat. |
 
 ### Subgrid-only fits (cosmology fixed at fiducial)
@@ -66,12 +66,12 @@ params otherwise use the broad default Gaussian (midpoint, σ=half-range).
 ### Cosmology-only / custom
 | Config | Observables | Notes |
 |---|---|---|
-| `GSMF_2cosmo_pk.yaml` | GSMF | `omega_m`, `sigma_8` free, hydro fixed at fiducial. GSMF-only control; pairs with `GSMF_7p_pk` for a GSMF-only cosmo marg-vs-fixed check. |
-| `GSMF_CGD_2cosmo_pk.yaml` | GSMF + CGD | `omega_m`, `sigma_8` free, hydro fixed at fiducial. Fixed partner for the GSMF+CGD cosmo marg-vs-fixed check (pairs with `GSMF_CGD_7p_pk`). |
+| `GSMF_2cosmo_planck.yaml` | GSMF | `omega_m`, `sigma_8` free, hydro fixed at fiducial. GSMF-only control; pairs with `GSMF_7p_planck` for a GSMF-only cosmo marg-vs-fixed check. |
+| `GSMF_CGD_2cosmo_planck.yaml` | GSMF + CGD | `omega_m`, `sigma_8` free, hydro fixed at fiducial. Fixed partner for the GSMF+CGD cosmo marg-vs-fixed check (pairs with `GSMF_CGD_7p_planck`). |
 | `sigma8_vkin_custom.yaml` | GSMF + CGD | Custom: `v_kin`, `eps_kin`, `sigma_8` free. |
 
-#### Planck-prior variants (`*_pk`)
-`GSMF_7p_pk`, `GSMF_2cosmo_pk`, `GSMF_CGD_7p_pk`, `GSMF_CGD_2cosmo_pk` override the
+#### Planck-prior variants (`*_planck`)
+`GSMF_7p_planck`, `GSMF_2cosmo_planck`, `GSMF_CGD_7p_planck`, `GSMF_CGD_2cosmo_planck` override the
 `_defaults.yaml` cosmology prior with a **Planck-width Gaussian** (σ_ωm=0.0011,
 σ_σ8=0.006, via `gaussian_priors`), bounded only by the design box (no hard cut).
 These are the canonical cosmology fits — a Planck-informed, complete posterior.
@@ -85,7 +85,7 @@ These are the canonical cosmology fits — a Planck-informed, complete posterior
 | `GSMF_multiz_CGD.yaml` | GSMF (z=0, z=1) + CGD (z=0.4) | 7p, multi-redshift (per-observable `redshift` keys). |
 
 > `_defaults.yaml` still holds the moderate fiducial-centered Gaussian as the base
-> cosmology prior (inherited by `GSMF_fGas_7p`, `GSMF_CGD_bias`, etc.); the `*_pk`
+> cosmology prior (inherited by `GSMF_fGas_7p`, `GSMF_CGD_bias`, etc.); the `*_planck`
 > configs override it. The moderate-prior `GSMF_{7p,2cosmo}` / `GSMF_CGD_{7p,2cosmo}`
 > configs + chains were retired to `old_results/retired_moderate_prior/`.
 >
@@ -100,4 +100,4 @@ These are the canonical cosmology fits — a Planck-informed, complete posterior
 >
 > The hard-truncated `*_trunc` cosmology priors were retired to
 > `old_results/retired_trunc/`: the ±1σ hard wall amputated the real posterior
-> (see `diagnostics/2p_cosmology_issue.md`). Use `*_pk` (Gaussian, no hard cut).
+> (see `diagnostics/2p_cosmology_issue.md`). Use `*_planck` (Gaussian, no hard cut).
