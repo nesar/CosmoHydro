@@ -17,7 +17,8 @@ def log_likelihood(theta,
                    case_label=None,
                    param_names=None,
                    redshift=None,
-                   z_all=None):
+                   z_all=None,
+                   with_emu_variance=False):
     """
     Calculate log likelihood for a single observable.
 
@@ -102,7 +103,16 @@ def log_likelihood(theta,
         y_adjusted = y
 
     sigma2 = yerr ** 2
-    ll = -0.5 * np.sum((y_adjusted - model) ** 2 / sigma2)
+    if with_emu_variance:
+        # Add the GP emulator's predictive variance to the error budget, and the
+        # matching Gaussian normalisation (logdet) term so the theta-dependent
+        # sigma2 is penalised correctly (prevents rewarding high-variance regions).
+        model_std = np.interp(x_eff, x_grid, model_var_grid[:, 0])
+        sigma2 = sigma2 + model_std ** 2
+        ll = -0.5 * np.sum((y_adjusted - model) ** 2 / sigma2
+                           + np.log(2.0 * np.pi * sigma2))
+    else:
+        ll = -0.5 * np.sum((y_adjusted - model) ** 2 / sigma2)
     return ll
 
 

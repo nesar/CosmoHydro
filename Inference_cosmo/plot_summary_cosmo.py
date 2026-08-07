@@ -314,18 +314,26 @@ def _triangle_png_union(chains, all_labels, limits):
 
 
 def _textboxes_union(ax, chains):
+    """One box per chain showing ALL 7 design params (fixed ones flagged '(fix)')
+    plus any nuisance extras — so a 'cosmo fixed' / 'hydro fixed' chain shows what
+    it is fixed to."""
     y0 = 0.97
-    for i, c in enumerate(chains):
+    canon = list(PARAM_NAME)
+    for c in chains:
+        free = set(c['own_labels'])
         props = dict(boxstyle='round4', facecolor='white', alpha=0.85,
                      edgecolor=c['color'])
         txt = f"{c['label']}:\n"
-        for lab, val in zip(c['own_labels'], c['shared_modes']):
+        for k, lab in enumerate(canon):
+            tag = '' if lab in free else '  (fix)'
+            txt += f"{lab}: {c['full_theta'][k]:.4f}{tag}\n"
+        for lab, val in c.get('extras', {}).items():
             txt += f"{lab}: {val:.4f}\n"
-        n_lines = len(c['own_labels']) + 1
-        ax.text(0.58, y0, txt.rstrip(), transform=ax.transAxes, fontsize=10,
+        n_lines = 1 + len(canon) + len(c.get('extras', {}))
+        ax.text(0.58, y0, txt.rstrip(), transform=ax.transAxes, fontsize=9,
                 verticalalignment='top', bbox=props, color=c['color'],
                 weight='bold')
-        y0 -= 0.032 * (n_lines + 1)
+        y0 -= 0.030 * (n_lines + 1)
 
 
 def make_figure_union(marg_trial, fixed_trial, marg_label, fixed_label,
@@ -387,6 +395,7 @@ def _triangle_png_multi(chains, all_labels, limits, filled, lws):
                     param_limits={tagged[l]: limits[l] for l in all_labels
                                   if l in limits})
     _overlay_priors_union(g, all_labels)
+    _draw_fixed_lines(g, all_labels, chains)
     for lg in list(g.fig.legends):
         lg.remove()
     for ax in g.fig.axes:
@@ -396,6 +405,29 @@ def _triangle_png_multi(chains, all_labels, limits, filled, lws):
     tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
     g.export(tmp.name)
     return tmp.name
+
+
+def _draw_fixed_lines(g, all_labels, chains):
+    """Dotted lines at each chain's FIXED parameter values, in the chain's colour
+    (green where cosmology is fixed, blue where hydro is fixed), in every triangle
+    panel that involves the fixed parameter."""
+    canon = list(PARAM_NAME)
+    n = len(all_labels)
+    for c in chains:
+        free = set(c['own_labels'])
+        for idx, lab in enumerate(all_labels):
+            if lab in free or lab not in canon:
+                continue                                   # only fixed design params
+            val = c['full_theta'][canon.index(lab)]
+            for i in range(n):
+                for j in range(i + 1):
+                    ax = g.subplots[i][j]
+                    if ax is None:
+                        continue
+                    if j == idx:
+                        ax.axvline(val, color=c['color'], ls=':', lw=1.3, alpha=0.9)
+                    if i == idx and i != j:
+                        ax.axhline(val, color=c['color'], ls=':', lw=1.3, alpha=0.9)
 
 
 def make_figure_multi(chain_specs, all_labels, title, out_name, panels, ctx,

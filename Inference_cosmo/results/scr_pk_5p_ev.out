@@ -1,0 +1,36 @@
+=== GSMF_CGD_Pk_5p_fid_cosmo_emuvar started Thu Aug  6 20:10:21 CDT 2026 (NWORKERS=8) ===
+=== Trial: GSMF_CGD_Pk_5p_fid_cosmo_emuvar ===
+Building targets and likelihoods...
+  target[0]: KiDS-Legacy nz3 -> PmLikelihood
+    [gsmf_cgd_target] GSMF: 7 obs points, model x_grid (16,)  [+emu variance]
+  target[1]: GSMF -> ObsLikelihood
+    [gsmf_cgd_target] CGD: 8 obs points, model x_grid (19,)  [+emu variance]
+  target[2]: CGD -> ObsLikelihood
+Free parameters (5):
+  $\kappa_\text{w}$              init=3.0000 range=[2.0000, 4.0000]
+  $e_\text{w}$                   init=0.6000 range=[0.2000, 1.0000]
+  $M_\text{seed}/10^{6}$         init=1.3000 range=[0.6000, 2.0000]
+  $v_\text{kin}/10^{4}$          init=0.6500 range=[0.1000, 1.2000]
+  $\epsilon_\text{kin}/10^{1}$   init=0.6100 range=[0.0200, 1.2000]
+Fixed parameters: {'$\\Omega_\\text{m}$': 0.14176, '$\\sigma_8$': 0.8102}
+
+ln_prob at init point: -259.3442
+
+MCMC: ndim=5, nwalkers=400, nburn=500, nrun=4000
+time (minutes): 31.76059147119522
+Burn-in phase
+time (minutes): 234.39886421759923
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_GSMF_CGD_Pk_5p_fid_cosmo_emuvar.npy
+  mean acceptance fraction: 0.470
+mcmc results: 3.239805372573276 0.4784647856045555 1.1964396701048376 1.1537220581718688 0.23287087368186293
+
+MCMC medians:
+  $\kappa_\text{w}$              = 3.2398
+  $e_\text{w}$                   = 0.4785
+  $M_\text{seed}/10^{6}$         = 1.1964
+  $v_\text{kin}/10^{4}$          = 1.1537
+  $\epsilon_\text{kin}/10^{1}$   = 0.2329
+=== GSMF_CGD_Pk_5p_fid_cosmo_emuvar done Fri Aug  7 00:36:45 CDT 2026 ===

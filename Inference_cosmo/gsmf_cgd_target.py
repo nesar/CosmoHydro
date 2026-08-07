@@ -41,21 +41,27 @@ def _infer_cfg():
 
 
 class ObsLikelihood:
-    """Single GSMF/CGD observable; callable on the full 7-param vector."""
+    """Single GSMF/CGD observable; callable on the full 7-param vector.
 
-    def __init__(self, obs, x_grid, model, x, y, yerr):
+    with_emu_variance=True adds the GP emulator predictive variance to the error
+    budget (+ the logdet normalisation term) — recommended so the GSMF/CGD chi2
+    is not artificially tight (see diagnose_emu_variance.py)."""
+
+    def __init__(self, obs, x_grid, model, x, y, yerr, with_emu_variance=False):
         self.obs, self.x_grid, self.model = obs, x_grid, model
         self.x, self.y, self.yerr = x, y, yerr
+        self.with_emu_variance = with_emu_variance
 
     def __call__(self, params7):
         return log_likelihood(
             np.asarray(params7, dtype=float), self.x_grid, self.model,
             self.x, self.y, self.yerr,
             fixed_params=None, param_names=list(PARAM_NAME),
-            case_label=self.obs, redshift=0.0, z_all=None)
+            case_label=self.obs, redshift=0.0, z_all=None,
+            with_emu_variance=self.with_emu_variance)
 
 
-def _build_component(kind):
+def _build_component(kind, with_emu_variance=False):
     """Load the GSMF/CGD emulator + obs exactly as Inference/run_mcmc.py does."""
     obs = _OBS_KIND[kind]
     cfg = _infer_cfg()
@@ -84,19 +90,23 @@ def _build_component(kind):
 
     od = R.load_obs_data(obs, cfg)
     print(f'    [gsmf_cgd_target] {obs}: {len(od["x"])} obs points, '
-          f'model x_grid {np.asarray(y_ind).shape}')
-    return ObsLikelihood(obs, y_ind, model, od['x'], od['y'], od['yerr'])
+          f'model x_grid {np.asarray(y_ind).shape}'
+          + ('  [+emu variance]' if with_emu_variance else ''))
+    return ObsLikelihood(obs, y_ind, model, od['x'], od['y'], od['yerr'],
+                         with_emu_variance=with_emu_variance)
 
 
 def register(registry):
     """Add gsmf/cgd/fgas target kinds to a run_mcmc_cosmo EXTRA_TARGET_KINDS dict.
 
-    builder signature is (spec, get_emu) -> (name, like); get_emu (the Pk
-    emulator getter) is unused here.
+    builder signature is (spec, get_emu) -> (name, like). Per-target config key
+    `emu_variance: true` adds the GP emulator variance to that observable's error
+    budget. get_emu (the Pk emulator getter) is unused here.
     """
     def _make(kind):
         def builder(spec, get_emu):
-            return _OBS_KIND[kind], _build_component(kind)
+            return _OBS_KIND[kind], _build_component(
+                kind, with_emu_variance=bool(spec.get('emu_variance', False)))
         return builder
     for kind in ('gsmf', 'cgd', 'fgas'):
         registry[kind] = _make(kind)

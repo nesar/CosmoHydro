@@ -1,0 +1,26 @@
+# Same as GSMF_CGD_Pk_2cosmo_hydA but the GSMF & CGD likelihood terms include the
+# GP emulator predictive variance (+ logdet), so their chi2/dof ~ 2 instead
+# of ~7 and no single statistic dominates (see diagnose_emu_variance.py).
+trial_name: GSMF_CGD_Pk_2cosmo_hydA_emuvar
+targets:
+- kind: kids
+  nz: nz3
+  k_min: 0.03
+  k_max: 7.0
+  z_bins:
+  - 0.15
+  - 0.45
+- kind: gsmf
+  emu_variance: true
+- kind: cgd
+  emu_variance: true
+param_mode: custom
+free_params:
+- omega_m
+- sigma_8
+fixed_params:
+  kappa_w: 3.2909
+  e_w: 0.4769
+  M_seed: 1.1914
+  v_kin: 1.1395
+  eps_kin: 0.2325
