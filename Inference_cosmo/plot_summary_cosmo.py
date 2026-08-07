@@ -35,13 +35,15 @@ sys.path.insert(0, _HERE)
 sys.path.insert(0, INFER)
 sys.path.insert(0, os.path.join(_HERE, '..', 'codes'))
 
-import plot_mcmc as P                       # noqa: E402  (GMM mode estimator)
+import plot_mcmc as P                       # noqa: E402  (GMM mode estimator + GSMF/CGD data)
 import plot_mcmc_summary as S               # noqa: E402  (triangle machinery)
-from cosmo_hydro_emu.load_hacc import PARAM_NAME     # noqa: E402
+from cosmo_hydro_emu.load_hacc import PARAM_NAME, plot_strings, mass_conds  # noqa: E402
+from cosmo_hydro_emu.emu import emulate     # noqa: E402  (GSMF/CGD best-fit prediction)
 
 from run_mcmc_cosmo import (                # noqa: E402
     FIDUCIAL_SUBGRID, FIDUCIAL_COSMO, SHORT_KEYS_ORDERED,
 )
+from run_mcmc import SHORT_KEY_TO_LABEL      # noqa: E402  (short key -> latex label)
 from targets import load_kids, load_gama_hmf             # noqa: E402
 from pk_likelihood import (                 # noqa: E402
     PkEmulator, HmfLikelihood, IDX_OMEGA_M, IDX_SIGMA_8,
@@ -76,14 +78,26 @@ def _chain(trial, label, color, shared_labels):
     pl = np.load(os.path.join(RESULTS, f'params_list_{trial}.npy'),
                  allow_pickle=True).tolist()
     free_labels = [str(p[0]) for p in pl]
-    n_design_free = sum(1 for l in free_labels if l in list(PARAM_NAME))
     stride = max(1, samples.shape[0] // MODE_SUBSAMPLE)
     mode = P.mcmc_results(samples[::stride], peak=1)
+
+    # Actual fixed values from the trial's saved config (e.g. hydro pinned at
+    # point A), defaulting to the PROJECT FIDUCIAL for anything not overridden.
+    import yaml
+    cfg_fixed = {}
+    cfg_path = os.path.join(RESULTS, f'config_{trial}.yaml')
+    if os.path.exists(cfg_path):
+        with open(cfg_path) as f:
+            cfg_fixed = (yaml.safe_load(f) or {}).get('fixed_params', {}) or {}
+    fixed_by_label = {SHORT_KEY_TO_LABEL[k]: float(v) for k, v in cfg_fixed.items()
+                      if k in SHORT_KEY_TO_LABEL}
 
     full_theta = []
     for i, name in enumerate(PARAM_NAME):
         if name in free_labels:
             full_theta.append(float(mode[free_labels.index(name)]))
+        elif name in fixed_by_label:
+            full_theta.append(fixed_by_label[name])
         else:
             full_theta.append(float(FIDUCIAL7[i]))
 
@@ -151,7 +165,46 @@ def panel_hmf(ax, chains, ctx):
     ax.legend(fontsize=8, loc='lower left')
 
 
-PANEL_FUNCS = {'kids': panel_kids, 'hmf': panel_hmf}
+def _panel_obs(ax, chains, ctx, obs):
+    """GSMF/CGD posterior-predictive panel: emulator prediction at each chain's
+    best-fit theta, overlaid on the observations (same conventions as the
+    Inference/ plot_summary_* panels — GSMF plots log10(model)=number density,
+    CGD plots the profile directly; both on a log y-axis)."""
+    dd = ctx['gc']
+    key = obs.lower()
+    y_ind = dd['datasets'][key]['y_ind']
+    od = dd['obs_data'][key]
+    is_gsmf = (obs == 'GSMF')
+    for c in chains:
+        mg, _ = emulate(dd['models'][key], c['full_theta'])
+        mg = np.asarray(mg).ravel()
+        y = np.log10(mg) if is_gsmf else mg
+        ls = '-' if c is chains[0] else '--'
+        ax.plot(y_ind, y, ls, color=c['color'], lw=2 if c is chains[0] else 1.5,
+                label=f'MCMC best fit: {c["label"]}')
+    oy = np.log10(od['y']) if is_gsmf else od['y']
+    ax.errorbar(od['x'], oy, yerr=od['yerr'], fmt='.k', capsize=2, zorder=3,
+                label='observation')
+    _, xlab, ylab = plot_strings(obs)
+    m1, m2 = mass_conds(obs)
+    ax.set_xlim(m1, m2)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel(xlab, fontsize=12)
+    ax.set_ylabel(ylab, fontsize=12)
+    ax.legend(fontsize=8, loc='lower left')
+
+
+def panel_gsmf(ax, chains, ctx):
+    _panel_obs(ax, chains, ctx, 'GSMF')
+
+
+def panel_cgd(ax, chains, ctx):
+    _panel_obs(ax, chains, ctx, 'CGD')
+
+
+PANEL_FUNCS = {'kids': panel_kids, 'hmf': panel_hmf,
+               'gsmf': panel_gsmf, 'cgd': panel_cgd}
 
 
 def make_figure(marg_trial, fixed_trial, marg_label, fixed_label,
@@ -303,14 +356,94 @@ def make_figure_union(marg_trial, fixed_trial, marg_label, fixed_label,
     print(f'  saved: {out}')
 
 
-def build_ctx(need_hmf=True):
+def _infer_cfg():
+    """Inference/ defaults (data paths + obs_dirs) for the GSMF/CGD emulators."""
+    import yaml
+    with open(os.path.join(INFER, 'configs', '_defaults.yaml')) as f:
+        return yaml.safe_load(f) or {}
+
+
+def _triangle_png_multi(chains, all_labels, limits, filled, lws):
+    """Union triangle for >=2 chains with per-chain filled/outline + line width."""
+    tagged = {l: f'p{i}' for i, l in enumerate(all_labels)}
+    mcs = []
+    for c in chains:
+        names = [tagged[l] for l in c['own_labels']]
+        labels = [l.strip('$') for l in c['own_labels']]
+        mcs.append(MCSamples(samples=c['samples_shared'], names=names,
+                             labels=labels, label=None,
+                             ranges={tagged[l]: c['ranges'][l] for l in c['own_labels']},
+                             settings=S.GD_SETTINGS))
+    g = gd_plots.get_subplot_plotter(subplot_size=1.7)
+    g.settings.axes_fontsize = 11
+    g.settings.axes_labelsize = 13
+    g.settings.alpha_filled_add = 0.6
+    g.settings.solid_contour_palefactor = 0.55
+    g.settings.num_plot_contours = 2
+    g.triangle_plot(mcs, [tagged[l] for l in all_labels], filled=filled,
+                    contour_colors=[c['color'] for c in chains],
+                    line_args=[{'color': c['color'], 'lw': w}
+                               for c, w in zip(chains, lws)],
+                    param_limits={tagged[l]: limits[l] for l in all_labels
+                                  if l in limits})
+    _overlay_priors_union(g, all_labels)
+    for lg in list(g.fig.legends):
+        lg.remove()
+    for ax in g.fig.axes:
+        leg = ax.get_legend()
+        if leg is not None:
+            leg.remove()
+    tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+    g.export(tmp.name)
+    return tmp.name
+
+
+def make_figure_multi(chain_specs, all_labels, title, out_name, panels, ctx,
+                      limits=None):
+    """Summary figure for a LIST of chains (each with its own free-param set):
+    union triangle (left) + posterior-predictive panels (right).
+
+    chain_specs : list of (trial, label, color, filled, lw).
+    """
+    print(f'\n=== summary figure (multi): {out_name} ===')
+    limits = limits or UNION_LIMS
+    chains = [_chain(t, lab, col, all_labels) for (t, lab, col, _f, _w) in chain_specs]
+    filled = [f for (_t, _l, _c, f, _w) in chain_specs]
+    lws = [w for (_t, _l, _c, _f, w) in chain_specs]
+
+    tri_png = _triangle_png_multi(chains, all_labels, limits, filled, lws)
+    tri_img = Image.open(tri_png)
+
+    fig = plt.figure(figsize=(19, 5.2 * len(panels)))
+    gs = GridSpec(1, 2, figure=fig, width_ratios=[2.2, 1], wspace=0.06)
+    ax_tri = fig.add_subplot(gs[0, 0])
+    ax_tri.imshow(tri_img)
+    ax_tri.axis('off')
+    gs_r = gs[0, 1].subgridspec(len(panels), 1, hspace=0.45)
+    axs = [fig.add_subplot(gs_r[i]) for i in range(len(panels))]
+    for ax, kind in zip(axs, panels):
+        PANEL_FUNCS[kind](ax, chains, ctx)
+    _textboxes_union(ax_tri, chains)
+    fig.suptitle(title, y=0.95, fontsize=15)
+    out = os.path.join(RESULTS, out_name)
+    plt.savefig(out, bbox_inches='tight')
+    plt.close(fig)
+    os.unlink(tri_png)
+    print(f'  saved: {out}')
+
+
+def build_ctx(need_hmf=True, need_kids=True, need_gc=False):
     print('loading emulators + targets (few minutes)...')
-    ctx = {'emu': PkEmulator(),
-           'kids': load_kids(nz='nz3', k_min=0.03, k_max=7.0,
-                             z_bins=[0.15, 0.45])}
+    ctx = {}
+    if need_kids:
+        ctx['emu'] = PkEmulator()
+        ctx['kids'] = load_kids(nz='nz3', k_min=0.03, k_max=7.0,
+                                z_bins=[0.15, 0.45])
     if need_hmf:
         ctx['hmf'] = load_gama_hmf(logM_max=14.9)
         ctx['hmf_like'] = HmfLikelihood(ctx['hmf'])
+    if need_gc:                    # GSMF + CGD emulators + observations
+        ctx['gc'] = P.load_all_data(_infer_cfg())
     return ctx
 
 
