@@ -1,0 +1,29 @@
+# CALIBRATED-ERROR version of GSMF_CGD_Pk_2cosmo_hydA — all audit fixes on
+# (see CALIBRATION_FIXES.md): GSMF err Jacobian (undo x5.3 chi2 inflation),
+# CGD Ghirardini+19 radius-dependent errors (replaces invented flat 5%),
+# KiDS k in [0.05, 4.0] (mode-count + half-Nyquist safe), + emulator variance.
+trial_name: GSMF_CGD_Pk_2cosmo_hydA_cal
+targets:
+- kind: kids
+  nz: nz3
+  k_min: 0.05
+  k_max: 4.0
+  z_bins:
+  - 0.15
+  - 0.45
+- kind: gsmf
+  emu_variance: true
+  err_jacobian: true
+- kind: cgd
+  emu_variance: true
+  err_model: ghirardini19
+param_mode: custom
+free_params:
+- omega_m
+- sigma_8
+fixed_params:
+  kappa_w: 3.2909
+  e_w: 0.4769
+  M_seed: 1.1914
+  v_kin: 1.1395
+  eps_kin: 0.2325

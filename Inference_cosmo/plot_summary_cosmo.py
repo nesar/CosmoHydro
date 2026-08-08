@@ -263,6 +263,14 @@ def _overlay_priors_union(g, labels):
         ax = g.subplots[i, i]
         if ax is None:
             continue
+        if lab in canon and canon.index(lab) == 4:
+            # eps_kin: the runs use flat_prior_indices [4] -> draw a FLAT prior
+            rlo, rhi = S.SG_PRIOR_RANGE[4]
+            lo, hi = ax.get_xlim()
+            ax.plot([max(lo, rlo), min(hi, rhi)], [0.5, 0.5], color='k',
+                    ls='--', lw=1.2, alpha=0.75)
+            ax.set_ylim(0, 1.15)
+            continue
         if lab in canon and canon.index(lab) <= 4:
             rlo, rhi = S.SG_PRIOR_RANGE[canon.index(lab)]
         elif lab == PARAM_NAME[5]:

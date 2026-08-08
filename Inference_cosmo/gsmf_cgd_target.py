@@ -61,8 +61,50 @@ class ObsLikelihood:
             with_emu_variance=self.with_emu_variance)
 
 
-def _build_component(kind, with_emu_variance=False):
+def _ghirardini_frac_err(r):
+    """Radius-dependent fractional error from Ghirardini+2019 (X-COP), the only
+    REAL error bars among the CGD reference datasets. Interpolated in log(r/R500),
+    floored at 0.15. See audit_joint_calibration.py / CALIBRATION_FIXES.md."""
+    gfile = os.path.join(_infer_cfg()['obs_dirs']['cgd'], 'ghirardini2019_rho_z0.txt')
+    g = np.loadtxt(gfile)
+    rg, y, lo, hi = g[:, 0], g[:, 1], g[:, 2], g[:, 3]
+    frac = 0.5 * (np.abs(lo) + np.abs(hi)) / y
+    return np.clip(np.interp(np.log(r), np.log(rg), frac), 0.15, None)
+
+
+def _apply_err_fixes(obs, od, spec):
+    """Opt-in, reversible error-model fixes (see CALIBRATION_FIXES.md).
+
+    GSMF, `err_jacobian: true`  : transform yerr (which load_gsmf_obs returns in
+        phi = linear-density space) into the 10^phi space the residual lives in:
+        sigma_(10^phi) = ln(10) * 10^phi * sigma_phi.  Undoes the (ln10)^2 ~ 5.3x
+        chi2 inflation verified in audit_joint_calibration.py.
+    CGD, `err_model: 'ghirardini19'` : replace the invented flat 5% error with
+        the radius-dependent fractional error measured by Ghirardini+2019,
+        floored at 15%.  `frac_err: <float>` gives a constant fraction instead.
+    Defaults (no keys) leave the legacy behaviour untouched.
+    """
+    if obs == 'GSMF' and spec.get('err_jacobian', False):
+        od = dict(od)
+        od['yerr'] = np.log(10.0) * od['y'] * od['yerr']
+        print('    [gsmf_cgd_target] GSMF yerr -> 10^phi space (x ln10*10^phi)')
+    if obs == 'CGD':
+        if spec.get('err_model') == 'ghirardini19':
+            od = dict(od)
+            frac = _ghirardini_frac_err(od['x'])
+            od['yerr'] = frac * od['y']
+            print('    [gsmf_cgd_target] CGD yerr -> Ghirardini+19 radius-dependent '
+                  f'(frac {frac.min():.2f}-{frac.max():.2f})')
+        elif 'frac_err' in spec:
+            od = dict(od)
+            od['yerr'] = float(spec['frac_err']) * od['y']
+            print(f'    [gsmf_cgd_target] CGD yerr -> flat {spec["frac_err"]:.0%}')
+    return od
+
+
+def _build_component(kind, with_emu_variance=False, spec=None):
     """Load the GSMF/CGD emulator + obs exactly as Inference/run_mcmc.py does."""
+    spec = spec or {}
     obs = _OBS_KIND[kind]
     cfg = _infer_cfg()
     data = cfg['data']
@@ -89,6 +131,7 @@ def _build_component(kind, with_emu_variance=False):
             design, y_vals, y_ind, exp_variance)
 
     od = R.load_obs_data(obs, cfg)
+    od = _apply_err_fixes(obs, od, spec)
     print(f'    [gsmf_cgd_target] {obs}: {len(od["x"])} obs points, '
           f'model x_grid {np.asarray(y_ind).shape}'
           + ('  [+emu variance]' if with_emu_variance else ''))
@@ -106,7 +149,8 @@ def register(registry):
     def _make(kind):
         def builder(spec, get_emu):
             return _OBS_KIND[kind], _build_component(
-                kind, with_emu_variance=bool(spec.get('emu_variance', False)))
+                kind, with_emu_variance=bool(spec.get('emu_variance', False)),
+                spec=spec)
         return builder
     for kind in ('gsmf', 'cgd', 'fgas'):
         registry[kind] = _make(kind)

@@ -19,20 +19,23 @@ from cosmo_hydro_emu.load_hacc import PARAM_NAME
 
 
 def main():
+    # optional suffix, e.g. '_emuvar', to plot the emulator-variance run set
+    suffix = sys.argv[1] if len(sys.argv) > 1 else ''
+    tag = ' [+emu variance]' if suffix else ''
     # (trial, label, color, filled, linewidth)
     chain_specs = [
-        ('GSMF_CGD_Pk_7p',           '7p marginalized',        '#d62728', False, 2.6),
-        ('GSMF_CGD_Pk_5p_fid_cosmo', '5 subgrid (cosmo fixed)', '#2ca02c', True, 1.6),
-        ('GSMF_CGD_Pk_2cosmo_hydA',  '2 cosmo @ A (hydro fixed)', '#1f77b4', True, 1.6),
+        (f'GSMF_CGD_Pk_7p{suffix}',           '7p marginalized',        '#d62728', False, 2.6),
+        (f'GSMF_CGD_Pk_5p_fid_cosmo{suffix}', '5 subgrid (cosmo fixed)', '#2ca02c', True, 1.6),
+        (f'GSMF_CGD_Pk_2cosmo_hydA{suffix}',  '2 cosmo @ A (hydro fixed)', '#1f77b4', True, 1.6),
     ]
     ctx = M.build_ctx(need_hmf=False, need_kids=True, need_gc=True)
     M.make_figure_multi(
         chain_specs,
         all_labels=list(PARAM_NAME),
         title='GSMF + CGD + KiDS $P_m$ (2 redshifts): 7p marginalized (red) vs '
-              '2-cosmo @ A (blue) vs 5-subgrid (green)\n— with posterior-predictive '
-              'summary (GSMF, CGD, $P_m$)',
-        out_name='plot_summary_gsmf_cgd_pk_7p_vs_2cosmoA_5subgrid.png',
+              '2-cosmo @ A (blue) vs 5-subgrid (green)' + tag +
+              '\n— with posterior-predictive summary (GSMF, CGD, $P_m$)',
+        out_name=f'plot_summary_gsmf_cgd_pk_7p_vs_2cosmoA_5subgrid{suffix}.png',
         panels=['gsmf', 'cgd', 'kids'],
         ctx=ctx,
     )
