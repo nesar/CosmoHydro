@@ -1,0 +1,23 @@
+# _cal2: as _cal but CGD uses the DATA-DRIVEN inter-survey error model
+# (McDonald+17 / X-COP / eROSITA disagreement + X-COP error-on-mean;
+# 26% core -> 5% mid -> 9% outer). Supersedes _cal, whose 'ghirardini19'
+# model mistook the 12-cluster SCATTER BAND for the error on the mean.
+# See CALIBRATION_FIXES.md.
+trial_name: GSMF_CGD_Pk_7p_cal2
+targets:
+- kind: kids
+  nz: nz3
+  k_min: 0.05
+  k_max: 4.0
+  z_bins:
+  - 0.15
+  - 0.45
+- kind: gsmf
+  emu_variance: true
+  err_jacobian: true
+- kind: cgd
+  emu_variance: true
+  err_model: intersurvey
+param_mode: subgrid+cosmo
+flat_prior_indices:
+- 4

@@ -1,0 +1,30 @@
+# 2-cosmology run with hydro fixed at point A_cal = the median of the
+# CORRECTED (_cal) 7p posterior. The original point A was derived from the
+# pre-fix GSMF_CGD_7p_planck posterior and is now 2.3 sigma away from where
+# the corrected 7p run actually sits (mostly eps_kin, -1.8 sigma).
+# See CALIBRATION_FIXES.md.
+trial_name: GSMF_CGD_Pk_2cosmo_hydAcal_cal
+targets:
+- kind: kids
+  nz: nz3
+  k_min: 0.05
+  k_max: 4.0
+  z_bins:
+  - 0.15
+  - 0.45
+- kind: gsmf
+  emu_variance: true
+  err_jacobian: true
+- kind: cgd
+  emu_variance: true
+  err_model: ghirardini19
+param_mode: custom
+free_params:
+- omega_m
+- sigma_8
+fixed_params:
+  kappa_w: 2.8468
+  e_w: 0.5388
+  M_seed: 1.0045
+  v_kin: 0.8528
+  eps_kin: 0.7083

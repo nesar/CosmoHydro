@@ -1,0 +1,30 @@
+=== Trial: GSMF_CGD_Pk_2cosmo_hydAcal_cal ===
+Building targets and likelihoods...
+  target[0]: KiDS-Legacy nz3 -> PmLikelihood
+    [gsmf_cgd_target] GSMF yerr -> 10^phi space (x ln10*10^phi)
+    [gsmf_cgd_target] GSMF: 7 obs points, model x_grid (16,)  [+emu variance]
+  target[1]: GSMF -> ObsLikelihood
+    [gsmf_cgd_target] CGD yerr -> Ghirardini+19 radius-dependent (frac 0.17-0.90)
+    [gsmf_cgd_target] CGD: 8 obs points, model x_grid (19,)  [+emu variance]
+  target[2]: CGD -> ObsLikelihood
+Free parameters (2):
+  $\Omega_\text{m}$              init=0.1375 range=[0.1200, 0.1550]
+  $\sigma_8$                     init=0.8000 range=[0.7000, 0.9000]
+Fixed parameters: {'$\\kappa_\\text{w}$': 2.8468, '$e_\\text{w}$': 0.5388, '$M_\\text{seed}/10^{6}$': 1.0045, '$v_\\text{kin}/10^{4}$': 0.8528, '$\\epsilon_\\text{kin}/10^{1}$': 0.7083}
+
+ln_prob at init point: -101.5715
+
+MCMC: ndim=2, nwalkers=400, nburn=500, nrun=4000
+time (minutes): 20.688232390085854
+Burn-in phase
+time (minutes): 165.55857445796332
+Sampling phase
+
+=== Results saved ===
+  /home/nramachandra/Projects/Hydro_runs/CosmoHydro/Inference_cosmo/results/samples_GSMF_CGD_Pk_2cosmo_hydAcal_cal.npy
+  mean acceptance fraction: 0.715
+mcmc results: 0.1414355931853218 0.8243447873179914
+
+MCMC medians:
+  $\Omega_\text{m}$              = 0.1414
+  $\sigma_8$                     = 0.8243

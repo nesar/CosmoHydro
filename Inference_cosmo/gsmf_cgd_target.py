@@ -62,14 +62,56 @@ class ObsLikelihood:
 
 
 def _ghirardini_frac_err(r):
-    """Radius-dependent fractional error from Ghirardini+2019 (X-COP), the only
-    REAL error bars among the CGD reference datasets. Interpolated in log(r/R500),
-    floored at 0.15. See audit_joint_calibration.py / CALIBRATION_FIXES.md."""
+    """X-COP (Ghirardini+2019) band as a fractional error, log-r interpolated.
+
+    NOTE: those columns are the cluster-to-cluster SCATTER band of the 12-cluster
+    sample (-57%/+124% in the core), not the uncertainty on the mean profile —
+    too large to use directly when fitting a mean profile. Kept for reference /
+    reproducibility; `_intersurvey_frac_err` is the recommended model."""
     gfile = os.path.join(_infer_cfg()['obs_dirs']['cgd'], 'ghirardini2019_rho_z0.txt')
     g = np.loadtxt(gfile)
     rg, y, lo, hi = g[:, 0], g[:, 1], g[:, 2], g[:, 3]
     frac = 0.5 * (np.abs(lo) + np.abs(hi)) / y
     return np.clip(np.interp(np.log(r), np.log(rg), frac), 0.15, None)
+
+
+def _intersurvey_frac_err(r):
+    """Fully data-driven CGD fractional error — NO invented floor.
+
+    Combines two independent, measured quantities at each radius and takes the
+    larger (they partly measure the same thing, so quadrature would double-count):
+
+      (a) inter-survey scatter: the RMS disagreement between three INDEPENDENT
+          observational determinations of the z~0 cluster gas density profile --
+          McDonald+2017 (SPT/Chandra), Ghirardini+2019 (X-COP/XMM) and
+          Lehle+2023 (eROSITA). This is a direct measurement of the systematic
+          uncertainty (~17% at r/R500=0.05, ~2-5% at mid radii, ~7% outer).
+      (b) X-COP statistical error on the MEAN = scatter band / sqrt(12 clusters).
+
+    Braspenning+2023 is a FLAMINGO simulation and is deliberately excluded.
+    """
+    cdir = _infer_cfg()['obs_dirs']['cgd']
+    mc = np.loadtxt(os.path.join(cdir, 'mcdonald2017_avg.txt'))
+    gh = np.loadtxt(os.path.join(cdir, 'ghirardini2019_rho_z0.txt'))
+    le = np.loadtxt(os.path.join(cdir, 'lehle2023_rho_z0.txt'))
+
+    def _lin(a, rq):                       # log-log interpolation
+        return np.exp(np.interp(np.log(rq), np.log(a[:, 0]), np.log(a[:, 1])))
+
+    # (a) inter-survey scatter on the overlap of all three
+    rlo = max(mc[:, 0].min(), gh[:, 0].min(), le[:, 0].min())
+    rhi = min(mc[:, 0].max(), gh[:, 0].max(), le[:, 0].max())
+    rc = mc[(mc[:, 0] >= rlo) & (mc[:, 0] <= rhi), 0]
+    Y = np.vstack([_lin(mc, rc), _lin(gh, rc), _lin(le, rc)])
+    f_inter = Y.std(axis=0, ddof=1) / Y.mean(axis=0)
+
+    # (b) X-COP error on the mean
+    f_eom = 0.5 * (gh[:, 2] + gh[:, 3]) / gh[:, 1] / np.sqrt(12.0)
+
+    lr = np.log(r)
+    a = np.interp(lr, np.log(rc), f_inter)          # flat-extrapolated at edges
+    b = np.interp(lr, np.log(gh[:, 0]), f_eom)
+    return np.maximum(a, b)
 
 
 def _apply_err_fixes(obs, od, spec):
@@ -89,7 +131,13 @@ def _apply_err_fixes(obs, od, spec):
         od['yerr'] = np.log(10.0) * od['y'] * od['yerr']
         print('    [gsmf_cgd_target] GSMF yerr -> 10^phi space (x ln10*10^phi)')
     if obs == 'CGD':
-        if spec.get('err_model') == 'ghirardini19':
+        if spec.get('err_model') == 'intersurvey':
+            od = dict(od)
+            frac = _intersurvey_frac_err(od['x'])
+            od['yerr'] = frac * od['y']
+            print('    [gsmf_cgd_target] CGD yerr -> inter-survey (McD17/X-COP/'
+                  f'eROSITA) + err-on-mean, frac {frac.min():.3f}-{frac.max():.3f}')
+        elif spec.get('err_model') == 'ghirardini19':
             od = dict(od)
             frac = _ghirardini_frac_err(od['x'])
             od['yerr'] = frac * od['y']

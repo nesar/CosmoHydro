@@ -21,14 +21,26 @@ from cosmo_hydro_emu.load_hacc import PARAM_NAME
 def main():
     # optional suffix, e.g. '_emuvar', to plot the emulator-variance run set
     suffix = sys.argv[1] if len(sys.argv) > 1 else ''
-    tag = ' [+emu variance]' if suffix else ''
+    tag = {'': '', '_emuvar': ' [+emu variance]',
+           '_cal': ' [calibrated errors: GSMF Jacobian, CGD Ghirardini+19, '
+                   'KiDS k$\\in$[0.05,4]]',
+           '_cal2': ' [GSMF Jacobian, CGD inter-survey errors, KiDS '
+                    'k$\\in$[0.05,4], +emu var]'}.get(suffix, f' [{suffix.lstrip("_")}]')
     # (trial, label, color, filled, linewidth)
     chain_specs = [
         (f'GSMF_CGD_Pk_7p{suffix}',           '7p marginalized',        '#d62728', False, 2.6),
         (f'GSMF_CGD_Pk_5p_fid_cosmo{suffix}', '5 subgrid (cosmo fixed)', '#2ca02c', True, 1.6),
         (f'GSMF_CGD_Pk_2cosmo_hydA{suffix}',  '2 cosmo @ A (hydro fixed)', '#1f77b4', True, 1.6),
     ]
-    ctx = M.build_ctx(need_hmf=False, need_kids=True, need_gc=True)
+    # For the _cal set, show the CORRECTED CGD errors in the panel (plot_mcmc's
+    # loader hard-codes the legacy flat 5%). NOTE: no GSMF entry on purpose —
+    # the GSMF panel plots log10(y)=phi against sigma_phi, which is already the
+    # consistent pair; the err_jacobian fix belongs to the LIKELIHOOD's 10^phi
+    # space only, so applying it here would double-count. See CALIBRATION_FIXES.md.
+    gc_fixes = {'_cal':  {'CGD': {'err_model': 'ghirardini19'}},
+                '_cal2': {'CGD': {'err_model': 'intersurvey'}}}.get(suffix)
+    ctx = M.build_ctx(need_hmf=False, need_kids=True, need_gc=True,
+                      gc_err_fixes=gc_fixes)
     M.make_figure_multi(
         chain_specs,
         all_labels=list(PARAM_NAME),

@@ -1,0 +1,28 @@
+# 2-cosmology run, hydro FIXED at the median of the _cal2 7p posterior
+# (self-consistent: same likelihood/error model as the 7p run it is
+# compared against). See CALIBRATION_FIXES.md.
+trial_name: GSMF_CGD_Pk_2cosmo_hydA_cal2
+targets:
+- kind: kids
+  nz: nz3
+  k_min: 0.05
+  k_max: 4.0
+  z_bins:
+  - 0.15
+  - 0.45
+- kind: gsmf
+  emu_variance: true
+  err_jacobian: true
+- kind: cgd
+  emu_variance: true
+  err_model: intersurvey
+param_mode: custom
+free_params:
+- omega_m
+- sigma_8
+fixed_params:
+  kappa_w: 2.774
+  e_w: 0.5528
+  M_seed: 0.8773
+  v_kin: 0.909
+  eps_kin: 0.8854

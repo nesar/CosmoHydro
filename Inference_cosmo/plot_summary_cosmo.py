@@ -447,9 +447,19 @@ def make_figure_multi(chain_specs, all_labels, title, out_name, panels, ctx,
     """
     print(f'\n=== summary figure (multi): {out_name} ===')
     limits = limits or UNION_LIMS
-    chains = [_chain(t, lab, col, all_labels) for (t, lab, col, _f, _w) in chain_specs]
-    filled = [f for (_t, _l, _c, f, _w) in chain_specs]
-    lws = [w for (_t, _l, _c, _f, w) in chain_specs]
+    # skip chains whose samples aren't on disk yet (e.g. a run still going)
+    avail = []
+    for spec in chain_specs:
+        if os.path.exists(os.path.join(RESULTS, f'samples_{spec[0]}.npy')):
+            avail.append(spec)
+        else:
+            print(f'  SKIP (not finished): {spec[0]}')
+    if not avail:
+        print('  no chains available — nothing to plot')
+        return
+    chains = [_chain(t, lab, col, all_labels) for (t, lab, col, _f, _w) in avail]
+    filled = [f for (_t, _l, _c, f, _w) in avail]
+    lws = [w for (_t, _l, _c, _f, w) in avail]
 
     tri_png = _triangle_png_multi(chains, all_labels, limits, filled, lws)
     tri_img = Image.open(tri_png)
@@ -472,7 +482,7 @@ def make_figure_multi(chain_specs, all_labels, title, out_name, panels, ctx,
     print(f'  saved: {out}')
 
 
-def build_ctx(need_hmf=True, need_kids=True, need_gc=False):
+def build_ctx(need_hmf=True, need_kids=True, need_gc=False, gc_err_fixes=None):
     print('loading emulators + targets (few minutes)...')
     ctx = {}
     if need_kids:
@@ -484,6 +494,16 @@ def build_ctx(need_hmf=True, need_kids=True, need_gc=False):
         ctx['hmf_like'] = HmfLikelihood(ctx['hmf'])
     if need_gc:                    # GSMF + CGD emulators + observations
         ctx['gc'] = P.load_all_data(_infer_cfg())
+        if gc_err_fixes:
+            # plot_mcmc's plot-side loader hard-codes the LEGACY errors
+            # (CGD 5%, GSMF yerr in phi space). Apply the same opt-in fixes the
+            # likelihood uses so the panels show the error bars actually fitted.
+            import gsmf_cgd_target as GC
+            import run_mcmc as R
+            cfg = _infer_cfg()
+            for obs, spec in gc_err_fixes.items():
+                od = GC._apply_err_fixes(obs, R.load_obs_data(obs, cfg), spec)
+                ctx['gc']['obs_data'][obs.lower()] = od
     return ctx
 
 
