@@ -1,10 +1,8 @@
-(1) 0-39 with DSD
-(2) Rest space-filling
+(1) Varying fixed Hydro  points check
+(2) Linear scale + nonlinear scale P(k) -- use complimentary data
+(3) Cleanup -- prior stuff
 
-(3) GSMF coverage, fGas, ... parameter dependence plots
-(4) P(k), P(k)-ratio, HMF, ...
 
-(5) Do a linear interpolation in z -- confirm this is done properly. 
 
 
 MCMCs:
