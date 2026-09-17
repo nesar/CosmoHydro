@@ -1,23 +1,26 @@
 #!/usr/bin/env python
 """
-Train ONLY the missing GP (SEPIA) emulators for cosmology-target inference,
-reusing everything already trained by codes/02_train_emulators_multiz.ipynb.
+Train the GP (SEPIA) P(k) emulators for cosmology-target inference into
+models/Pk_cosmo/:
 
-Already trained and REUSED (never retrained here):
-  models/Pk_multivariate_model_z_index0.pkl
-      P_hydro.full/P_go suppression ratio at z=0, exp_variance=0.95,
-      trained on runs 000-099 (notebook 02, cells 24-25).
-      Loaded via ``load_pk_model('ratio', '0.0')`` below.
-
-Missing, trained here into models/Pk_cosmo/:
+  ratio_z{0.0,0.1,0.5,1.0,2.0}   : P_hydro.full/P_go suppression ratio
+      (exp_variance=0.95, 7 input params). Needed because
+      P_hydro(k,z) = ratio(k,z) * P_go(k,z) at the KiDS/BOSS redshifts.
   logP_go_z{0.0,0.1,0.5,1.0,2.0} : log10 P_go(k) — gravity-only spectra,
       cosmology-only inputs (design columns [omega_m, sigma_8]; GO runs do
       not depend on subgrid physics). Needed for absolute-P(k) targets
       (KiDS-Legacy Pm, BOSS) and the A_mod template (P_L/P_GO).
-  ratio_z{0.1,0.5,1.0,2.0}       : suppression ratio at the remaining
-      snapshots (z=0 already exists), same recipe as the notebook z=0 model
-      (exp_variance=0.95, 7 input params). Needed because
-      P_hydro(k,z) = ratio(k,z) * P_go(k,z) at the KiDS/BOSS redshifts.
+
+k ranges (fixed 2026-09-17): the box is 400 Mpc/h with 1600^3 particles and
+P(k) is measured on a 1600^3 FFT mesh, so the trusted range is
+mass_conds('Pk') = [2pi/L, mesh Nyquist] = [0.0157, 12.57] h/Mpc for both
+the ratio and the absolute spectra (aliasing near the Nyquist is a caveat to
+validate on the trained emulators; it cancels in the ratio). Models trained
+before this fix used k_max = 8.04 (a mistaken 1024^3 particle count) and no
+longer match mass_conds('Pk') — retrain everything with --retrain. The legacy
+notebook-02 pickle models/Pk_multivariate_model_z_index0.pkl (and its
+models/Pk_training_data.npz) are deprecated for the same reason and are no
+longer read by this module.
 
 Conventions follow notebook 02 exactly: design rows 0-109 = run000-109,
 train on runs 0-99, hold out runs 100-109; k cut = mass_conds('Pk');
@@ -63,14 +66,10 @@ from pk_data import (
 MODEL_DIR = os.path.join(_HERE, '..', 'models', 'Pk_cosmo')
 DIAG_DIR = os.path.join(_HERE, 'diagnostics')
 
-# Path of the pre-existing notebook-trained z=0 ratio model (reused, read-only)
-EXISTING_RATIO_Z0 = os.path.join(_HERE, '..', 'models',
-                                 'Pk_multivariate_model_z_index0')
-
 QUANTITIES = {
     # name: (exp_variance, param_cols or None for all 7, ztags to train)
     'logP_go': (0.999, COSMO_COLS, ['0.0', '0.1', '0.5', '1.0', '2.0']),
-    'ratio':   (0.95,  None,       ['0.1', '0.5', '1.0', '2.0']),
+    'ratio':   (0.95,  None,       ['0.0', '0.1', '0.5', '1.0', '2.0']),
 }
 
 
@@ -131,8 +130,7 @@ def train_one(quantity, ztag, params_all, retrain=False):
 
 
 def load_pk_model(quantity, ztag, params_all=None):
-    """Load a trained model for (quantity, ztag), reusing the notebook-trained
-    z=0 ratio model where it exists.
+    """Load a trained model for (quantity, ztag) from models/Pk_cosmo/.
 
     Returns (sepia_model, info) where info holds k grid, param_cols, and the
     full-suite (y_all, p_all) arrays for validation use.
@@ -140,25 +138,20 @@ def load_pk_model(quantity, ztag, params_all=None):
     if params_all is None:
         params_all = load_design()
 
-    if quantity == 'ratio' and ztag == '0.0':
-        # Pre-existing notebook model: rebuild its exact training SepiaData
-        # (runs 0-99, all 7 params, ratio on the k cut) and restore.
-        k_cut, y_all, p_all = build_training_data('ratio', '0.0', params_all)
-        train_idx = np.array(TRAIN_INDICES)
-        sepia_data = sepia_data_format(p_all[train_idx], y_all[train_idx], k_cut)
-        with contextlib.redirect_stdout(io.StringIO()):
-            model = load_model_autosync(EXISTING_RATIO_Z0, sepia_data,
-                                        exp_variance=0.95)
-        info = {'k': k_cut, 'param_cols': None, 'y_all': y_all, 'p_all': p_all,
-                'source': os.path.basename(EXISTING_RATIO_Z0)}
-        return model, info
-
     base, pkl_path, meta_path = model_paths(quantity, ztag)
+    if not (os.path.exists(pkl_path) and os.path.exists(meta_path)):
+        raise FileNotFoundError(
+            f'{base}(.pkl/_meta.json) not found — train it first:\n'
+            f'  python train_pk_emulators.py --quantity {quantity} --ztags {ztag}')
     with open(meta_path) as f:
         meta = json.load(f)
     k_cut, y_all, p_all = build_training_data(quantity, ztag, params_all)
-    if not np.allclose(k_cut, np.array(meta['k'])):
-        raise RuntimeError(f'k grid changed since training of {base}')
+    k_meta = np.array(meta['k'])
+    if k_meta.size != k_cut.size or not np.allclose(k_cut, k_meta):
+        raise RuntimeError(
+            f'k grid changed since training of {base} '
+            f'({k_meta.size} trained vs {k_cut.size} current bins) — '
+            f'retrain with: python train_pk_emulators.py --retrain')
     train_idx = np.array(meta['train_indices'])
     sepia_data = sepia_data_format(p_all[train_idx], y_all[train_idx], k_cut)
     with contextlib.redirect_stdout(io.StringIO()):
@@ -252,13 +245,11 @@ def main():
 
     results = []
     for q in quantities:
-        # validate every z that has a model, including the reused z=0 ratio
-        all_z = PK_REDSHIFT_TAGS if q == 'ratio' else QUANTITIES[q][2]
-        ztags = args.ztags or all_z
+        # validate every z that has a model
+        ztags = args.ztags or QUANTITIES[q][2]
         per_z = {}
         for zt in ztags:
-            is_existing = (q == 'ratio' and zt == '0.0')
-            if not is_existing and not os.path.exists(model_paths(q, zt)[1]):
+            if not os.path.exists(model_paths(q, zt)[1]):
                 print(f'  [valid] {q} z={zt}: no model on disk, skipping')
                 continue
             per_z[zt] = validate_one(q, zt, params_all, results)

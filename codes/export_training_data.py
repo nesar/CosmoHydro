@@ -24,7 +24,7 @@ import numpy as np
 
 from cosmo_hydro_emu.load_hacc import (
     read_gsmf_all_snaps, read_hmf_all_snaps, read_gasfr_all_snaps,
-    read_profile_all_snaps, read_pk_new, mass_conds, fill_nan_with_interpolation,
+    read_profile_all_snaps, mass_conds, fill_nan_with_interpolation,
 )
 from cosmo_hydro_emu.snapshot_utils import SNAPSHOT_IDS, get_snapshot_redshifts
 
@@ -108,14 +108,11 @@ for obs, prefix in PROFILE_PREFIX.items():
     rad_cond = np.where((radius > rlim1) & (radius < rlim2))[0]
     save(obs, arr[:, :, rad_cond], radius[rad_cond], np.arange(6, len(SNAPSHOT_IDS)))
 
-# --- Pk ratio, z=0 only (nb02 cell 24; pickle is models/Pk_multivariate_model_z_index0.pkl)
-k, pk_arr, pk_go_arr, pk_ratio = read_pk_new(DirIn_pk, num_sims, redshift='0.0',
-                                             pk_type='hydro.full', start_sim_idx=start_sim_idx)
-mlim1_pk, mlim2_pk = mass_conds('Pk')
-k_cond = np.where((k > mlim1_pk) & (k < mlim2_pk))[0]
-pk_path = '../models/Pk_training_data.npz'
-np.savez_compressed(pk_path, p_train=params_train, y_vals=pk_ratio[train_sim_indices][:, k_cond],
-                    y_ind=k[k_cond], z_index_range=np.array([0]), redshifts=np.array([0.0]),
-                    param_names=PARAM_NAMES)
-print(f'Pk    -> {pk_path}  y_vals {pk_ratio[train_sim_indices][:, k_cond].shape}  '
-      f'y_ind {k[k_cond].shape}  {os.path.getsize(pk_path) / 1e3:.0f} kB')
+# --- Pk: no longer exported here (2026-09-17) --------------------------------
+# The z=0 suppression-ratio training data used to be exported for the legacy
+# notebook-02 pickle (models/Pk_multivariate_model_z_index0.pkl). After the
+# 1600^3 k-range fix, all P(k) models (ratio and logP_go, z = 0..2) are trained
+# by Inference_cosmo/train_pk_emulators.py into models/Pk_cosmo/, and the
+# cosmohydro_emu package exports their training data directly from the raw
+# spectra (cosmohydro_emu/scripts/export_training_data.py). The legacy pickle
+# and models/Pk_training_data.npz are deprecated.

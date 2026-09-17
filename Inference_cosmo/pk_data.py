@@ -19,8 +19,12 @@ that trained the existing models):
   * slice: start_sim_idx=0, num_sims=110  ->  run000..run109 (all runs)
   * train/test split: runs 0-99 train, runs 100-109 held-out test
   * subgrid scaling: M_seed/1e6, v_kin/1e4, eps_kin/1e1
-  * trusted k range: mass_conds('Pk') = [2*pi/400, pi/(400/1024)]
-                     = [0.0157, 8.04] h/Mpc  (fundamental mode to Nyquist)
+  * trusted k range: mass_conds('Pk') = [2*pi/400, pi/(400/1600)]
+                     = [0.0157, 12.57] h/Mpc (fundamental mode to the 1600^3
+                     P(k)-mesh / particle Nyquist). The raw files extend to
+                     sqrt(3)*k_Nyq = 21.8 (corner modes of the FFT cube);
+                     mass-assignment aliasing near the Nyquist is a known
+                     caveat to be validated on the trained emulators.
 """
 
 import os
@@ -52,6 +56,7 @@ TEST_INDICES = list(range(100, 110))      # runs 100-109 (held out)
 #   kappa_W, e_W, M_seed, v_kin, eps_kin, omega_m(=Omega_m h^2), sigma_8
 SCALE_FACTORS = {2: seed_mass_scale, 3: vkin_scale, 4: eps_scale}
 COSMO_COLS = [5, 6]
+
 
 
 def load_design(design_file=DESIGN_FILE_DEFAULT,
@@ -174,8 +179,14 @@ def load_hmf_snapshot(snap_id=HMF_SNAPSHOT_Z01,
             'dlog10M': float(np.median(np.diff(np.log10(M))))}
 
 
-def k_trust_mask(k):
-    """Boolean mask for the trusted k range (fundamental mode .. Nyquist)."""
+def k_trust_mask(k, quantity='ratio'):
+    """Boolean mask for the trusted k range (fundamental mode .. Nyquist).
+
+    ``quantity`` is accepted for call-site symmetry; all quantities currently
+    use the same range. Mass-assignment aliasing near the mesh Nyquist is a
+    known caveat for the absolute spectra (it cancels in the ratio) and is to
+    be validated on the trained emulators.
+    """
     kmin, kmax = mass_conds('Pk')
     return (k > kmin) & (k < kmax)
 
@@ -188,7 +199,7 @@ def emulation_targets(suite, quantity):
               'ratio'      -> P / P_go
     Returns (k_cut, y_vals).
     """
-    m = k_trust_mask(suite['k'])
+    m = k_trust_mask(suite['k'], quantity)
     k_cut = suite['k'][m]
     if quantity == 'logP_hydro':
         y = np.log10(suite['P'][:, m])

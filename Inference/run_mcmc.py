@@ -584,8 +584,16 @@ def main():
                                    design_params, y_vals, y_ind, exp_variance)
             else:
                 # Fall back to standalone z_index0 model
-                model_file = os.path.join(model_dir,
-                                          f'{MODEL_PREFIX[obs]}_multivariate_model_z_index{z_index}')
+                if obs == 'Pk':
+                    # models/Pk_cosmo/ratio_z0.0 is the current z=0 suppression
+                    # model (full 1600^3-mesh k range, 2026-09-17 fix); the legacy
+                    # Pk_multivariate_model_z_index0 pickle predates the fix and
+                    # no longer matches mass_conds('Pk').
+                    model_file = os.path.join(model_dir, 'Pk_cosmo', 'ratio_z0.0')
+                else:
+                    model_file = os.path.join(
+                        model_dir,
+                        f'{MODEL_PREFIX[obs]}_multivariate_model_z_index{z_index}')
                 model = load_model(model_file, design_params, y_vals, y_ind, exp_variance)
 
             sepia_models.append(model)

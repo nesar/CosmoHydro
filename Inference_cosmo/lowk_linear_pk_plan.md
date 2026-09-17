@@ -19,10 +19,19 @@ Box: **L = 400 Mpc/h, 1600³ particles** (HAvoCC SciDAC design).
 | quantity | value | consequence |
 |---|---|---|
 | fundamental mode k_f = 2π/L | **0.0157 h/Mpc** | nothing below this exists in the box |
-| emulator k-grid | 0.0222 – 8.03 h/Mpc (511 bins) | lowest bins = 1.4 k_f |
-| particle Nyquist πN/L | 12.6 h/Mpc | not the binding limit |
-| P(k) mesh Nyquist (1024³ FFT) | 8.03 h/Mpc | grid max |
-| half mesh-Nyquist (aliasing-safe) | **~4.0 h/Mpc** | current k_max = 7.0 is beyond it |
+| emulator k-grid | 0.0222 – 12.56 h/Mpc (ratio; GO capped at 10) | lowest bins = 1.4 k_f |
+| particle Nyquist πN/L | 12.6 h/Mpc | = mesh Nyquist (grid max) |
+| P(k) mesh Nyquist (1600³ FFT) | 12.57 h/Mpc | grid max |
+| half mesh-Nyquist (aliasing-safe) | **~6.3 h/Mpc** | current k_max = 7.0 is marginally above it |
+
+> **Correction (2026-09-17):** P(k) was measured on a **1600³** FFT mesh
+> (verified: the raw files' k_max = √3 · π·1600/L, the corner modes of a 1600³
+> cube), not 1024³ as this table previously assumed. The old emulator
+> k_max = 8.03 was π/(L/1024) — a mistaken particle count, no scale of this
+> dataset. `mass_conds('Pk')` now runs to the true Nyquist 12.57 (ratio);
+> absolute spectra are capped at k = 10 where measured aliasing reaches ~1%
+> (rising to ~+20% at the Nyquist). Half mesh-Nyquist is 6.3, not 4.0, so
+> `k_max = 4.0` for KiDS remains safe (and conservative).
 
 Mode counts in the KiDS log bins (Δln k ≈ 0.40):
 
@@ -43,8 +52,11 @@ Mode counts in the KiDS log bins (Δln k ≈ 0.40):
    statistically dominant misfit: mean |z| = 0.47 at k<0.1 vs 0.63 at k>0.1.)
    A safer floor is **k_min ≈ 0.05** (≥3 k_f, ≥150 modes) unless the GO
    emulator's low-k box variance is explicitly modeled.
-2. `k_max = 7.0` exceeds the aliasing-safe half mesh-Nyquist; prefer
-   **k_max ≈ 4.0** unless the extraction corrected mass-assignment aliasing.
+2. `k_max = 7.0` marginally exceeds the aliasing-safe half mesh-Nyquist
+   (~6.3 after the 2026-09-17 1600³ correction; the old ~4.0 figure assumed a
+   1024³ mesh). **k_max ≈ 4.0** remains the conservative choice; anything up
+   to ~6.3 is defensible unless the extraction corrected mass-assignment
+   aliasing.
 3. The KiDS deprojection itself assumed Ω_m = 0.305 ± 0.012 in its lensing
    kernel. Solutions far from that (e.g. the railed ω_m = 0.154 → Ω_m = 0.337)
    are internally inconsistent with the data product being fit. Any future

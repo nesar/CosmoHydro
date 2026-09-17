@@ -514,13 +514,21 @@ def mass_conds(summary_stat):
 
     if (summary_stat == 'Pk'):
 
-        ## Based on 400 Mpc/h box, 1024 particles
+        ## Based on 400 Mpc/h box, 1600^3 particles. P(k) is measured on a
+        ## 1600^3 FFT mesh (verified: raw-file k_max = sqrt(3)*pi*1600/L, the
+        ## corner modes of a 1600^3 cube), so mesh Nyquist == particle Nyquist.
+        ## Pre-2026-09 this used a mistaken 1024^3 particle count
+        ## (k_max = 8.04); models trained with that cut were valid but
+        ## conservative, and are inconsistent with the current cut.
         # k_min = 2*np.pi/side_length
-        # delta_x = side_length/Npart
-        # k_max = np.pi/delta_x #Nyquist
+        # delta_x = side_length/Npart          # Npart = 1600
+        # k_max = np.pi/delta_x  # Nyquist = 12.566
+        ## Mass-assignment aliasing near the Nyquist is a known caveat for
+        ## the absolute spectra (it cancels in the hydro/GO ratio); to be
+        ## validated on the trained emulators.
 
         mlim1 =  0.015707963267948967
-        mlim2 = 8.042477193189871
+        mlim2 = 12.566370614359172
     
     if (summary_stat == 'CSFR'):
 

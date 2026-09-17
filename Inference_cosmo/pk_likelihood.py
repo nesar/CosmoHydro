@@ -7,8 +7,8 @@ The total-matter hydro power spectrum is composed as
 
     P_hydro(k, z; theta) = S(k, z; theta_7) * P_go(k, z; omega_m, sigma_8)
 
-where S is the suppression-ratio emulator (7 params; the z=0 model is the
-pre-existing notebook-trained ``models/Pk_multivariate_model_z_index0``) and
+where S is the suppression-ratio emulator (7 params; all snapshots, z=0
+included, trained into ``models/Pk_cosmo/`` by train_pk_emulators.py) and
 P_go the gravity-only emulator (2 cosmology params). No standalone hydro-P(k)
 emulator is trained: the ratio cancels realization noise, and the GO spectrum
 carries the cosmology dependence.
@@ -89,15 +89,26 @@ class PkEmulator:
             if need_go:
                 m, info = load_pk_model('logP_go', zt, params_all)
                 self.models[('logP_go', zt)] = (m, info)
-        any_info = next(iter(self.models.values()))[1]
-        self.k_grid = any_info['k']
+        # Ratio models extend to the mesh Nyquist (12.57 h/Mpc) while the
+        # absolute logP_go models are capped at k = 10 (aliasing). Both grids
+        # come from the same parent binning, so the shorter is a prefix of the
+        # longer: work on the common prefix so S and P_go always combine on
+        # the same grid.
+        grids = [info['k'] for (_m, info) in self.models.values()]
+        n_common = min(g.size for g in grids)
+        ref = grids[0][:n_common]
+        for g in grids:
+            if not np.allclose(g[:n_common], ref):
+                raise ValueError('P(k) model k grids are not nested')
+        self.k_grid = ref
+        self._n_common = n_common
 
     # -- snapshot-level predictions --------------------------------------
     def _predict_snap(self, quantity, ztag, params7):
         model, info = self.models[(quantity, ztag)]
         p = params7[COSMO_COLS] if info['param_cols'] == COSMO_COLS else params7
         mean, std = emulate(model, np.asarray(p))
-        return mean[:, 0], std[:, 0]
+        return mean[:self._n_common, 0], std[:self._n_common, 0]
 
     def _bracket(self, z):
         if z < self.z_snaps[0] - 1e-9 or z > self.z_snaps[-1] + 1e-9:
